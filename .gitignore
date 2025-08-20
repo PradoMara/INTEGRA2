@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Node / Vite / React
+**/node_modules/
+**/dist/
+**/.vite/
+*.log
+
+# Env
+.env
+.env.*.local
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
