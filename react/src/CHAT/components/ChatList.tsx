@@ -2,22 +2,22 @@ import { Chat } from "../types/chat";
 
 interface ChatListProps {
   chats: Chat[];
-  chatActivo: Chat | null;
-  setChatActivo: (chat: Chat) => void;
+  onSelectChat: (id: number) => void;
+  chatActivo: number | null;
 }
 
-export function ChatList({ chats, chatActivo, setChatActivo }: ChatListProps) {
+export function ChatList({ chats, onSelectChat, chatActivo }: ChatListProps) {
   return (
-    <div className="w-1/4 bg-gray-100 border-r overflow-y-auto">
-      <h2 className="p-4 font-bold border-b">Mis chats</h2>
+    <div className="w-1/4 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+      <h2 className="p-4 text-lg font-bold text-[#0075B4]">Mis Chats</h2>
       <ul>
         {chats.map((chat) => (
           <li
             key={chat.id}
-            className={`p-3 cursor-pointer hover:bg-gray-200 ${
-              chatActivo?.id === chat.id ? "bg-blue-100" : ""
+            onClick={() => onSelectChat(chat.id)}
+            className={`p-4 cursor-pointer hover:bg-gray-200 ${
+              chatActivo === chat.id ? "bg-[#EDC500]" : ""
             }`}
-            onClick={() => setChatActivo(chat)}
           >
             <p className="font-semibold">{chat.nombre}</p>
             <p className="text-sm text-gray-600 truncate">

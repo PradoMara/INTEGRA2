@@ -1,19 +1,16 @@
-import { Chat } from "../types/chat";
+import { Mensaje } from "../types/chat";
+import { ChatBubble } from "./ChatBubble";
 
 interface ChatWindowProps {
-  chatActivo: Chat | null;
+  mensajes: Mensaje[];
 }
 
-export function ChatWindow({ chatActivo }: ChatWindowProps) {
+export function ChatWindow({ mensajes }: ChatWindowProps) {
   return (
-    <div className="flex-1 p-3 overflow-y-auto bg-gray-50">
-      {chatActivo ? (
-        <p className="text-gray-600">
-          Aquí aparecerán los mensajes de <b>{chatActivo.nombre}</b>
-        </p>
-      ) : (
-        <p className="text-gray-400">Selecciona un chat para empezar</p>
-      )}
+    <div className="flex-1 p-4 overflow-y-auto bg-gray-100">
+      {mensajes.map((m) => (
+        <ChatBubble key={m.id} mensaje={m} />
+      ))}
     </div>
   );
 }
