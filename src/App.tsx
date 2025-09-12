@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Button from "./components/Button";
 import Input from "./components/Input";
 import Textarea from "./components/Textarea";
@@ -6,33 +6,36 @@ import Modal from "./components/Modal";
 
 function App() {
   const [showModal, setShowModal] = useState(false);
-  const [inputError, setInputError] = useState("Este campo es obligatorio");
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-neutral-900">
-      {/* Botones */}
-      <div className="flex gap-4">
-        <Button variant="primary">Primario</Button>
-        <Button variant="secondary">Secundario</Button>
-        <Button variant="primary" disabled>Disabled</Button>
+    <div className="min-h-screen bg-gray-600 flex flex-col items-center justify-center gap-8 px-4">
+      <div className="w-full max-w-lg space-y-6">
+        <div>
+          <h2 className="text-xl font-bold mb-2">Botones</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="primary" size="md">Primario</Button>
+            <Button variant="secondary" size="md">Secundario</Button>
+            <Button variant="primary" size="sm">Pequeño</Button>
+            <Button variant="primary" size="lg">Grande</Button>
+            <Button variant="outline-purple" size="md" disabled>Deshabilitado</Button>
+            <Button variant="outline-purple" size="md" className="">Boton Estilizado</Button>
+          </div>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold mb-2">Inputs</h2>
+          <Input label="Usuario" placeholder="Tu usuario" className="text-black"/>
+          <Input label="Email" placeholder="Correo electrónico" error="Este campo es obligatorio" className="mt-2" />
+          <Textarea label="Descripcion" placeholder="Escribe tu mensaje..." className="mt-2" />
+          <Textarea label="Notas" placeholder="Notas adicionales" error="Campo obligatorio" className="mt-2" />
+        </div>
+        <div>
+          <Button onClick={() => setShowModal(true)} size="md">Abrir Modal</Button>
+          <Modal open={showModal} onClose={() => setShowModal(false)}>
+            <h2 className="text-lg font-bold mb-2">Este es un Modal</h2>
+            <p>Contenido de prueba para verificar responsividad.</p>
+          </Modal>
+        </div>
       </div>
-
-      {/* Input y Textarea */}
-      <div className="flex flex-col gap-4 w-80">
-        <Input placeholder="Input normal" />
-        <Input placeholder="Input con error" error={inputError} />
-        <Textarea placeholder="Textarea normal" />
-        <Textarea placeholder="Textarea con error" error={inputError} />
-      </div>
-
-      {/* Modal */}
-      <Button onClick={() => setShowModal(true)}>
-        Abrir Modal
-      </Button>
-      <Modal open={showModal} onClose={() => setShowModal(false)}>
-        <h2 className="text-xl font-bold mb-4">Este es un Modal</h2>
-        <p>Puedes cerrarme haciendo click en la X.</p>
-      </Modal>
     </div>
   );
 }
