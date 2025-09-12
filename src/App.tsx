@@ -1,74 +1,68 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import VirtualizedFeed from './components/InfiniteFeed'
+import { useState, useCallback } from 'react'
+import InfiniteFeed from './components/InfiniteFeed'
 import SearchAndFilter from './components/SearchAndFilter'
+import { useDebounce } from './hooks/usePostsWithFilters'
 
 function App() {
   // Estado para la búsqueda y filtros
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [feedStats, setFeedStats] = useState({ hasResults: true, totalResults: 0 })
   
-  // Categorías de ejemplo para el marketplace
+  // Debounce del término de búsqueda para optimizar las consultas
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  
+  // Mapeo de categorías para compatibilidad
   const categories = [
     'Electrónicos',
-    'Libros y Materiales',
+    'Libros y Materiales', 
     'Ropa y Accesorios',
     'Deportes',
     'Hogar y Jardín',
     'Vehículos',
     'Servicios'
-  ];
+  ]
 
-  // Simulamos algunos datos de publicaciones para demostrar la funcionalidad
-  const mockPosts = [
-    { id: 1, title: 'iPhone 13 Pro Max', category: 'Electrónicos', content: 'Vendo iPhone en excelente estado' },
-    { id: 2, title: 'Libro de Matemáticas', category: 'Libros y Materiales', content: 'Libro universitario de cálculo' },
-    { id: 3, title: 'Zapatillas Nike', category: 'Ropa y Accesorios', content: 'Zapatillas deportivas nuevas' },
-    { id: 4, title: 'Bicicleta de montaña', category: 'Deportes', content: 'Bicicleta en perfecto estado' },
-    { id: 5, title: 'Sofá cama', category: 'Hogar y Jardín', content: 'Sofá cama muy cómodo' },
-  ];
+  // Mapear nombres de categorías a IDs
+  const categoryMap: Record<string, string> = {
+    'Electrónicos': 'electronics',
+    'Libros y Materiales': 'books',
+    'Ropa y Accesorios': 'clothing',
+    'Deportes': 'sports',
+    'Hogar y Jardín': 'home',
+    'Vehículos': 'vehicles',
+    'Servicios': 'services'
+  }
 
-  // Función para filtrar publicaciones basada en búsqueda y categoría
-  const getFilteredPosts = useCallback(() => {
-    let filtered = mockPosts;
+  // Convertir categoría seleccionada a ID
+  const selectedCategoryId = selectedCategory ? categoryMap[selectedCategory] || '' : ''
 
-    // Filtrar por categoría
-    if (selectedCategory) {
-      filtered = filtered.filter(post => post.category === selectedCategory);
-    }
-
-    // Filtrar por término de búsqueda
-    if (searchTerm) {
-      filtered = filtered.filter(post => 
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return filtered;
-  }, [searchTerm, selectedCategory]);
-
-  // Calcular si hay resultados y cuántos
-  const filteredPosts = getFilteredPosts();
-  const hasResults = filteredPosts.length > 0;
-  const totalResults = filteredPosts.length;
-
-  // Manejadores de eventos
+  // Manejadores de eventos con optimización
   const handleSearchChange = useCallback((newSearchTerm: string) => {
-    setSearchTerm(newSearchTerm);
-    // Aquí se podría implementar debounce para optimizar las búsquedas
-  }, []);
+    setSearchTerm(newSearchTerm)
+  }, [])
 
   const handleCategoryChange = useCallback((newCategory: string) => {
-    setSelectedCategory(newCategory);
-    // Aquí se aplicaría el filtro por categoría
-  }, []);
+    setSelectedCategory(newCategory)
+  }, [])
+
+  // Manejador para limpiar filtros
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm('')
+    setSelectedCategory('')
+  }, [])
+
+  // Callback para recibir estadísticas del feed
+  const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => {
+    setFeedStats({ hasResults, totalResults })
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-gray-900">Marketplace UCT</h1>
-          <p className="text-gray-600">Feed optimizado con virtualización</p>
+          <p className="text-gray-600">Feed optimizado con filtrado en tiempo real</p>
         </div>
       </header>
       
@@ -79,15 +73,18 @@ function App() {
         categories={categories}
         onSearchChange={handleSearchChange}
         onCategoryChange={handleCategoryChange}
-        hasResults={hasResults}
-        totalResults={totalResults}
+        onClearFilters={handleClearFilters}
+        hasResults={feedStats.hasResults}
+        totalResults={feedStats.totalResults}
       />
       
-      <main>
-        {/* Solo mostrar el feed si hay resultados o no hay filtros activos */}
-        {(hasResults || (!searchTerm && !selectedCategory)) && (
-          <VirtualizedFeed />
-        )}
+      <main className="py-6">
+        {/* Feed con filtros integrados */}
+        <InfiniteFeed 
+          searchTerm={debouncedSearchTerm}
+          selectedCategoryId={selectedCategoryId}
+          onStatsChange={handleFeedStatsChange}
+        />
       </main>
     </div>
   )

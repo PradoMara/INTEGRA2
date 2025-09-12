@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 interface SearchAndFilterProps {
   onSearchChange: (searchTerm: string) => void;
   onCategoryChange: (category: string) => void;
+  onClearFilters?: () => void; // Nueva prop para limpiar filtros
   categories: string[];
   selectedCategory: string;
   searchTerm: string;
@@ -15,6 +16,7 @@ interface SearchAndFilterProps {
 const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   onSearchChange,
   onCategoryChange,
+  onClearFilters,
   categories,
   selectedCategory,
   searchTerm,
@@ -44,7 +46,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             {/* Input de búsqueda */}
             <input
               type="text"
-              placeholder="Buscar publicaciones..."
+              placeholder="Buscar por título o descripción..."
               value={searchTerm}
               onChange={handleSearchChange}
               onFocus={() => setIsSearchFocused(true)}
@@ -58,6 +60,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                 onClick={() => onSearchChange('')}
                 className="search-clear-btn"
                 type="button"
+                title="Limpiar búsqueda"
               >
                 ×
               </button>
@@ -74,7 +77,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               onChange={handleCategoryChange}
               className="category-select"
             >
-              <option value="">Seleccionar categoría</option>
+              <option value="">Todas las categorías</option>
               {categories.map((category) => (
                 <option key={category} value={category}>
                   {category}
@@ -83,31 +86,54 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             </select>
           </div>
         </div>
+
+        {/* Botón para limpiar todos los filtros */}
+        {(searchTerm || selectedCategory) && onClearFilters && (
+          <button
+            onClick={onClearFilters}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200 border border-gray-300"
+            type="button"
+          >
+            Limpiar filtros
+          </button>
+        )}
       </div>
 
-      {/* Información de resultados */}
+      {/* Información de resultados mejorada */}
       <div className="search-info">
-        {searchTerm && (
-          <span className="search-results-text">
-            Buscando: <strong>"{searchTerm}"</strong>
-          </span>
+        {(searchTerm || selectedCategory) && (
+          <>
+            {searchTerm && (
+              <span className="search-results-text">
+                Búsqueda: <strong>"{searchTerm}"</strong>
+              </span>
+            )}
+            {selectedCategory && (
+              <span className="category-results-text">
+                Categoría: <strong>{selectedCategory}</strong>
+              </span>
+            )}
+            {hasResults && totalResults > 0 && (
+              <span className="results-count-text">
+                {totalResults} resultado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
+              </span>
+            )}
+          </>
         )}
-        {selectedCategory && (
-          <span className="category-results-text">
-            Categoría: <strong>{selectedCategory}</strong>
-          </span>
-        )}
-        {(searchTerm || selectedCategory) && hasResults && totalResults > 0 && (
-          <span className="results-count-text">
-            {totalResults} resultado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
+        
+        {/* Mostrar total sin filtros cuando no hay filtros activos */}
+        {!searchTerm && !selectedCategory && totalResults > 0 && (
+          <span className="text-gray-500 text-xs">
+            Mostrando {totalResults} publicaciones
           </span>
         )}
       </div>
 
-      {/* Mensaje de no resultados */}
+      {/* Mensaje de no resultados mejorado */}
       {(searchTerm || selectedCategory) && !hasResults && (
         <div className="no-results-container">
           <div className="no-results-message">
+            <div className="text-4xl mb-3">🔍</div>
             <h3>No se encontraron resultados</h3>
             <p>
               {searchTerm && selectedCategory 
@@ -123,13 +149,10 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                 <li>Verifica la ortografía de las palabras</li>
                 <li>Intenta con términos más generales</li>
                 <li>Prueba con una categoría diferente</li>
-                {(searchTerm || selectedCategory) && (
+                {onClearFilters && (
                   <li>
                     <button 
-                      onClick={() => {
-                        onSearchChange('');
-                        onCategoryChange('');
-                      }}
+                      onClick={onClearFilters}
                       className="clear-filters-btn"
                     >
                       Limpiar todos los filtros

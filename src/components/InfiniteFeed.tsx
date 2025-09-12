@@ -1,381 +1,267 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useRef, useEffect } from 'react'
+import { usePostsWithFilters } from '../hooks/usePostsWithFilters'
 
-// Interfaz para las publicaciones estilo Facebook Marketplace
-interface Post {
-  id: number
-  author: string
-  avatar: string
-  content: string
-  image?: string
-  likes: number
-  comments: number
-  shares: number
-  timeAgo: string
-  price?: string
+// Props para el componente con filtros optimizado
+interface InfiniteFeedProps {
+  searchTerm: string
+  selectedCategoryId: string
+  onStatsChange?: (hasResults: boolean, totalResults: number) => void
 }
 
-// Simulación de API para cargar publicaciones con más variedad
-const generatePosts = (page: number, limit: number = 9): Post[] => {
-  const posts: Post[] = []
-  const startId = (page - 1) * limit + 1
-  
-  for (let i = 0; i < limit; i++) {
-    const id = startId + i
-    posts.push({
-      id,
-      author: `Usuario ${id}`,
-      avatar: `https://avatar.iran.liara.run/public/${id}`,
-      content: `Producto número ${id} - ${id % 2 === 0 ? 'Libro de texto en excelente estado' : id % 3 === 0 ? 'Calculadora científica' : 'Notebook gaming usado'}. ${id % 4 === 0 ? 'Precio negociable. Disponible en campus.' : 'En muy buen estado, poco uso.'}`,
-      image: `https://picsum.photos/400/300?random=${id}`,
-      likes: Math.floor(Math.random() * 50),
-      comments: Math.floor(Math.random() * 15),
-      shares: Math.floor(Math.random() * 5),
-      timeAgo: `${Math.floor(Math.random() * 48)}h`,
-      price: `$${(Math.random() * 500000 + 10000).toLocaleString('es-CL')}`
-    })
-  }
-  
-  return posts
-}
+const InfiniteFeed: React.FC<InfiniteFeedProps> = ({ 
+  searchTerm = '', 
+  selectedCategoryId = '',
+  onStatsChange
+}) => {
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastPostElementRef = useRef<HTMLDivElement | null>(null)
 
-const fetchPosts = async (page: number): Promise<{ posts: Post[], hasMore: boolean }> => {
-  console.log(`Cargando página ${page}...`)
-  
-  // Simular delay de red
-  await new Promise(resolve => setTimeout(resolve, 800))
-  
-  const posts = generatePosts(page, 9) // 9 posts por página (3x3 grid)
-  const hasMore = page < 10 // Máximo 10 páginas = 90 posts
-  
-  return { posts, hasMore }
-}
+  // Usar el hook personalizado con React Query
+  const {
+    posts,
+    hasResults,
+    totalResults,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error
+  } = usePostsWithFilters({
+    searchTerm: searchTerm.trim(),
+    categoryId: selectedCategoryId
+  })
 
-const InfiniteFeed: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(1)
-  const [initialLoad, setInitialLoad] = useState(true)
-  const [loadingRequestSent, setLoadingRequestSent] = useState(false)
-  const observerRef = useRef<IntersectionObserver | null>(null)
-  const loadingRef = useRef<HTMLDivElement>(null)
-
-  // Función para cargar más posts con control de duplicación
-  const loadMorePosts = async () => {
-    if (loading || !hasMore || loadingRequestSent) return
-
-    setLoadingRequestSent(true)
-    setLoading(true)
-    console.log(`🚀 Cargando página ${page}`)
-
-    try {
-      const { posts: newPosts, hasMore: moreAvailable } = await fetchPosts(page)
-      
-      setPosts(prevPosts => {
-        // Evitar duplicados de manera más robusta
-        const existingIds = new Set(prevPosts.map(p => p.id))
-        const uniquePosts = newPosts.filter(p => !existingIds.has(p.id))
-        console.log(`✅ Agregados ${uniquePosts.length} posts nuevos`)
-        return [...prevPosts, ...uniquePosts]
-      })
-
-      setHasMore(moreAvailable)
-      setPage(prev => prev + 1)
-      
-      if (!moreAvailable) {
-        console.log('📝 No hay más publicaciones')
-      }
-    } catch (error) {
-      console.error('❌ Error al cargar posts:', error)
-    } finally {
-      setLoading(false)
-      setInitialLoad(false)
-      // Resetear el flag después de un breve delay para evitar cargas múltiples
-      setTimeout(() => setLoadingRequestSent(false), 1000)
-    }
-  }
-
-  // Configurar Intersection Observer MEJORADO para evitar carga infinita
+  // Notificar cambios en las estadísticas al componente padre
   useEffect(() => {
-    if (loading || loadingRequestSent) return
+    if (onStatsChange && !isLoading) {
+      onStatsChange(hasResults, totalResults)
+    }
+  }, [hasResults, totalResults, isLoading, onStatsChange])
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const target = entries[0]
-        // MEJORA: Solo cargar si el usuario realmente llegó al elemento Y hay más contenido
-        if (target.isIntersecting && hasMore && !loading && !loadingRequestSent) {
-          console.log('📍 Intersection Observer activado - Cargando una vez')
-          loadMorePosts()
+  // Configurar Intersection Observer para scroll infinito - MEJORADO
+  useEffect(() => {
+    if (isLoading || isFetchingNextPage) return
+
+    if (observer.current) observer.current.disconnect()
+
+    observer.current = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          console.log('🚀 Loading more posts... Page:', posts.length / 9 + 1)
+          fetchNextPage()
         }
       },
       { 
-        threshold: 0.3, // Aumentado para ser menos sensible
-        rootMargin: '50px' // Reducido para evitar carga prematura
+        threshold: 0.5, // Cambiar a 0.5 para activar antes
+        rootMargin: '200px' // Activar cuando esté a 200px del final
       }
     )
 
-    if (loadingRef.current && hasMore) {
-      observerRef.current.observe(loadingRef.current)
+    if (lastPostElementRef.current) {
+      observer.current.observe(lastPostElementRef.current)
     }
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
+      if (observer.current) {
+        observer.current.disconnect()
       }
     }
-  }, [loading, hasMore, loadingRequestSent])
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, posts.length])
 
-  // Cargar posts iniciales
-  useEffect(() => {
-    loadMorePosts()
-  }, [])
+  // Mapeo de categorías para mostrar nombres legibles
+  const categoryNames: Record<string, string> = {
+    'electronics': 'Electrónicos',
+    'books': 'Libros y Materiales',
+    'clothing': 'Ropa y Accesorios',
+    'sports': 'Deportes',
+    'home': 'Hogar y Jardín',
+    'vehicles': 'Vehículos',
+    'services': 'Servicios'
+  }
 
-  // Componente para una publicación estilo Marketplace
-  const PostCard: React.FC<{ post: Post }> = ({ post }) => (
-    <div 
-      style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        backgroundColor: 'white',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        height: 'fit-content'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)'
-        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'
-      }}
-    >
-      {/* Imagen del producto */}
-      <div style={{ position: 'relative' }}>
-        <img 
-          src={post.image} 
-          alt="Producto"
-          style={{
-            width: '100%',
-            height: '200px',
-            objectFit: 'cover'
-          }}
-        />
-        {post.price && (
-          <div style={{
-            position: 'absolute',
-            top: '8px',
-            left: '8px',
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: 'bold'
-          }}>
-            {post.price}
-          </div>
-        )}
+  // Componente para mostrar estado vacío
+  const EmptyState = () => (
+    <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
+      <div className="text-8xl mb-6">🛒</div>
+      <h3 className="text-2xl font-semibold mb-3 text-gray-700">No se encontraron productos</h3>
+      <p className="text-center max-w-md text-gray-600 leading-relaxed">
+        {searchTerm || selectedCategoryId ? 
+          'Intenta ajustar tus filtros de búsqueda o explora otras categorías.' :
+          'No hay publicaciones disponibles en este momento.'
+        }
+      </p>
+    </div>
+  )
+
+  // Componente de estado de carga inicial
+  const InitialLoadingState = () => (
+    <div className="col-span-full flex items-center justify-center py-20">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-6"></div>
+        <p className="text-gray-600 text-lg">Cargando publicaciones...</p>
       </div>
+    </div>
+  )
 
-      <div style={{ padding: '12px' }}>
-        {/* Header del post */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          <img 
-            src={post.avatar} 
-            alt={post.author}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              marginRight: '8px'
-            }}
-          />
-          <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0, fontWeight: '600', fontSize: '13px', color: '#1f2937' }}>
-              {post.author}
-            </h3>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '11px' }}>
-              {post.timeAgo}
-            </p>
-          </div>
-        </div>
-
-        {/* Contenido del post */}
-        <p style={{ 
-          margin: '0 0 12px 0', 
-          lineHeight: '1.4',
-          fontSize: '14px',
-          color: '#374151',
-          display: '-webkit-box',
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden'
-        }}>
-          {post.content}
-        </p>
-
-        {/* Acciones del post - más compactas */}
-        <div 
-          style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderTop: '1px solid #f3f4f6',
-            paddingTop: '8px',
-            color: '#6b7280',
-            fontSize: '12px'
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            👍 {post.likes}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            💬 {post.comments}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            📤 {post.shares}
-          </span>
+  // Componente de error
+  const ErrorState = () => (
+    <div className="col-span-full mb-6 p-6 bg-red-50 border border-red-200 rounded-lg">
+      <div className="flex items-center">
+        <div className="text-red-400 mr-4 text-2xl">⚠️</div>
+        <div>
+          <h4 className="text-red-800 font-medium text-lg">Error al cargar las publicaciones</h4>
+          <p className="text-red-600 text-sm mt-1">
+            {error?.message || 'Ha ocurrido un error inesperado. Por favor, intenta nuevamente.'}
+          </p>
         </div>
       </div>
     </div>
   )
 
-  // Loading inicial
-  if (initialLoad && posts.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '40px' }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
-          border: '4px solid #f3f4f6',
-          borderTop: '4px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 16px'
-        }} />
-        <p>Cargando productos del marketplace...</p>
-      </div>
-    )
-  }
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '24px', fontSize: '28px', fontWeight: 'bold' }}>
-        Marketplace UCT
-      </h1>
-      
-      {/* Debug info - más compacto */}
-      <div style={{
-        backgroundColor: '#f8fafc',
-        padding: '12px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        fontSize: '14px',
-        color: '#64748b',
-        textAlign: 'center'
-      }}>
-        📊 Productos: {posts.length} | Página: {page - 1} | Más contenido: {hasMore ? '✅' : '❌'} | Estado: {loading ? '🔄 Cargando...' : '💤 Listo'}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Header con información de resultados */}
+      {!isLoading && (
+        <div className="mb-6 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            {posts.length > 0 ? (
+              <>
+                Mostrando {posts.length} publicación{posts.length !== 1 ? 'es' : ''}
+                {(searchTerm || selectedCategoryId) && (
+                  <span className="ml-2">
+                    {searchTerm && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 mr-2 font-medium">
+                        🔍 "{searchTerm}"
+                      </span>
+                    )}
+                    {selectedCategoryId && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">
+                        📁 {categoryNames[selectedCategoryId]}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </>
+            ) : hasResults ? (
+              'Cargando resultados...'
+            ) : (
+              'No hay resultados para mostrar'
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {isError && <ErrorState />}
+
+      {/* Posts Grid - CUADRÍCULA FORZADA */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6">
+        {isLoading ? (
+          <InitialLoadingState />
+        ) : !hasResults ? (
+          <EmptyState />
+        ) : (
+          posts.map((post, index) => (
+            <div
+              key={`${post.id}-${searchTerm}-${selectedCategoryId}`}
+              ref={index === posts.length - 1 ? lastPostElementRef : null}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 w-full"
+            >
+              {/* Post Image */}
+              {post.image && (
+                <div className="relative aspect-video w-full">
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  {post.price && (
+                    <div className="absolute top-3 right-3 bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-bold shadow-lg">
+                      {post.price}
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-white/95 text-gray-800 font-medium shadow-sm">
+                      {post.categoryName}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Post Content */}
+              <div className="p-4 md:p-5">
+                {/* Header */}
+                <div className="flex items-center mb-3 md:mb-4">
+                  <img
+                    src={post.avatar}
+                    alt={post.author}
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full mr-3 border-2 border-gray-100"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs md:text-sm font-medium text-gray-900 truncate">
+                      {post.author}
+                    </h4>
+                    <p className="text-xs text-gray-500">{post.timeAgo}</p>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-2 md:mb-3 line-clamp-2 leading-tight">
+                  {post.title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-3 leading-relaxed">
+                  {post.description}
+                </p>
+
+                {/* Engagement */}
+                <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-gray-100">
+                  <div className="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
+                    <span className="flex items-center hover:text-red-500 transition-colors cursor-pointer">
+                      <span className="mr-1">❤️</span>
+                      {post.likes}
+                    </span>
+                    <span className="flex items-center hover:text-blue-500 transition-colors cursor-pointer">
+                      <span className="mr-1">💬</span>
+                      {post.comments}
+                    </span>
+                    <span className="flex items-center hover:text-green-500 transition-colors cursor-pointer">
+                      <span className="mr-1">📤</span>
+                      {post.shares}
+                    </span>
+                  </div>
+                  <button className="text-blue-600 hover:text-blue-800 text-xs md:text-sm font-medium transition-colors">
+                    Ver detalles →
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* GRID DE 3 COLUMNAS - ESTILO FACEBOOK MARKETPLACE */}
-      <div 
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '20px',
-          marginBottom: '40px'
-        }}
-      >
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </div>
-
-      {/* Botón de Cargar Más - REEMPLAZA LA CARGA INFINITA AUTOMÁTICA */}
-      {hasMore && !loading && (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <button
-            onClick={loadMorePosts}
-            style={{
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-          >
-            Ver más productos
-          </button>
+      {/* Loading indicator para scroll infinito */}
+      {isFetchingNextPage && (
+        <div className="flex justify-center py-8">
+          <div className="flex items-center text-gray-600">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+            <span>Cargando más publicaciones...</span>
+          </div>
         </div>
       )}
 
-      {/* Loading indicator cuando se está cargando */}
-      {loading && (
-        <div 
-          ref={loadingRef}
-          style={{ textAlign: 'center', padding: '20px' }}
-        >
-          <div style={{ 
-            width: '30px', 
-            height: '30px', 
-            border: '3px solid #f3f4f6',
-            borderTop: '3px solid #3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 12px'
-          }} />
-          <p style={{ color: '#6b7280' }}>Cargando más productos...</p>
+      {/* Mensaje cuando no hay más posts - Solo mostrar si realmente no hay más datos */}
+      {!hasNextPage && posts.length > 0 && !isFetchingNextPage && posts.length >= 27 && (
+        <div className="text-center py-8 text-gray-500">
+          <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+            <span className="mr-2">🎉</span>
+            <span>Has visto todas las publicaciones disponibles</span>
+          </div>
         </div>
       )}
-
-      {/* Fin del feed */}
-      {!hasMore && posts.length > 0 && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px',
-          color: '#6b7280'
-        }}>
-          🎉 <strong>¡Has visto todos los productos disponibles!</strong>
-          <br />
-          Total: {posts.length} productos en el marketplace
-          <br />
-          <small style={{ color: '#9ca3af' }}>Vuelve más tarde para ver nuevos productos</small>
-        </div>
-      )}
-
-      {/* Mensaje si no hay posts */}
-      {posts.length === 0 && !loading && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '60px',
-          color: '#6b7280'
-        }}>
-          📦 No hay productos disponibles en este momento
-        </div>
-      )}
-
-      {/* CSS para animación */}
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 768px) {
-          .grid {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
-            gap: 15px !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }
