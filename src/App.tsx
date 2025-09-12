@@ -18,6 +18,40 @@ function App() {
     'Servicios'
   ];
 
+  // Simulamos algunos datos de publicaciones para demostrar la funcionalidad
+  const mockPosts = [
+    { id: 1, title: 'iPhone 13 Pro Max', category: 'Electrónicos', content: 'Vendo iPhone en excelente estado' },
+    { id: 2, title: 'Libro de Matemáticas', category: 'Libros y Materiales', content: 'Libro universitario de cálculo' },
+    { id: 3, title: 'Zapatillas Nike', category: 'Ropa y Accesorios', content: 'Zapatillas deportivas nuevas' },
+    { id: 4, title: 'Bicicleta de montaña', category: 'Deportes', content: 'Bicicleta en perfecto estado' },
+    { id: 5, title: 'Sofá cama', category: 'Hogar y Jardín', content: 'Sofá cama muy cómodo' },
+  ];
+
+  // Función para filtrar publicaciones basada en búsqueda y categoría
+  const getFilteredPosts = useCallback(() => {
+    let filtered = mockPosts;
+
+    // Filtrar por categoría
+    if (selectedCategory) {
+      filtered = filtered.filter(post => post.category === selectedCategory);
+    }
+
+    // Filtrar por término de búsqueda
+    if (searchTerm) {
+      filtered = filtered.filter(post => 
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return filtered;
+  }, [searchTerm, selectedCategory]);
+
+  // Calcular si hay resultados y cuántos
+  const filteredPosts = getFilteredPosts();
+  const hasResults = filteredPosts.length > 0;
+  const totalResults = filteredPosts.length;
+
   // Manejadores de eventos
   const handleSearchChange = useCallback((newSearchTerm: string) => {
     setSearchTerm(newSearchTerm);
@@ -45,10 +79,15 @@ function App() {
         categories={categories}
         onSearchChange={handleSearchChange}
         onCategoryChange={handleCategoryChange}
+        hasResults={hasResults}
+        totalResults={totalResults}
       />
       
       <main>
-        <VirtualizedFeed />
+        {/* Solo mostrar el feed si hay resultados o no hay filtros activos */}
+        {(hasResults || (!searchTerm && !selectedCategory)) && (
+          <VirtualizedFeed />
+        )}
       </main>
     </div>
   )

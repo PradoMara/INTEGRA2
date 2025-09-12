@@ -7,6 +7,8 @@ interface SearchAndFilterProps {
   categories: string[];
   selectedCategory: string;
   searchTerm: string;
+  hasResults?: boolean; // Nueva prop para saber si hay resultados
+  totalResults?: number; // Nueva prop para mostrar cantidad de resultados
 }
 
 // Componente principal de búsqueda y filtros
@@ -15,7 +17,9 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   onCategoryChange,
   categories,
   selectedCategory,
-  searchTerm
+  searchTerm,
+  hasResults = true,
+  totalResults = 0
 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
@@ -37,27 +41,10 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         {/* Barra de búsqueda */}
         <div className="search-input-container">
           <div className={`search-input-wrapper ${isSearchFocused ? 'search-input-focused' : ''}`}>
-            {/* Icono de búsqueda */}
-            <div className="search-icon">
-              <svg 
-                className="w-5 h-5 text-gray-400" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-                />
-              </svg>
-            </div>
-
             {/* Input de búsqueda */}
             <input
               type="text"
-              placeholder="Buscar productos..."
+              placeholder="Buscar publicaciones..."
               value={searchTerm}
               onChange={handleSearchChange}
               onFocus={() => setIsSearchFocused(true)}
@@ -72,9 +59,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                 className="search-clear-btn"
                 type="button"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                ×
               </button>
             )}
           </div>
@@ -83,43 +68,19 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         {/* Select de categorías */}
         <div className="category-select-container">
           <div className="category-select-wrapper">
-            {/* Icono de categoría */}
-            <div className="category-icon">
-              <svg 
-                className="w-5 h-5 text-gray-400" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" 
-                />
-              </svg>
-            </div>
-
             {/* Select de categorías */}
             <select
               value={selectedCategory}
               onChange={handleCategoryChange}
               className="category-select"
             >
-              <option value="">Todas las categorías</option>
+              <option value="">Seleccionar categoría</option>
               {categories.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
               ))}
             </select>
-
-            {/* Icono de flecha */}
-            <div className="category-arrow">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
           </div>
         </div>
       </div>
@@ -136,7 +97,50 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             Categoría: <strong>{selectedCategory}</strong>
           </span>
         )}
+        {(searchTerm || selectedCategory) && hasResults && totalResults > 0 && (
+          <span className="results-count-text">
+            {totalResults} resultado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
+
+      {/* Mensaje de no resultados */}
+      {(searchTerm || selectedCategory) && !hasResults && (
+        <div className="no-results-container">
+          <div className="no-results-message">
+            <h3>No se encontraron resultados</h3>
+            <p>
+              {searchTerm && selectedCategory 
+                ? `No hay publicaciones que coincidan con "${searchTerm}" en la categoría "${selectedCategory}"`
+                : searchTerm
+                ? `No hay publicaciones que coincidan con "${searchTerm}"`
+                : `No hay publicaciones en la categoría "${selectedCategory}"`
+              }
+            </p>
+            <div className="no-results-suggestions">
+              <h4>Sugerencias:</h4>
+              <ul>
+                <li>Verifica la ortografía de las palabras</li>
+                <li>Intenta con términos más generales</li>
+                <li>Prueba con una categoría diferente</li>
+                {(searchTerm || selectedCategory) && (
+                  <li>
+                    <button 
+                      onClick={() => {
+                        onSearchChange('');
+                        onCategoryChange('');
+                      }}
+                      className="clear-filters-btn"
+                    >
+                      Limpiar todos los filtros
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
