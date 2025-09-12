@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+<<<<<<< HEAD
   content: [
     "./src/**/*.{js,ts,jsx,tsx}"
   ],
@@ -64,6 +65,33 @@ module.exports = {
         'card-md': '0 4px 16px 0 rgba(60,72,88,0.15)',
         'card-lg': '0 8px 32px 0 rgba(60,72,88,0.22)',
         'card-xl': '0 16px 48px 0 rgba(60,72,88,0.32)',
+=======
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: "#2563eb",         // Azul principal (ajusta según tu branding)
+        secondary: "#64748b",       // Gris/azul secundario
+        accent: "#a855f7",          // Violeta para botones y detalles
+        background: "#f7fafc",      // Fondo claro
+        surface: "#ffffff",         // Cards/modal
+        error: "#ef4444",           // Rojo para errores
+      },
+      fontFamily: {
+        sans: ["Inter", "Arial", "sans-serif"],
+        mono: ["Fira Mono", "monospace"],
+      },
+      spacing: {
+        xs: "4px",
+        sm: "8px",
+        md: "16px",
+        lg: "24px",
+        xl: "32px",
+      },
+      borderRadius: {
+        md: "8px",
+        lg: "16px",
+>>>>>>> origin/msanhueza
       },
     },
   },
