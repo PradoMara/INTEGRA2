@@ -1,33 +1,53 @@
 import { useState } from "react";
 
 interface ChatInputProps {
-  onSend: (texto: string) => void;
+  onSend: (texto: string) => Promise<void>; // puede fallar si backend no responde
 }
 
 export function ChatInput({ onSend }: ChatInputProps) {
-  const [entrada, setEntrada] = useState("");
+  const [texto, setTexto] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSend = () => {
-    if (!entrada.trim()) return;
-    onSend(entrada);
-    setEntrada("");
+  const handleSend = async () => {
+    if (!texto.trim()) {
+      setError("⚠️ El mensaje no puede estar vacío");
+      return;
+    }
+    setError("");
+
+    try {
+      await onSend(texto);
+      setTexto(""); // limpiar input si se envió bien
+    } catch (e) {
+      setError("❌ No se pudo enviar el mensaje, intenta nuevamente");
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
   };
 
   return (
-    <div className="p-3 bg-white border-t flex">
-      <input
-        className="flex-1 border px-3 py-2 rounded-l focus:outline-none"
-        placeholder="Escribe un mensaje..."
-        value={entrada}
-        onChange={(e) => setEntrada(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSend()}
-      />
-      <button
-        className="bg-[#0075B4] text-white px-4 rounded-r hover:bg-blue-700"
-        onClick={handleSend}
-      >
-        Enviar
-      </button>
+    <div className="p-4 bg-gray-100 flex flex-col">
+      <div className="flex">
+        <input
+          type="text"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={handleKeyPress}
+          placeholder="Escribe un mensaje..."
+          className="flex-1 px-4 py-2 rounded-l-lg border focus:outline-none"
+        />
+        <button
+          onClick={handleSend}
+          className="bg-blue-500 text-white px-6 py-2 rounded-r-lg font-bold hover:bg-blue-600 transition"
+        >
+          Enviar
+        </button>
+      </div>
+      {error && <span className="text-red-500 text-sm mt-1">{error}</span>}
     </div>
   );
 }
