@@ -1,10 +1,10 @@
 import './App.css'
-import LoginInstitutionalPage from './presentation/pages/LoginInstitutionalPage'
+import Header from './presentation/components/Header'
 
 function App() {
   return (
     <div className="App">
-      <LoginInstitutionalPage />
+      <Header />
     </div>
   )
 }
