@@ -1,5 +1,6 @@
 import img from "/favicon.png";
 import styles from './Login.module.css'
+import { useEffect, useRef } from 'react'
 
 type Props = {
   onOAuth?: () => void | Promise<void>
@@ -9,6 +10,35 @@ const ALUMNO_DOMAIN = "alu.uct.cl"
 const PROFESOR_DOMAIN = "uct.cl"
 
 export default function LoginInstitutional({ onOAuth }: Props) {
+  const btnRef = useRef<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    const w = window as any
+    if (!w.google || !w.google.accounts || !w.google.accounts.id) return
+
+    const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id'
+    w.google.accounts.id.initialize({
+      client_id,
+      callback: (resp: any) => {
+        try {
+          localStorage.setItem('google_credential', resp.credential)
+        } catch {}
+        if (onOAuth) onOAuth()
+      },
+    })
+
+    const container = document.createElement('div')
+    container.style.width = '100%'
+    btnRef.current?.replaceWith(container)
+    w.google.accounts.id.renderButton(container, {
+      theme: 'outline',
+      size: 'large',
+      width: 360,
+      text: 'continue_with',
+      logo_alignment: 'left',
+      shape: 'pill',
+    })
+  }, [onOAuth])
   return (
     <div className={styles.heroBg}>
       <div className={styles.card}>
@@ -20,7 +50,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
           <span className={styles.badge}>Solo cuentas @{PROFESOR_DOMAIN} @{ALUMNO_DOMAIN}</span>
         </header>
 
-        <button className={styles.googleBtn} onClick={() => { if (onOAuth) onOAuth() }}>
+        <button ref={btnRef} className={styles.googleBtn} onClick={() => { if (onOAuth) onOAuth() }}>
           <GoogleIcon />
           <span>Continuar con Google</span>
         </button>

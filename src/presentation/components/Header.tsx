@@ -2,14 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import styles from './Header.module.css'
 
-// En el futuro estos enlaces se reemplazarán por <NavLink /> de react-router-dom
-// por ahora son anchors simples con href="#" a modo de placeholder.
 export const Header: React.FC = () => {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Cerrar con Escape
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false)
@@ -18,14 +16,14 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  // Bloquear scroll del body cuando el panel móvil está abierto
+
   useEffect(() => {
     const body = document.body
     if (open) {
       const prev = body.style.overflow
       body.setAttribute('data-prev-overflow', prev)
       body.style.overflow = 'hidden'
-      // Enfocar campo de búsqueda en móvil (esperar microtask para asegurar montaje)
+
       setTimeout(() => {
         searchInputRef.current?.focus()
       }, 0)
@@ -40,12 +38,12 @@ export const Header: React.FC = () => {
     }
   }, [open])
 
-  // Cerrar si se hace click afuera
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (!open) return
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        // ignorar si se clicó el botón toggle
+
         const toggle = document.getElementById('menu-toggle-btn')
         if (toggle && toggle.contains(e.target as Node)) return
         setOpen(false)
