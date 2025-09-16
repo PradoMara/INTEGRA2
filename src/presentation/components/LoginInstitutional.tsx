@@ -1,6 +1,7 @@
 import img from "/favicon.png";
 import styles from './Login.module.css'
 import { useEffect, useRef, useState } from 'react'
+import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '../../shared/utils/validators'
 
 type Props = {
   onOAuth?: () => void | Promise<void>
@@ -23,10 +24,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
       return
     }
     // Allowed domains (comma-separated in env). Defaults to UCT domains.
-    const allowed: string[] = String(import.meta.env.VITE_ALLOWED_EMAIL_DOMAINS || 'uct.cl,alu.uct.cl')
-      .split(',')
-      .map(s => s.trim().toLowerCase())
-      .filter(Boolean)
+    const allowed = parseAllowedDomainsFromEnv(import.meta.env.VITE_ALLOWED_EMAIL_DOMAINS)
 
     const decodeJwt = (token: string): Record<string, any> => {
       try {
@@ -48,8 +46,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
       callback: (resp: any) => {
         const payload = decodeJwt(resp?.credential || '')
         const email: string = String(payload?.email || '')
-        const domain = email.split('@')[1]?.toLowerCase() || ''
-        if (!domain || !allowed.includes(domain)) {
+        if (!isAllowedEmailDomain(email, allowed)) {
           setError(`Solo cuentas ${allowed.map(d => `@${d}`).join(' o ')}`)
           return
         }
