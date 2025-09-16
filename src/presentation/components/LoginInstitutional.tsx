@@ -1,6 +1,6 @@
 import img from "/favicon.png";
 import styles from './Login.module.css'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Props = {
   onOAuth?: () => void | Promise<void>
@@ -11,18 +11,50 @@ const PROFESOR_DOMAIN = "uct.cl"
 
 export default function LoginInstitutional({ onOAuth }: Props) {
   const btnRef = useRef<HTMLButtonElement | null>(null)
+  const [error, setError] = useState<string>('')
 
   useEffect(() => {
     const w = window as any
     if (!w.google || !w.google.accounts || !w.google.accounts.id) return
 
-    const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id'
+    const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
+    if (!client_id) {
+      console.warn('[Login] Falta VITE_GOOGLE_CLIENT_ID en el .env — se usará el botón visual como fallback')
+      return
+    }
+    // Allowed domains (comma-separated in env). Defaults to UCT domains.
+    const allowed: string[] = String(import.meta.env.VITE_ALLOWED_EMAIL_DOMAINS || 'uct.cl,alu.uct.cl')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean)
+
+    const decodeJwt = (token: string): Record<string, any> => {
+      try {
+        const parts = token.split('.')
+        if (parts.length !== 3) throw new Error('Invalid JWT')
+        const b64url = parts[1]
+        let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/')
+        const pad = b64.length % 4
+        if (pad === 2) b64 += '=='
+        else if (pad === 3) b64 += '='
+        const json = atob(b64)
+        return JSON.parse(json)
+      } catch {
+        return {}
+      }
+    }
     w.google.accounts.id.initialize({
       client_id,
       callback: (resp: any) => {
-        try {
-          localStorage.setItem('google_credential', resp.credential)
-        } catch {}
+        const payload = decodeJwt(resp?.credential || '')
+        const email: string = String(payload?.email || '')
+        const domain = email.split('@')[1]?.toLowerCase() || ''
+        if (!domain || !allowed.includes(domain)) {
+          setError(`Solo cuentas ${allowed.map(d => `@${d}`).join(' o ')}`)
+          return
+        }
+        try { localStorage.setItem('google_credential', resp.credential) } catch {}
+        setError('')
         if (onOAuth) onOAuth()
       },
     })
@@ -54,6 +86,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
           <GoogleIcon />
           <span>Continuar con Google</span>
         </button>
+        {error && <p className={styles.error} role="alert">{error}</p>}
       </div>
     </div>
   )

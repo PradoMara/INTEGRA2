@@ -1,3 +1,15 @@
+# INTEGRA2
+## Entorno y credenciales (seguro)
+
+1) Crea tu archivo `.env` a partir de `.env.example`:
+
+	- Copia `.env.example` a `.env` y completa `VITE_GOOGLE_CLIENT_ID`.
+	- Opcional: ajusta `VITE_ALLOWED_EMAIL_DOMAINS` (coma-separado).
+
+2) Seguridad: `.env` ya está ignorado en `.gitignore` y no se debe subir. No subas archivos como `client_secret*.json` al repo.
+
+3) Rotación: si algún secreto fue subido accidentalmente, rota/regenéralo en Google Cloud Console y elimina el archivo del repo (y del historial si procede).
+
 ## Layout con Header Reutilizable
 
 Se creó el componente `PageLayout` en `src/presentation/components/PageLayout.tsx` que inyecta el `Header` global y deja un `<main>` para el contenido de cada página.

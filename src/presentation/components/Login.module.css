@@ -121,6 +121,16 @@
   margin: -6px 0 0 2px; 
   font-size: 12px; 
 }
+
+.error {
+  margin-top: 10px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
 /* removed: styles archived to /archived-by-assistant/login-styles */
 
 

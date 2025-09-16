@@ -4,7 +4,8 @@ import LoginInstitutionalPage from './presentation/pages/LoginInstitutionalPage'
 function App() {
   return (
     <div className="App">
-      <LoginInstitutionalPage />
+      <LoginInstitutionalPage />  
+
     </div>
   )
 }

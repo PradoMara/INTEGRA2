@@ -39,3 +39,8 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/settings.json
+
+# Credentials / secrets
+# Never commit OAuth client secrets or service account keys
+docs/client_secret*.json
+**/client_secret*.json
