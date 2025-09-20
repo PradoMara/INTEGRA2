@@ -1,6 +1,6 @@
 # Arquitectura del Proyecto Marketplace UCT
 
-Este documento describe la arquitectura técnica y funcional del Marketplace local para la comunidad UCT, incluyendo el diseño del frontend, backend, base de datos, el flujo de autenticación y las principales dependencias del sistema.
+Este documento describe la arquitectura técnica y funcional del Marketplace local para la comunidad UCT, incluyendo el diseño del frontend, backend, base de datos, el flujo de autenticación, las principales dependencias del sistema y los principios arquitectónicos utilizados.
 
 ---
 
@@ -10,9 +10,23 @@ El sistema está compuesto por una plataforma web y móvil que permite a estudia
 
 ---
 
-## 2. Arquitectura de Componentes
+## 2. Principios Arquitectónicos
 
-### 2.1 Frontend
+### 2.1 Clean Architecture
+
+El proyecto se construye siguiendo los principios de **Clean Architecture**, que promueven una clara separación de responsabilidades, independencia de frameworks, testabilidad y facilidad de mantenimiento. Esto implica dividir la solución en capas bien definidas (entidades, casos de uso, interfaces y frameworks externos) y asegurar que las dependencias siempre apunten hacia el dominio.
+
+### 2.2 Feature Modularization
+
+Adicionalmente, la arquitectura implementa el enfoque de **Feature Modularization**. Esto implica organizar el código tanto del frontend como del backend en módulos independientes por funcionalidad o "feature" (ejemplo: Autenticación, Publicaciones, Mensajería, Moderación), en lugar de solo por tipo de archivo (controllers, services, etc).
+
+Cada módulo contiene todos los elementos necesarios para su funcionamiento (componentes, servicios, rutas, lógica de dominio, pruebas, estilos), permitiendo que el desarrollo, mantenimiento y escalabilidad de cada feature sea más sencillo y aislado.
+
+---
+
+## 3. Arquitectura de Componentes
+
+### 3.1 Frontend
 
 - **Framework:** React con TypeScript (web), React Native (móvil)
 - **Estilos:** Tailwind CSS (web), Styled Components o NativeBase (móvil)
@@ -24,21 +38,30 @@ El sistema está compuesto por una plataforma web y móvil que permite a estudia
 - **Notificaciones:** Web push y notificaciones móviles
 - **Prototipado/Diseño:** Figma
 
-#### Estructura típica de carpetas:
+#### Ejemplo de estructura modular:
+
 ```
 src/
-  components/
-  pages/
-  store/
-  hooks/
-  utils/
-  assets/
-  styles/
+  features/
+    auth/
+      components/
+      hooks/
+      services/
+      store/
+      styles/
+      tests/
+    publicaciones/
+    mensajes/
+    moderacion/
+  shared/
+    components/
+    utils/
+    styles/
 ```
 
 ---
 
-### 2.2 Backend
+### 3.2 Backend
 
 - **Lenguaje:** TypeScript (Node.js)
 - **Framework:** Express.js
@@ -50,21 +73,29 @@ src/
 - **Panel de administración:** Endpoints protegidos y dashboard para métricas, reportes y gestión de usuarios/publicaciones
 - **Validación:** Joi o Zod para datos de entrada
 
-#### Estructura típica de carpetas:
+#### Ejemplo de estructura modular:
+
 ```
 src/
-  controllers/
-  routes/
-  models/
-  middlewares/
-  services/
-  utils/
-  config/
+  features/
+    auth/
+      controllers/
+      routes/
+      services/
+      models/
+      tests/
+    publicaciones/
+    mensajes/
+    moderacion/
+  shared/
+    middlewares/
+    utils/
+    config/
 ```
 
 ---
 
-### 2.3 Base de Datos
+### 3.3 Base de Datos
 
 - **Motor:** PostgreSQL
 - **Modelo Entidad-Relación (MER):**
@@ -88,7 +119,7 @@ Usuario ───< Notificación
 
 ---
 
-## 3. Flujo de Autenticación
+## 4. Flujo de Autenticación
 
 1. **Inicio:** Usuario accede al portal y selecciona "Ingresar con cuenta institucional".
 2. **Google OAuth 2.0:** Se inicia el flujo de autenticación con Google, restringiendo el acceso a correos con dominios `@alu.uct.cl` o `@uct.cl`.
@@ -100,7 +131,7 @@ Usuario ───< Notificación
 
 ---
 
-## 4. Dependencias Principales
+## 5. Dependencias Principales
 
 ### Frontend
 - react, react-dom, react-router-dom
@@ -109,7 +140,7 @@ Usuario ───< Notificación
 - axios
 - redux, @reduxjs/toolkit
 - i18next (opcional)
-- @mui/material o equivalent (opcional)
+- @mui/material o equivalente (opcional)
 - socket.io-client (si hay mensajería en tiempo real)
 
 ### Backend
@@ -131,7 +162,7 @@ Usuario ───< Notificación
 
 ---
 
-## 5. Diagrama Simplificado de Arquitectura
+## 6. Diagrama Simplificado de Arquitectura
 
 ```
 [ Usuario (Web/Móvil) ]
@@ -151,7 +182,7 @@ Usuario ───< Notificación
 
 ---
 
-## 6. Seguridad y Buenas Prácticas
+## 7. Seguridad y Buenas Prácticas
 
 - Autenticación obligatoria con correo institucional.
 - Validación de datos en backend y frontend.
@@ -163,14 +194,24 @@ Usuario ───< Notificación
 
 ---
 
-## 7. Observaciones y Futuras Extensiones
+## 8. Beneficios de Clean Architecture + Feature Modularization
+
+La combinación de Clean Architecture y Feature Modularization aporta los siguientes beneficios al proyecto:
+
+- **Escalabilidad:** Permite agregar nuevas funcionalidades (features) de manera aislada, sin impactar otras partes del sistema.
+- **Mantenibilidad:** Facilita la localización y corrección de errores, así como la actualización de componentes específicos.
+- **Reutilización:** Los módulos pueden ser reutilizados o adaptados en otros proyectos o contextos.
+- **Independencia tecnológica:** El sistema puede migrar frameworks, librerías o servicios externos sin afectar el núcleo del dominio.
+- **Colaboración eficiente:** Equipos de desarrollo pueden trabajar en diferentes features en paralelo, minimizando conflictos y mejorando la productividad.
+- **Testabilidad:** Favorece la escritura de pruebas unitarias e integraciones sobre módulos bien aislados y capas independientes.
+- **Onboarding rápido:** Los nuevos integrantes del equipo pueden comprender y contribuir rápidamente a features específicos, gracias a la estructura modular y la claridad de las capas.
+
+---
+
+## 9. Observaciones y Futuras Extensiones
 
 - El diseño modular permite agregar nuevos roles, categorías y funcionalidades (foros, IA avanzada, integración con calendarios, etc).
 - La arquitectura soporta escalabilidad y despliegue en la nube (Docker, CI/CD, HTTPS).
 - La base de datos queda preparada para métricas, auditoría y análisis.
 
 ---
-
-**Contacto:**  
-Equipo de desarrollo Marketplace UCT  
-(Ver sección de integrantes en la documentación principal)
