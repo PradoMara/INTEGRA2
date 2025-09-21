@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState, useCallback } from 'react'
 import InfiniteFeed from './components/InfiniteFeed'
 import SearchAndFilter from './components/SearchAndFilter'
@@ -86,8 +87,22 @@ function App() {
           onStatsChange={handleFeedStatsChange}
         />
       </main>
+=======
+import './App.css'
+import { AppRoutes } from './app/routes'
+
+function App() {
+  return (
+    <div className="App">
+  <AppRoutes />  
+
+>>>>>>> origin/Daniel
     </div>
   )
 }
 
+<<<<<<< HEAD
 export default App
+=======
+export default App
+>>>>>>> origin/Daniel
