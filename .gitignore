@@ -22,8 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-<<<<<<< HEAD
-=======
 
 # Node / Vite / React
 **/node_modules/
@@ -46,4 +44,3 @@ Thumbs.db
 # Never commit OAuth client secrets or service account keys
 docs/client_secret*.json
 **/client_secret*.json
->>>>>>> origin/Daniel
