@@ -1,7 +1,7 @@
 import img from "/favicon.png";
 import styles from './Login.module.css'
 import { useEffect, useRef, useState } from 'react'
-import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '../../shared/utils/validators'
+import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '../../../shared/utils/validators'
 
 type Props = {
   onOAuth?: () => void | Promise<void>
@@ -47,7 +47,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
         const payload = decodeJwt(resp?.credential || '')
         const email: string = String(payload?.email || '')
         if (!isAllowedEmailDomain(email, allowed)) {
-          setError(`Solo cuentas ${allowed.map(d => `@${d}`).join(' o ')}`)
+          setError(`Solo cuentas ${allowed.map((d: string) => `@${d}`).join(' o ')}`)
           return
         }
         try { localStorage.setItem('google_credential', resp.credential) } catch {}
@@ -81,7 +81,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
 
         <button ref={btnRef} className={styles.googleBtn} onClick={() => { if (onOAuth) onOAuth() }}>
           <GoogleIcon />
-          <span>Continuar con Google </span>
+          <span>Continuar con Google</span>
         </button>
         {error && <p className={styles.error} role="alert">{error}</p>}
       </div>
