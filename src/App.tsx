@@ -1,33 +1,84 @@
-import { useState } from "react";
-import ChatPage from "../frontend/src/features/chat/pages/ChatPage";
+import { useState, useCallback } from 'react'
+import InfiniteFeed from './features/marketplace/presentation/InfiniteFeed'
+import SearchAndFilter from './components/SearchAndFilter'
+import { useDebounce } from './hooks/usePostsWithFilters'
+import Header from './shared/ui/Header'
+// import LoginInstitutionalPage from './presentation/pages/LoginInstitutionalPage'
 
 function App() {
-  const [showChat, setShowChat] = useState(false);
+  // Estado para la búsqueda y filtros
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [feedStats, setFeedStats] = useState({ hasResults: true, totalResults: 0 })
+  
+  // Debounce del término de búsqueda para optimizar las consultas
+  const debouncedSearchTerm = useDebounce(searchTerm, MARKETPLACE_CONFIG.pagination.debounceDelay)
+  
+  // Obtener categorías desde la configuración
+  const categories = MARKETPLACE_CONFIG.categories.map(cat => cat.name)
 
-  if (showChat) {
-    return <ChatPage />;
-  }
+  // Mapear nombres de categorías a IDs
+  const categoryMap: Record<string, string> = Object.fromEntries(
+    MARKETPLACE_CONFIG.categories.map(cat => [cat.name, cat.id])
+  )
+
+  // Convertir categoría seleccionada a ID
+  const selectedCategoryId = selectedCategory ? categoryMap[selectedCategory] || '' : ''
+
+  // Manejadores de eventos con optimización
+  const handleSearchChange = useCallback((newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm)
+  }, [])
+
+  const handleCategoryChange = useCallback((newCategory: string) => {
+    setSelectedCategory(newCategory)
+  }, [])
+
+  // Manejador para limpiar filtros
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm('')
+    setSelectedCategory('')
+  }, [])
+
+  // Callback para recibir estadísticas del feed
+  const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => {
+    setFeedStats({ hasResults, totalResults })
+  }, [])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 text-white">
-      <div className="text-center">
-        <h1 className="text-5xl font-extrabold drop-shadow-lg mb-4">
-          Bienvenido a <span className="text-yellow-300">UCT Chat</span> 🚀
-        </h1>
-        <p className="text-lg mb-8 opacity-90">
-          Conéctate con tus compañeros y profesores en tiempo real 💬
-        </p>
-
-        <button
-          onClick={() => setShowChat(true)}
-          className="bg-yellow-400 text-black px-8 py-3 rounded-xl font-bold text-lg shadow-lg hover:scale-105 hover:bg-yellow-300 transition-transform duration-300"
-        >
-          👉 Ir al Chat
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b">
+        {/* <div className="max-w-7xl mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Marketplace UCT</h1>
+          <p className="text-gray-600">Feed optimizado con filtrado en tiempo real</p>
+        </div> */}
+        <Header/>
+      </header>
+      
+      {/* Componente de búsqueda y filtros */}
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        selectedCategory={selectedCategory}
+        categories={categories}
+        onSearchChange={handleSearchChange}
+        onCategoryChange={handleCategoryChange}
+        onClearFilters={handleClearFilters}
+        hasResults={feedStats.hasResults}
+        totalResults={feedStats.totalResults}
+      />
+      
+      <main className="py-6">
+        {/* Feed con filtros integrados */}
+        <InfiniteFeed
+          searchTerm={debouncedSearchTerm}
+          selectedCategoryId={selectedCategoryId}
+          onStatsChange={handleFeedStatsChange}
+        />
+      </main>
     </div>
-  );
+  )
 }
 
-export default App;
+
+export default App
 
