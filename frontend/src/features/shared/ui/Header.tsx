@@ -72,6 +72,7 @@ export const Header: React.FC = () => {
             <li><NavLink className={styles.navLink} to="/home">Inicio</NavLink></li>
             <li><NavLink className={styles.navLink} to="/crear">Crear Publicación</NavLink></li>
             <li><NavLink className={styles.navLink} to="/mis-publicaciones">Mis Publicaciones</NavLink></li>
+            <li><NavLink className={styles.navLink} to='/Ayuda'>Ayuda</NavLink></li>
           </ul>
         </nav>
 

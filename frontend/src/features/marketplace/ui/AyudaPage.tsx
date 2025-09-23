@@ -1,6 +1,6 @@
 import React from "react";
-import FAQ from "../../src/features/marketplace/ui/components/FAQ";
-import ChatBox from "../../src/features/marketplace/ui/components/ChatBox";
+import FAQ from "././components/FAQ";
+import ChatBox from "././components/ChatBox";
 
 export default function HelpSection() {
   return (
