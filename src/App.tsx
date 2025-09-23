@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ChatPage from "./CHAT/pages/ChatPage";
+import ChatPage from "../frontend/src/features/chat/pages/ChatPage";
 
 function App() {
   const [showChat, setShowChat] = useState(false);
