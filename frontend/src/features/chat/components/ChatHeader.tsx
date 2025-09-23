@@ -1,4 +1,4 @@
-import type { Chat } from "../types/chat";
+import type { Chat } from "@/features/chat/types/chat";
 
 interface ChatHeaderProps {
   chatActivo: Chat | null;
