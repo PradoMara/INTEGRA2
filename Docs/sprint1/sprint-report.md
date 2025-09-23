@@ -20,7 +20,10 @@ Durante el desarrollo del sprint surgieron los siguientes inconvenientes:
 
 - **Bugs en la validación de dominios OAuth:** Inicialmente, algunos dominios no eran reconocidos correctamente, impidiendo el acceso a usuarios válidos.
 - **Conflictos de merge:** Se detectaron conflictos al integrar ramas relacionadas con el sistema de roles y la interfaz de publicaciones, debido a cambios simultáneos en archivos compartidos.
-- **Errores de coordinación:** La comunicación entre responsables de backend y frontend fue insuficiente en algunos momentos, provocando desacoplamiento temporal en la integración de formularios y lógica de validación.
+- **Errores de coordinación y falta de claridad:** En ocasiones, el equipo no sabía cómo avanzar o qué pasos seguir, lo que generó incertidumbre y ralentizó el progreso en ciertas tareas.
+- **Dificultades al contemplar tecnologías y modularización:** No se consideraron en profundidad algunas decisiones tecnológicas clave, especialmente en lo referente a la modularización del código y la integración de nuevas tecnologías para features específicos.
+- **Ausencia temporal de un integrante:** Debido a un accidente, un miembro del equipo no pudo participar durante el sprint, lo que afectó la distribución de la carga de trabajo.
+- **Falta de previsión en funcionalidades específicas:** Se identificaron desafíos adicionales relacionados con la integración de ciertos features, como el manejo del favicon.
 
 ---
 
@@ -31,6 +34,7 @@ Para resolver los problemas mencionados se tomaron las siguientes acciones:
 - **Ajuste de filtros y reglas en la validación OAuth:** Se amplió la lista de dominios válidos y se implementaron logs más detallados para identificar errores de autenticación.
 - **Estrategia de integración continua:** Se establecieron rutinas de integración diaria y revisiones cruzadas de código para minimizar conflictos de merge.
 - **Reuniones de sincronización:** Se programaron reuniones breves de seguimiento entre los equipos de frontend y backend para alinear requerimientos y avances.
+- **Capacitación interna:** Se promovió la búsqueda de información y capacitación autodidacta para abordar las tecnologías y prácticas de modularización requeridas.
 
 ---
 
@@ -40,6 +44,8 @@ Para resolver los problemas mencionados se tomaron las siguientes acciones:
 - **Documentar criterios de aceptación y reglas de negocio:** Registrar de manera explícita los requisitos y reglas en tickets o tareas para reducir ambigüedades.
 - **Promover la integración continua:** Hacer commits frecuentes y revisiones de código colaborativas para detectar y resolver conflictos tempranamente.
 - **Automatizar pruebas y validaciones:** Priorizar el desarrollo de pruebas automatizadas para todos los flujos críticos desde el inicio del sprint.
+- **Profundizar en la planificación de tecnologías y arquitectura:** Dedicar sesiones específicas para analizar y decidir las tecnologías y la arquitectura del proyecto, especialmente en aspectos de modularización y features nuevos.
+- **Anticipar la redistribución de tareas:** Tener planes de contingencia para cubrir ausencias inesperadas y asegurar el cumplimiento de los objetivos del sprint.
 
 ---
 
