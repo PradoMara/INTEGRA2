@@ -1,19 +1,25 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { usePostsWithFilters } from '../../../../hooks/usePostsWithFilters'
 import { RatingStars } from './RatingStars'
 import { formatInt } from '../../utils/format'
+// Reutiliza tu hook; si tu hook acepta authorId/onlyMine, pásalo aquí.
+// Si no, puedes cambiar la import por tu hook real para “mis publicaciones”.
+import { usePostsWithFilters } from '../../../../hooks/usePostsWithFilters'
 
-interface InfiniteFeedProps {
-  searchTerm: string
-  selectedCategoryId: string
+type MyPublicationsFeedProps = {
+  searchTerm?: string
+  selectedCategoryId?: string
+  authorId?: string        // si tu hook filtra por autor
   onStatsChange?: (hasResults: boolean, totalResults: number) => void
+  onEdit?: (postId: string) => void // si lo pasas, reemplaza el <Link> por callback
 }
 
-const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
+const MyPublicationsFeed: React.FC<MyPublicationsFeedProps> = ({
   searchTerm = '',
   selectedCategoryId = '',
-  onStatsChange
+  authorId,
+  onStatsChange,
+  onEdit
 }) => {
   const observer = useRef<IntersectionObserver | null>(null)
   const lastPostElementRef = useRef<HTMLDivElement | null>(null)
@@ -30,8 +36,10 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     error
   } = usePostsWithFilters({
     searchTerm: searchTerm.trim(),
-    categoryId: selectedCategoryId
-  })
+    categoryId: selectedCategoryId,
+    authorId,          // ⚠️ si tu hook no soporta esto, elimínalo o adapta
+    onlyMine: true     // idem: si tu hook soporta esta flag, genial; si no, remuévela
+  } as any)
 
   useEffect(() => {
     if (onStatsChange && !isLoading) onStatsChange(hasResults, totalResults)
@@ -64,12 +72,10 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
 
   const EmptyState = () => (
     <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
-      <div className="text-8xl mb-6">🛒</div>
-      <h3 className="text-2xl font-semibold mb-3 text-gray-700">No se encontraron productos</h3>
+      <div className="text-8xl mb-6">📭</div>
+      <h3 className="text-2xl font-semibold mb-3 text-gray-700">Aún no tienes publicaciones</h3>
       <p className="text-center max-w-md text-gray-600 leading-relaxed">
-        {searchTerm || selectedCategoryId
-          ? 'Intenta ajustar tus filtros de búsqueda o explora otras categorías.'
-          : 'No hay publicaciones disponibles en este momento.'}
+        Crea tu primera publicación desde “Crear”.
       </p>
     </div>
   )
@@ -78,13 +84,13 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     <div className="col-span-full flex items-center justify-center py-20">
       <div className="flex flex-col items-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-6" />
-        <p className="text-gray-600 text-lg">Cargando publicaciones...</p>
+        <p className="text-gray-600 text-lg">Cargando tus publicaciones…</p>
       </div>
     </div>
   )
 
   const PostSkeleton = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-2 00 overflow-hidden animate-pulse">
       <div className="relative aspect-video w-full bg-gray-300" />
       <div className="p-4 md:p-5">
         <div className="flex items-center mb-3 md:mb-4">
@@ -120,7 +126,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
       <div className="flex items-center">
         <div className="text-red-400 mr-4 text-2xl">⚠️</div>
         <div>
-          <h4 className="text-red-800 font-medium text-lg">Error al cargar las publicaciones</h4>
+          <h4 className="text-red-800 font-medium text-lg">Error al cargar tus publicaciones</h4>
           <p className="text-red-600 text-sm mt-1">
             {error?.message || 'Ha ocurrido un error inesperado. Por favor, intenta nuevamente.'}
           </p>
@@ -136,7 +142,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
           <div className="text-sm text-gray-600">
             {posts.length > 0 ? (
               <>
-                Mostrando {posts.length} publicación{posts.length !== 1 ? 'es' : ''}
+                Mostrando {posts.length} publicación{posts.length !== 1 ? 'es' : ''} propias
                 {(searchTerm || selectedCategoryId) && (
                   <span className="ml-2">
                     {searchTerm && (
@@ -155,7 +161,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
             ) : hasResults ? (
               'Cargando resultados...'
             ) : (
-              'No hay resultados para mostrar'
+              'No tienes resultados para mostrar'
             )}
           </div>
         </div>
@@ -170,9 +176,9 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
           <EmptyState />
         ) : (
           <>
-            {posts.map((post, index) => {
-              const rating = (post as any).sellerRating ?? (post as any).rating ?? 0
-              const sales = (post as any).sellerSales ?? (post as any).sales
+            {posts.map((post: any, index: number) => {
+              const rating = post.sellerRating ?? post.rating ?? 0
+              const sales = post.sellerSales ?? post.sales
 
               return (
                 <div
@@ -216,9 +222,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                         <h4 className="text-xs md:text-sm font-medium text-gray-900 truncate">
                           {post.author}
                         </h4>
-                        {post.timeAgo && (
-                          <p className="text-xs text-gray-500">{post.timeAgo}</p>
-                        )}
+                        {post.timeAgo && <p className="text-xs text-gray-500">{post.timeAgo}</p>}
                       </div>
                     </div>
 
@@ -231,7 +235,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                       </p>
                     )}
 
-                    {/* Footer: estrellas + ventas + Ver detalle */}
+                    {/* Footer: estrellas + ventas + Editar */}
                     <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-gray-100">
                       <div className="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
                         <span className="inline-flex items-center gap-2">
@@ -248,13 +252,22 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                         )}
                       </div>
 
-                      {/* 👉 reemplazo del precio textual: botón/enlace Ver detalle */}
-                      <Link
-                        to={`/publicacion/${post.id}`}
-                        className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                      >
-                        Ver detalle
-                      </Link>
+                      {/* botón Editar */}
+                      {onEdit ? (
+                        <button
+                          onClick={() => onEdit(post.id)}
+                          className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          Editar
+                        </button>
+                      ) : (
+                        <Link
+                          to={`/mis-publicaciones/editar/${post.id}`}
+                          className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          Editar
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -269,8 +282,8 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
       {!hasNextPage && posts.length > 0 && !isFetchingNextPage && posts.length >= 27 && (
         <div className="text-center py-8 text-gray-500">
           <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
-            <span className="mr-2">🎉</span>
-            <span>Has visto todas las publicaciones disponibles</span>
+            <span className="mr-2">✅</span>
+            <span>Mostramos todas tus publicaciones</span>
           </div>
         </div>
       )}
@@ -278,4 +291,4 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   )
 }
 
-export default InfiniteFeed
+export default MyPublicationsFeed

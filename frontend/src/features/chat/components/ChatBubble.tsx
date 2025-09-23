@@ -28,7 +28,7 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
         break;
       case "leido":
         texto = "✔✔ Leído";
-        color = "text-green-500 font-semibold";
+        color = "text-blue-500 font-semibold"; // en vez de green
         break;
     }
 
