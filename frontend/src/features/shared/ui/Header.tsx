@@ -107,6 +107,7 @@ export const Header: React.FC = () => {
               <li><NavLink to="/home" onClick={() => setOpen(false)}>Inicio</NavLink></li>
               <li><NavLink to="/crear" onClick={() => setOpen(false)}>Crear Publicación</NavLink></li>
               <li><NavLink to="/mis-publicaciones" onClick={() => setOpen(false)}>Mis Publicaciones</NavLink></li>
+              <li><NavLink to="/ayuda" onClick={() => setOpen(false)}>Ayuda</NavLink></li>
             </ul>
           </nav>
           <div className="mobileSearch">
