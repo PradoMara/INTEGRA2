@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import InfiniteFeed from './components/InfiniteFeed'
+import InfiniteFeed from './features/marketplace/presentation/InfiniteFeed'
 import SearchAndFilter from './components/SearchAndFilter'
 import { useDebounce } from './hooks/usePostsWithFilters'
 import Header from './shared/ui/Header'
@@ -12,29 +12,15 @@ function App() {
   const [feedStats, setFeedStats] = useState({ hasResults: true, totalResults: 0 })
   
   // Debounce del término de búsqueda para optimizar las consultas
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const debouncedSearchTerm = useDebounce(searchTerm, MARKETPLACE_CONFIG.pagination.debounceDelay)
   
-  // Mapeo de categorías para compatibilidad
-  const categories = [
-    'Electrónicos',
-    'Libros y Materiales', 
-    'Ropa y Accesorios',
-    'Deportes',
-    'Hogar y Jardín',
-    'Vehículos',
-    'Servicios'
-  ]
+  // Obtener categorías desde la configuración
+  const categories = MARKETPLACE_CONFIG.categories.map(cat => cat.name)
 
   // Mapear nombres de categorías a IDs
-  const categoryMap: Record<string, string> = {
-    'Electrónicos': 'electronics',
-    'Libros y Materiales': 'books',
-    'Ropa y Accesorios': 'clothing',
-    'Deportes': 'sports',
-    'Hogar y Jardín': 'home',
-    'Vehículos': 'vehicles',
-    'Servicios': 'services'
-  }
+  const categoryMap: Record<string, string> = Object.fromEntries(
+    MARKETPLACE_CONFIG.categories.map(cat => [cat.name, cat.id])
+  )
 
   // Convertir categoría seleccionada a ID
   const selectedCategoryId = selectedCategory ? categoryMap[selectedCategory] || '' : ''
