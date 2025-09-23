@@ -1,4 +1,4 @@
-import { Mensaje } from "../types/chat";
+import type { Mensaje } from "../types/chat";
 
 interface ChatWindowProps {
   mensajes: Mensaje[];

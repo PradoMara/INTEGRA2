@@ -1,4 +1,4 @@
-import { Chat } from "../types/chat";
+import type { Chat } from "@/features/chat/types/chat";
 
 interface ChatListProps {
   chats: Chat[];

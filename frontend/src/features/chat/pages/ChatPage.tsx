@@ -3,7 +3,7 @@ import { ChatList } from "../components/ChatList";
 import { ChatHeader } from "../components/ChatHeader";
 import { ChatWindow } from "../components/ChatWindow";
 import { ChatInput } from "../components/ChatInput";
-import { Chat, Mensaje } from "../types/chat";
+import type { Chat, Mensaje } from "../types/chat";
 
 // 🔹 Función auxiliar para hora HH:mm
 const horaActual = () => {
