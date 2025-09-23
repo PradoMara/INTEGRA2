@@ -347,7 +347,7 @@ function MiniChatWindow({
           />
           <button
             onClick={submit}
-            className="h-10 px-4 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-900"
+            className="h-10 px-4 rounded-full bg-black text-gray text-sm font-medium hover:bg-gray-900"
           >
             Enviar
           </button>

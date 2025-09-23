@@ -23,7 +23,7 @@ export function ChatInput({ onSend }: { onSend: (t: string)=>Promise<void> }) {
           />
           <button
             onClick={submit}
-            className="h-11 px-5 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-900"
+            className="h-11 px-5 rounded-full bg-black text-gray text-sm font-medium hover:bg-gray-900"
           >
             Enviar
           </button>

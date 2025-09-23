@@ -196,7 +196,7 @@ export function CreatePostForm() {
               <div className="md:col-span-3">
                 <button
                   type="submit"
-                  className="h-11 w-full rounded-full px-4 border-2 border-violet-500 bg-violet-500 text-white font-extrabold hover:brightness-95 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="h-11 w-full rounded-full px-4 border-2 border-violet-500 bg-violet-500 text-black opacity-80 font-medium hover:brightness-95 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Publicando…" : "Publicar"}
