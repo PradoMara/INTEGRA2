@@ -1,6 +1,8 @@
-
 import { http, HttpResponse } from 'msw'
-import { Post } from '../features/auth/entities/Post'
+import { Post } from '../features/marketplace/domain/entities/Post'
+import { User } from '../features/auth/entities/User'
+
+const API_URL = '/api' // Usar ruta relativa
 
 // Datos de categorías (puedes moverlos a un archivo compartido si es necesario)
 const categories = [
@@ -39,15 +41,19 @@ const productData = [
 ]
 
 // Función para generar posts (similar a la que tenías, pero ahora en el mock de MSW)
-const generatePosts = (page: number, limit: number, filters: { categoryId?: string, searchTerm?: string }): Post[] => {
+const generatePosts = (page: number, limit: number, filters: { categoryId?: string, searchTerm?: string, authorId?: string }): Post[] => {
   const posts: Post[] = []
-  const startId = (page - 1) * limit + 1
+  const startId = (page - 1) * limit
 
   for (let i = 0; i < limit; i++) {
-    const id = startId + i
+    const id = startId + i + 1
     const productIndex = (id - 1) % productData.length
     const product = productData[productIndex]
     const category = categories.find(cat => cat.id === product.category)!
+
+    if (filters.authorId && `user-${filters.authorId}` !== `user-${id}`) {
+        continue;
+    }
 
     const post: Post = {
       id,
@@ -86,21 +92,36 @@ const generatePosts = (page: number, limit: number, filters: { categoryId?: stri
 }
 
 export const handlers = [
-  http.get('/api/posts', ({ request }) => {
+  http.get(`${API_URL}/posts`, ({ request }) => {
     const url = new URL(request.url)
     const page = parseInt(url.searchParams.get('page') || '1', 10)
     const limit = parseInt(url.searchParams.get('limit') || '9', 10)
     const categoryId = url.searchParams.get('categoryId') || undefined
     const searchTerm = url.searchParams.get('searchTerm') || undefined
+    const authorId = url.searchParams.get('authorId') || undefined
 
-    const posts = generatePosts(page, limit, { categoryId, searchTerm })
-    const hasMore = posts.length > 0
+    const posts = generatePosts(page, limit, { categoryId, searchTerm, authorId })
+    const nextPage = posts.length === limit ? page + 1 : null
+    const totalCount = 100 // Simula un conteo total
 
     return HttpResponse.json({
       posts,
-      hasMore,
-      totalCount: 100, // Puedes hacerlo más dinámico si quieres
-      nextPage: hasMore ? page + 1 : undefined
+      nextPage,
+      totalCount,
     })
+  }),
+
+  http.get(`${API_URL}/me`, () => {
+    const user: User = {
+        id: '1',
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        avatar: 'https://avatar.iran.liara.run/public/1',
+        campus: 'San Francisco',
+        rating: 4.5,
+        preferredDeliverySpots: ['Biblioteca', 'Gimnasio'],
+        role: 'user',
+    }
+    return HttpResponse.json(user)
   }),
 ]
