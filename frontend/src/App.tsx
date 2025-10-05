@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import InfiniteFeed from './components/InfiniteFeed'
+import InfiniteFeed from './features/marketplace/ui/components/InfiniteFeed'
 import SearchAndFilter from './features/marketplace/ui/components/SearchAndFilter'
 import { useDebounce } from './hooks/usePostsWithFilters'
 import Header from './features/shared/ui/Header'
