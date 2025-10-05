@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from 'react-router-dom';
 import { useUser } from '@/features/auth/hooks/useUser';
 import { useUserPosts } from '@/features/marketplace/application/useUserPosts';
 import { RatingStars } from '@/features/marketplace/ui/components/RatingStars';
@@ -46,19 +47,16 @@ const PerfilPage = () => {
       )}
 
       <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Mis Publicaciones ({posts?.length ?? 0})</h2>
-        {/* Aquí se podría listar las publicaciones si fuera necesario */}
-        {posts && posts.length > 0 ? (
-          <ul>
-            {posts.map(post => (
-              <li key={post.id} className="border-b py-2">
-                {post.title}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No tienes publicaciones activas.</p>
-        )}
+        <h2 className="text-2xl font-bold mb-4">Mis Publicaciones</h2>
+        <p className="text-gray-600 mb-4">
+          Tienes {posts?.length ?? 0} publicación{posts?.length === 1 ? '' : 'es'} activa{posts?.length === 1 ? '' : 's'}.
+        </p>
+        <Link
+          to="/mis-publicaciones"
+          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Ver mis publicaciones
+        </Link>
       </div>
     </div>
   );
