@@ -2,6 +2,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header'
 import FloatingChat from './FloatingChat'
+import Footer from './footer'
 
 export default function PageLayout() {
   const { pathname } = useLocation()
@@ -14,13 +15,14 @@ export default function PageLayout() {
 
       {/* En /chats: ocultamos scroll global para evitar doble scroll.
           En el resto: habilitamos scroll vertical en <main>. */}
-      <main className={isDM ? 'min-h-0 overflow-hidden' : 'min-h-0 overflow-y-auto'}>
+      <main className={isDM ? 'min-h-0 overflow-hidden pb-14' : 'min-h-0 overflow-y-auto pb-14'}>
         <div className="min-h-0">
           <Outlet />
         </div>
       </main>
 
       {showFloatingChat && <FloatingChat width={360} height={560} corner="right" />}
+      <Footer />
     </div>
   )
 }
