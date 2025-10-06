@@ -3,7 +3,6 @@ import InfiniteFeed from './components/InfiniteFeed'
 import SearchAndFilter from './features/marketplace/ui/components/SearchAndFilter'
 import { useDebounce } from './hooks/usePostsWithFilters'
 import Header from './features/shared/ui/Header'
-
 // import LoginInstitutionalPage from './presentation/pages/LoginInstitutionalPage'
 
 function App() {
