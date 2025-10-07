@@ -8,7 +8,7 @@ export function Sidebar({
 }) {
   return (
     // Parche alto completo: fondo del aside crece con la página, contenido sticky interno
-    <aside className="relative bg-white border-r">
+    <aside className="relative bg-gradient-to-br from-blue-00 to-gray-100 min-h-screen border-r">
       <div className="sticky top-0 h-dvh flex flex-col gap-4 p-4">
         <div className="flex items-center gap-2.5 px-1 py-1.5">
           <div className="w-11 h-11 rounded-xl grid place-items-center bg-slate-50">

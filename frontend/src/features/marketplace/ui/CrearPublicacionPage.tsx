@@ -8,7 +8,7 @@ export default function CrearPublicacionPage() {
   const title = useMemo(() => 'Crear publicación', [])
 
   return (
-    <div className="min-h-screen bg-gray-50 grid grid-cols-1 lg:grid-cols-[260px_1fr]">
+    <div className="min-h-screen shadow-2xl bg-gradient-to-br from-sky-200 to-gray-300  grid grid-cols-1 lg:grid-cols-[260px_1fr]">
       {/* Sidebar fijo en desktop */}
       <aside className="border-r bg-white">
         <Sidebar active="crear" />
