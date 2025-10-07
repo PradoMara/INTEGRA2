@@ -24,12 +24,8 @@ graph TB
         AUTH[Autenticación OAuth<br/>+ Gestión de Roles<br/>Admin/Usuario]
         USER[Gestión de<br/>Usuarios/Perfiles<br/>+ Reputación]
         PUB[Gestión de<br/>Publicaciones]
-        PROD[Gestión de<br/>Productos/Categorías<br/>+ Imágenes]
         TRANS[Sistema de<br/>Transacciones<br/>+ Confirmaciones]
-        RATING[Sistema de<br/>Calificaciones<br/>+ Reputación]
         MSG[Servicio de<br/>Mensajería]
-        ACTIVITY[Tracking de<br/>Actividad Usuario]
-        REPORTS[Gestión de<br/>Reportes]
         MOD[Moderación<br/>+ IA/NLP Futuro]
         REC[Sistema de<br/>Recomendaciones ML]
         NOTS[Servicio de<br/>Notificaciones]
@@ -39,13 +35,9 @@ graph TB
     subgraph "Base de Datos - PostgreSQL"
         DB_USER[(Usuarios/Perfiles<br/>+ Reputación)]
         DB_PUB[(Publicaciones<br/>Categorías)]
-        DB_PROD[(Productos/Categorías<br/>+ Imágenes)]
         DB_TRANS[(Transacciones<br/>Historial)]
-        DB_RATING[(Calificaciones<br/>+ Estados)]
         DB_MSG[(Mensajes<br/>Conversaciones)]
         DB_FORUM[(Foros<br/>Grupos)]
-        DB_ACTIVITY[(Actividad<br/>Usuario)]
-        DB_REPORTS[(Reportes<br/>+ Estados)]
         DB_NOTIF[(Notificaciones)]
         DB_LOC[(Ubicaciones<br/>Campus)]
     end
@@ -73,12 +65,8 @@ graph TB
     API --> AUTH
     API --> USER
     API --> PUB
-    API --> PROD
     API --> TRANS
-    API --> RATING
     API --> MSG
-    API --> ACTIVITY
-    API --> REPORTS
     API --> MOD
     API --> REC
     API --> NOTS
@@ -88,24 +76,13 @@ graph TB
     USER --> DB_USER
     USER --> DB_LOC
     PUB --> DB_PUB
-    PROD --> DB_PROD
-    PROD --> STORAGE
     TRANS --> DB_TRANS
     TRANS --> DB_USER
-    TRANS --> DB_PROD
-    RATING --> DB_RATING
-    RATING --> DB_TRANS
-    RATING --> DB_USER
     MSG --> DB_MSG
-    ACTIVITY --> DB_ACTIVITY
-    REPORTS --> DB_REPORTS
-    REPORTS --> DB_USER
     MOD --> DB_PUB
     MOD --> DB_MSG
-    MOD --> DB_REPORTS
     REC --> DB_PUB
     REC --> DB_USER
-    REC --> DB_PROD
     NOTS --> DB_NOTIF
     
     %% Forums connections
@@ -131,9 +108,9 @@ graph TB
     classDef future fill:#607D8B,stroke:#37474F,stroke-width:2px,color:#FFFFFF
 
     class UI,DASH,ADMIN,MSGS,FORUMS,NOTIF frontend
-    class AUTH,USER,PUB,PROD,TRANS,RATING,MSG,ACTIVITY,REPORTS,REC,NOTS backend
+    class AUTH,USER,PUB,TRANS,MSG,REC,NOTS backend
     class MOD future
-    class DB_USER,DB_PUB,DB_PROD,DB_TRANS,DB_RATING,DB_MSG,DB_FORUM,DB_ACTIVITY,DB_REPORTS,DB_NOTIF,DB_LOC database
+    class DB_USER,DB_PUB,DB_TRANS,DB_MSG,DB_FORUM,DB_NOTIF,DB_LOC database
     class OAUTH,STORAGE,CDN,ML_API external
     class WS websocket
     class API api
@@ -151,20 +128,14 @@ graph TB
 - Arquitectura de microservicios
 - API RESTful con autenticación OAuth
 
-### Nuevos Servicios Backend Agregados:
-- **Gestión de Productos/Categorías**: CRUD completo de productos, categorías e imágenes
-- **Sistema de Calificaciones**: Manejo de valoraciones y reputación de usuarios
-- **Tracking de Actividad**: Registro y seguimiento de actividad de usuarios
-- **Gestión de Reportes**: Administración de reportes y su procesamiento
-
 ### Base de Datos (Verde)
 - **PostgreSQL**
-- Esquema normalizado completo
-- Nuevas tablas agregadas: productos, calificaciones, actividad_usuario, reportes
+- Esquema normalizado
+- Almacenamiento de usuarios, publicaciones y transacciones
 
 ### Servicios Externos (Naranja)
 - **Google OAuth 2.0** para autenticación UCT
-- **Almacenamiento en la nube** para archivos e imágenes
+- **Almacenamiento en la nube** para archivos
 - **CDN** para optimización de recursos
 
 ### Tiempo Real (Rosa)
@@ -173,21 +144,3 @@ graph TB
 
 ### Funcionalidades Futuras (Gris)
 - **IA/NLP** para moderación automática
-
-## Mejoras Implementadas
-
-✅ **Servicios agregados:**
-- Gestión completa de productos y categorías
-- Sistema de calificaciones y reputación
-- Tracking de actividad de usuarios
-- Gestión de reportes y moderación
-
-✅ **Conexiones mejoradas:**
-- Productos conectados con transacciones y recomendaciones
-- Calificaciones vinculadas con transacciones y usuarios
-- Reportes integrados con moderación
-- Actividad de usuario para analytics
-
-✅ **Base de datos actualizada:**
-- Todas las tablas del esquema MER reflejadas
-- Separación clara de responsabilidades por dominio
