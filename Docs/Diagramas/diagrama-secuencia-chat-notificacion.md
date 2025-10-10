@@ -4,51 +4,28 @@ Este diagrama representa la secuencia de mensajes para la interacción de chat e
 
 ---
 
-## 2. Chat y Notificación
+## Secuencia: Chat y Notificación
 
-**Participantes:**  
-- Usuario A (Frontend)  
-- Usuario B (Frontend)  
-- API REST  
-- WS (WebSocket)  
-- DB
+```mermaid
+sequenceDiagram
+    participant UsuarioA
+    participant FrontendA
+    participant API
+    participant WS
+    participant DB
+    participant UsuarioB
+    participant FrontendB
 
----
+    UsuarioA->>FrontendA: (1) Redacta y envía mensaje
+    FrontendA->>API: (2) POST /api/chats/:id/mensajes
+    API->>DB: (3) Guarda mensaje
+    API->>WS: (4) Notifica nuevo mensaje
+    WS->>FrontendB: (5) Notificación UsuarioB
 
-### Secuencia: Chat y Notificación
-
-1. **Usuario A (Frontend)** redacta mensaje y lo envía.
-2. **Frontend** realiza petición `POST /api/chats/:id/mensajes` a **API REST**.
-3. **API REST** valida y persiste el mensaje en **DB**.
-4. **API REST** notifica a **WS** la llegada de nuevo mensaje.
-5. **WS** envía notificación en tiempo real a **Usuario B (Frontend)**.
-6. **Usuario B (Frontend)** abre el chat y solicita historial con `GET /api/chats/:id/mensajes` a **API REST**.
-7. **API REST** recupera historial desde **DB** y responde a **Frontend**.
-
----
-
-### Diagrama Visual (PlantUML)
-
-```plantuml
-@startuml
-actor UsuarioA
-actor UsuarioB
-participant FrontendA as "Frontend A"
-participant FrontendB as "Frontend B"
-participant "API REST"
-participant "WS"
-database DB
-
-UsuarioA -> FrontendA: 1. Redacta y envía mensaje
-FrontendA -> "API REST": 2. POST /api/chats/:id/mensajes
-"API REST" -> DB: 3. Guardar mensaje
-"API REST" -> "WS": 4. Notificar nuevo mensaje
-"WS" -> FrontendB: 5. Notificación nuevo mensaje
-
-UsuarioB -> FrontendB: 6. Abre chat y solicita historial
-FrontendB -> "API REST": 7. GET /api/chats/:id/mensajes
-"API REST" -> DB: 8. Consultar historial
-DB --> "API REST": 9. Entregar historial
-"API REST" -> FrontendB: 10. Respuesta historial de mensajes
-@enduml
+    UsuarioB->>FrontendB: (6) Abre chat y solicita historial
+    FrontendB->>API: (7) GET /api/chats/:id/mensajes
+    API->>DB: (8) Consulta historial
+    DB-->>API: (9) Responde historial
+    API->>FrontendB: (10) Respuesta mensajes
 ```
+
