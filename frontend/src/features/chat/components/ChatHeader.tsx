@@ -1,4 +1,4 @@
-import type { Chat } from "@/features/chat/types/chat";
+import type { Chat } from "@/types/chat";
 
 export function ChatHeader({ chatActivo }: { chatActivo: Chat | null }) {
   return (
