@@ -1,4 +1,4 @@
-import type { Chat } from "@/types/chat";
+import type { Chat } from "../types/chat";
 
 export function ChatList({
   chats,
@@ -8,19 +8,18 @@ export function ChatList({
   return (
     <aside className="h-full w-full min-w-0 flex flex-col bg-white">
       <ul className="min-h-0 overflow-y-auto overflow-x-hidden">  {/* sin rounded y con bg claro */}
-        {chats.map((chat, idx) => {
-          const active = chatActivo === chat.id
+        {chats.map((chat) => {
+          const active = chatActivo === chat.id;
           return (
             <li key={chat.id} className="min-w-0">
               <button
                 onClick={() => onSelectChat(chat.id)}
                 className={[
-                  // ❌ sin rounded-*, sin fondos oscuros
                   "w-full flex items-center gap-3 px-4 py-4 text-left transition",
                   "border-b last:border-b-0",               // separadores finos
                   active
-                    ? "bg-[#e7e7e7] text-slate-900"         // activo amarillo
-                    : "bg-white hover:bg-slate-50 text-slate-800", // normal claro
+                    ? "bg-[#e7e7e7] text-slate-900"
+                    : "bg-white hover:bg-slate-50 text-slate-800",
                 ].join(" ")}
               >
                 <div className="h-10 w-10 rounded-full bg-gray-200 grid place-items-center text-gray-400 shrink-0">
@@ -42,7 +41,6 @@ export function ChatList({
           )
         })}
       </ul>
-
     </aside>
   );
 }
