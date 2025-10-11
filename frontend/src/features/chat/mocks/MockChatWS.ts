@@ -1,4 +1,4 @@
-import type { Chat, Mensaje } from "@/features/chat/types/chat";
+/*import type { Chat, Mensaje } from "@/features/chat/types/chat";*/
 
 export class MockChatWS {
   isOpen = false;
