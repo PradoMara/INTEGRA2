@@ -2,7 +2,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import Header from './Header'
 import FloatingChat from './FloatingChat'
-import Footer from './footer'
 
 export default function PageLayout() {
   const { pathname } = useLocation()
@@ -22,7 +21,6 @@ export default function PageLayout() {
       </main>
 
       {showFloatingChat && <FloatingChat width={360} height={560} corner="right" />}
-      <Footer />
     </div>
   )
 }

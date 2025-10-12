@@ -2,6 +2,7 @@ import img from "/favicon.png";
 import styles from './Login.module.css'
 import { useEffect, useRef, useState } from 'react'
 import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '../../marketplace/utils/validators'
+import LoginFooter from './LoginFooter'
 
 type Props = {
   onOAuth?: () => void | Promise<void>
@@ -68,6 +69,7 @@ export default function LoginInstitutional({ onOAuth }: Props) {
       shape: 'pill',
     })
   }, [onOAuth])
+
   return (
     <div className={styles.heroBg}>
       <div className={styles.card}>
@@ -79,12 +81,17 @@ export default function LoginInstitutional({ onOAuth }: Props) {
           <span className={styles.badge}>Solo cuentas @{PROFESOR_DOMAIN} @{ALUMNO_DOMAIN}</span>
         </header>
 
-        <button ref={btnRef} className={styles.googleBtn} onClick={() => { if (onOAuth) onOAuth() }}>
+        <button
+          ref={btnRef}
+          className={styles.googleBtn}
+          onClick={() => { if (onOAuth) onOAuth(); }}
+        >
           <GoogleIcon />
           <span>Continuar con Google</span>
         </button>
         {error && <p className={styles.error} role="alert">{error}</p>}
       </div>
+      <LoginFooter />
     </div>
   )
 }

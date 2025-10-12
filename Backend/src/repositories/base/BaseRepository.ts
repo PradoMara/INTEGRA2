@@ -24,14 +24,6 @@ export interface BaseRepositoryConfig<TEntity, TDelegate, TIdField extends keyof
 }
 
 /**
- * Implementación base del patrón Repository desacoplado de Prisma.
- * Usa un "model delegate" de Prisma internamente pero expone interfaz limpia.
- * 
- * Criterios de implementación:
- * - CRUD genérico (create, find, update, delete)
- * - Paginación offset y cursor
- * - Desacoplamiento del ORM mediante mappers opcionales
- * - Manejo de errores centralizado
  * 
  * @template TEntity - Entidad del dominio
  * @template TCreateInput - Input para crear
