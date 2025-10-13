@@ -1,8 +1,0 @@
-@import 'tailwindcss';
-
-/* Estilos base adicionales */
-body {
-  font-family: 'Inter', Arial, sans-serif;
-  background-color: #f7fafc; /* background */
-  color: #222;
-}
