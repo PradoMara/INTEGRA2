@@ -80,14 +80,14 @@ export default function PerfilPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 grid grid-cols-1 lg:grid-cols-[240px_1fr]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
       {/* Sidebar izquierda */}
       <Sidebar />
 
       {/* Contenido */}
       <div className="min-w-0">
         {/* Header del perfil */}
-        <header className="bg-gray-50 border-b">
+        <header className="border-b">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
             <div className="flex items-center gap-5">
               <div className="h-20 w-20 rounded-full bg-gray-300" />

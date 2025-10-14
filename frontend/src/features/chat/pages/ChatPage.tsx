@@ -163,10 +163,10 @@ export default function ChatPage() {
 
   return (
     <div className="grid h-screen overflow-hidden max-h-222 grid-cols-[64px_320px_1fr]">
-      <aside className="border-r bg-white max-h-222">
+      <aside className="border-r">
         <MiniSidebar active="chats" />
       </aside>
-      <div className="border-r bg-white min-w-0 min-h-0 max-h-222 flex flex-col">
+      <div className="border-r min-w-0 min-h-0 max-h-222 flex flex-col">
         <div className="shrink-0 px-4 py-3 border-b">
           <h2 className="text-sm font-semibold text-slate-700">Mis Chats</h2>
         </div>
