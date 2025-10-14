@@ -6,6 +6,7 @@ import MisPublicacionesPage from '../features/marketplace/ui/MisPublicacionesPag
 import PerfilPage from '../features/marketplace/ui/PerfilPage.tsx'
 import PageLayout from '../features/shared/ui/PageLayout.tsx'
 import ChatPage from '../features/chat/pages/ChatPage.tsx'
+import AboutPage from '../features/shared/ui/AboutPage.tsx'
 
 export function AppRoutes() {
   return (
@@ -17,6 +18,7 @@ export function AppRoutes() {
           <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/chats" element={<ChatPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
