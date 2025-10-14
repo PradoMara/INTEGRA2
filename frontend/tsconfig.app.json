@@ -19,7 +19,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "types": ["vite/client"],
+    "types": ["vitest", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

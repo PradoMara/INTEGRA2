@@ -6,5 +6,11 @@ export const worker = setupWorker(...handlers)
 
 // Start the Service Worker.
 worker.start({
-  onUnhandledRequest: 'bypass',
+  onUnhandledRequest: ({ url, method }) => {
+    const parsedUrl = new URL(url)
+    if (parsedUrl.protocol === 'ws:' || parsedUrl.hostname === 'accounts.google.com' || parsedUrl.hostname === 'via.placeholder.com') {
+      return
+    }
+    console.warn(`[MSW] Unhandled ${method} ${url}`)
+  },
 })
