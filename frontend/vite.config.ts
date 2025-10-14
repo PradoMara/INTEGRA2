@@ -5,8 +5,10 @@ import tailwind from "@tailwindcss/vite";
 export default defineConfig({
   base: "/",
   plugins: [react(), tailwind()],
-  build: {
-    outDir: "dist",
-    sourcemap: true
-  }
+  resolve: {
+    alias: {
+      "@": "/src"   // alias simple para imports '@/...'
+    }
+  },
+  build: { outDir: "dist", sourcemap: false }
 });
