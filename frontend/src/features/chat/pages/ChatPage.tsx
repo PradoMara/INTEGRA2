@@ -5,7 +5,7 @@ import { ChatHeader } from '../components/ChatHeader'
 import { ChatWindow } from '../components/ChatWindow'
 import { ChatInput } from '../components/ChatInput'
 import {MiniSidebar} from '../../marketplace/ui/components/MiniSidebar'// mini sidebar con íconos (ajusta la ruta si hace falta)
-import type { Chat, Mensaje } from '@/features/chat/types/chat'
+import type { Chat, Mensaje } from '@/types/chat'
 
 /* Helpers */
 const useEnv = () => {

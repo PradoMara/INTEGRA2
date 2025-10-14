@@ -56,3 +56,14 @@ export interface PostFilters {
     max: number
   }
 }
+
+export const CATEGORIES = [
+"Todo",
+"Electonica",
+"Musica",
+"Deportes",
+"Entretenimiento",
+"Servicios",
+] as const;
+export type Category = (typeof CATEGORIES)[number];
+
