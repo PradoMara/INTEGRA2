@@ -1,3 +1,4 @@
+=======
 # INTEGRA2
 ## Entorno y credenciales (seguro)
 
@@ -36,3 +37,14 @@ Repositorio del proyecto de Taller de integracion II, grupo 8 de la UCT
 
 ##
 #
+>>>>>>> origin/devs
+
+## Enlace en README
+
+[Diagrama de Secuencia: Publicar y Moderar](./docs/diagramas/diagrama-secuencia-publicar-moderar.md)
+
+[Diagrama de Secuencia: Chat y Notificación](./docs/diagramas/diagrama-secuencia-chat-notificacion.md)
+
+[Diagrama Casos de uso: Usuarios](./Docs/Diagramas/caso-de-uso-usuarios.drawio.xml)
+
+[Diagrama Casos de uso: Admin](./Docs/Diagramas/caso-de-uso-admin.drawio.xml)
