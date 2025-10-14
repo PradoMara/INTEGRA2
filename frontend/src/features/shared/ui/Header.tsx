@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import styles from './Header.module.css'
+import LogoMUCT from '../../../assets/img/logoMUCT.png' // logo como componente React
 
 export const Header: React.FC = () => {
   const [open, setOpen] = useState(false)
@@ -62,8 +63,16 @@ export const Header: React.FC = () => {
           <span className={styles.burger} />
         </button>
 
-        <div className={styles.logoArea}>
-          <div className={styles.logoPlaceholder} aria-hidden="true" />
+        <div className={styles.logoArea}>      
+          <div className={styles.logoPlaceholder} aria-hidden="true">
+                    <img
+        src={LogoMUCT}
+        alt="Marketplace UCT"
+        className={styles.logoImg}
+        decoding="async"
+        fetchPriority="high"   // es el logo del header; mejor alta prioridad
+      />
+          </div>
           <span>Marketplace UCT</span>
         </div>
 
@@ -73,20 +82,9 @@ export const Header: React.FC = () => {
             <li><NavLink className={styles.navLink} to="/crear">Crear Publicación</NavLink></li>
             <li><NavLink className={styles.navLink} to="/mis-publicaciones">Mis Publicaciones</NavLink></li>
             <li><NavLink className={styles.navLink} to='/Ayuda'>Ayuda</NavLink></li>
+            <li><NavLink className={styles.navLink} to="/about">Acerca de</NavLink></li>
           </ul>
         </nav>
-
-        <form className={styles.searchBar} role="search" onSubmit={(e) => { e.preventDefault(); }}>
-          <span className={styles.searchIcon} aria-hidden="true">🔍</span>
-          <input
-            type="search"
-            className={styles.searchInput}
-            placeholder="Buscar publicaciones..."
-            aria-label="Buscar"
-            name="q"
-            autoComplete="off"
-          />
-        </form>
 
         <div className={styles.actions}>
           <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario">
@@ -108,6 +106,7 @@ export const Header: React.FC = () => {
               <li><NavLink to="/crear" onClick={() => setOpen(false)}>Crear Publicación</NavLink></li>
               <li><NavLink to="/mis-publicaciones" onClick={() => setOpen(false)}>Mis Publicaciones</NavLink></li>
               <li><NavLink to="/ayuda" onClick={() => setOpen(false)}>Ayuda</NavLink></li>
+              <li><NavLink to="/about" onClick={() => setOpen(false)}>Acerca de</NavLink></li>
             </ul>
           </nav>
           <div className="mobileSearch">

@@ -1,5 +1,5 @@
-import type { PostRepository } from '../../marketplace/application/interfaces/PostInterfaces'
-import type { Post, PostFilters } from '../entities/Post'
+import type { PostRepository } from '../features/marketplace/application/interfaces/PostInterfaces'
+import type { Post, PostFilters } from '../types/Post'
 
 // Datos de categorías
 const categories = [

@@ -8,6 +8,7 @@ import PageLayout from '../features/shared/ui/PageLayout.tsx'
 import ChatPage from '../features/chat/pages/ChatPage.tsx'
 import AyudaPage from '../features/marketplace/ui/AyudaPage.tsx'
 import TermsPage from '../features/marketplace/ui/TermsPage.tsx'
+import AboutPage from '../features/shared/ui/AboutPage.tsx'
 
 export function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ export function AppRoutes() {
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/terminos" element={<TermsPage />} />
         <Route path="/chats" element={<ChatPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

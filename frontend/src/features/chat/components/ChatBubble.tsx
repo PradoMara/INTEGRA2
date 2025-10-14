@@ -1,4 +1,4 @@
-import type { Mensaje } from "@/features/chat/types/chat";
+import type { Mensaje } from "@/types/chat";
 
 interface ChatBubbleProps {
   mensaje: Mensaje;
@@ -28,7 +28,7 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
         break;
       case "leido":
         texto = "✔✔ Leído";
-        color = "text-green-500 font-semibold";
+        color = "text-blue-500 font-semibold"; // en vez de green
         break;
     }
 

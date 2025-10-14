@@ -1,149 +1,181 @@
-import { useEffect, useRef, useState } from "react";
-import { ChatList } from "../components/ChatList";
-import { ChatHeader } from "../components/ChatHeader";
-import { ChatWindow } from "../components/ChatWindow";
-import { ChatInput } from "../components/ChatInput";
-import type { Chat, Mensaje } from "@/features/chat/types/chat";
+// src/features/chat/pages/ChatPage.tsx
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { ChatList } from '../components/ChatList'
+import { ChatHeader } from '../components/ChatHeader'
+import { ChatWindow } from '../components/ChatWindow'
+import { ChatInput } from '../components/ChatInput'
+import {MiniSidebar} from '../../marketplace/ui/components/MiniSidebar'// mini sidebar con íconos (ajusta la ruta si hace falta)
+import type { Chat, Mensaje } from '@/types/chat'
 
-// 🔹 Función auxiliar para hora HH:mm
-const horaActual = () => {
-  const ahora = new Date();
-  return ahora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
+/* Helpers */
+const useEnv = () => {
+  const API = useMemo(() => import.meta.env.VITE_API_URL as string, [])
+  const WS_URL = useMemo(() => import.meta.env.VITE_WS_URL as string, [])
+  return { API, WS_URL }
+}
+const horaActual = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
 export default function ChatPage() {
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [chatActivo, setChatActivo] = useState<number | null>(null);
-  const ws = useRef<WebSocket | null>(null);
+  const { API, WS_URL } = useEnv()
+  const [chats, setChats] = useState<Chat[]>([])
+  const [chatActivo, setChatActivo] = useState<number | null>(null)
+  const userIdActual = useMemo(() => 'u1', [])
+  const ws = useRef<WebSocket | null>(null)
 
-  // 1️⃣ Cargar lista de chats
+  /* 1) Cargar lista de chats */
   useEffect(() => {
-    fetch("http://localhost:3000/chats")
-      .then((res) => res.json())
-      .then((data) => {
-        setChats(data);
-        if (data.length > 0) setChatActivo(data[0].id);
-      })
-      .catch((err) => console.error("❌ Error cargando chats:", err));
-  }, []);
-
-  // 2️⃣ Conectar WebSocket
-  useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:3000");
-    ws.current.onopen = () => console.log("✅ Conectado al WS");
-
-    ws.current.onmessage = (msg) => {
-      const data = JSON.parse(msg.data);
-
-      if (data.tipo === "nuevo") {
-        // mensaje recibido
-        setChats((prev) =>
-          prev.map((c) =>
-            c.id === data.chatId
-              ? { ...c, mensajes: [...c.mensajes, { ...data.mensaje, estado: "recibido" }] }
-              : c
-          )
-        );
+    (async () => {
+      try {
+        const res = await fetch(`${API}/chats`, { credentials: 'include' })
+        if (!res.ok) throw new Error(String(res.status))
+        const data: Chat[] = await res.json()
+        setChats(data)
+        if (data.length) setChatActivo(data[0].id)
+      } catch (e) {
+        console.error('[ChatPage] Error cargando chats:', e)
       }
+    })()
+  }, [API])
 
-      if (data.tipo === "estado") {
-        // actualización de estado
-        setChats((prev) =>
-          prev.map((c) =>
+  /* 2) Conectar WebSocket una vez */
+  useEffect(() => {
+    const socket = new WebSocket(`${WS_URL}?userId=${encodeURIComponent(userIdActual)}`)
+    ws.current = socket
+
+    socket.onopen = () => console.log('[ChatPage] WS conectado')
+    socket.onclose = () => console.log('[ChatPage] WS cerrado')
+    socket.onerror = (e) => console.error('[ChatPage] WS error:', e)
+    socket.onmessage = (evt) => {
+      const data = JSON.parse(evt.data)
+
+      // mensaje entrante
+      if (data.tipo === 'nuevo' || data.tipo === 'mensaje') {
+        setChats(prev =>
+          prev.map(c =>
             c.id === data.chatId
               ? {
                   ...c,
-                  mensajes: c.mensajes.map((m) =>
-                    m.id === data.mensajeId ? { ...m, estado: data.estado } : m
+                  mensajes: [...c.mensajes, { ...data.mensaje, estado: 'recibido' }],
+                  ultimoMensaje: data.mensaje?.texto ?? c.ultimoMensaje,
+                }
+              : c
+          )
+        )
+      }
+
+      // actualización de estado (enviado/recibido/leido)
+      if (data.tipo === 'estado') {
+        setChats(prev =>
+          prev.map(c =>
+            c.id === data.chatId
+              ? {
+                  ...c,
+                  mensajes: c.mensajes.map(m =>
+                    data.mensajeId
+                      ? (m.id === data.mensajeId ? { ...m, estado: data.estado } : m)
+                      : (m.autor === 'yo' ? { ...m, estado: data.estado } : m)
                   ),
                 }
               : c
           )
-        );
-      }
-    };
-
-    return () => ws.current?.close();
-  }, []);
-
-  // 3️⃣ Enviar mensaje
-  const handleSend = async (texto: string) => {
-    if (!chatActivo) return;
-
-    const tempId = "temp-" + Date.now();
-
-    const nuevoMensaje: Mensaje = {
-      id: tempId,
-      texto,
-      autor: "yo",
-      estado: "enviando",
-      hora: horaActual(),
-    };
-
-    // mostrar local
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === chatActivo ? { ...c, mensajes: [...c.mensajes, nuevoMensaje], ultimoMensaje: texto } : c
-      )
-    );
-
-    try {
-      const res = await fetch("http://localhost:3000/mensajes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto, autor: "yo", hora: nuevoMensaje.hora, chatId: chatActivo }),
-      });
-
-      if (!res.ok) throw new Error("Error en el servidor");
-
-      const mensajeGuardado = await res.json();
-
-      // reemplazar tempId con id real
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chatActivo
-            ? {
-                ...c,
-                mensajes: c.mensajes.map((m) =>
-                  m.id === tempId ? { ...mensajeGuardado, estado: "enviado" } : m
-                ),
-              }
-            : c
         )
-      );
-
-      // notificar por WS
-      ws.current?.send(JSON.stringify({ tipo: "nuevo", chatId: chatActivo, mensaje: mensajeGuardado }));
-    } catch (err) {
-      console.error("❌ No se pudo enviar:", err);
+      }
     }
-  };
 
-  // 4️⃣ Marcar como leído al entrar a un chat
+    return () => socket.close()
+  }, [WS_URL, userIdActual])
+
+  /* 3) Unirse al chat cuando cambie */
   useEffect(() => {
-    if (chatActivo && ws.current) {
-      ws.current.send(JSON.stringify({ tipo: "estado", chatId: chatActivo, estado: "leido" }));
+    if (chatActivo && ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ tipo: 'join', chatId: chatActivo, userId: userIdActual }))
     }
-  }, [chatActivo]);
+  }, [chatActivo, userIdActual])
 
-  const chatSeleccionado = chats.find((c) => c.id === chatActivo);
+  /* 4) Enviar mensaje */
+  const handleSend = useCallback(
+    async (texto: string) => {
+      if (!chatActivo) return
 
+      const tempId = 'temp-' + Date.now()
+      const nuevo: Mensaje = { id: tempId, texto, autor: 'yo', estado: 'enviando', hora: horaActual() }
+
+      // pinta local
+      setChats(prev =>
+        prev.map(c =>
+          c.id === chatActivo ? { ...c, mensajes: [...c.mensajes, nuevo], ultimoMensaje: texto } : c
+        )
+      )
+
+      try {
+        const res = await fetch(`${API}/mensajes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto, autor: 'yo', hora: nuevo.hora, chatId: chatActivo }),
+        })
+        if (!res.ok) throw new Error('HTTP ' + res.status)
+        const guardado: Mensaje = await res.json()
+
+        // reemplaza temporal por real
+        setChats(prev =>
+          prev.map(c =>
+            c.id === chatActivo
+              ? { ...c, mensajes: c.mensajes.map(m => (m.id === tempId ? { ...guardado, estado: 'enviado' } : m)) }
+              : c
+          )
+        )
+
+        // notifica a otros
+        ws.current?.send(JSON.stringify({ tipo: 'nuevo', chatId: chatActivo, mensaje: guardado }))
+      } catch (e) {
+        console.error('[ChatPage] No se pudo enviar:', e)
+      }
+    },
+    [API, chatActivo]
+  )
+
+  /* 5) Marcar leído al entrar/actualizar chat */
+  useEffect(() => {
+    if (!chatActivo || !ws.current) return
+    const chat = chats.find(c => c.id === chatActivo)
+    const last = chat?.mensajes?.[chat.mensajes.length - 1]
+    if (last?.id) {
+      ws.current.send(JSON.stringify({ tipo: 'estado', chatId: chatActivo, estado: 'leido', mensajeId: last.id }))
+    }
+  }, [chatActivo, chats])
+
+  const chatSeleccionado = chats.find(c => c.id === chatActivo) ?? null
+
+  /* ===================== Layout con scroll locales ===================== */
   return (
-    <div className="flex h-screen">
-      <ChatList chats={chats} onSelectChat={setChatActivo} chatActivo={chatActivo} />
-      <div className="flex flex-col w-3/4">
-        {chatSeleccionado ? (
-          <>
-            <ChatHeader chatActivo={chatSeleccionado} />
-            <ChatWindow mensajes={chatSeleccionado.mensajes || []} />
-            <ChatInput onSend={handleSend} />
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            Selecciona un chat para comenzar
-          </div>
-        )}
+    <div className="grid h-screen overflow-hidden max-h-222 grid-cols-[64px_320px_1fr]">
+      {/* mini sidebar */}
+      <aside className="border-r bg-white max-h-222">
+        <MiniSidebar active="chats" />
+      </aside>
+
+      {/* columna: lista de chats (header fijo + lista scrolleable) */}
+      <div className="border-r bg-white min-w-0 min-h-0 max-h-222 flex flex-col">
+        <div className="shrink-0 px-4 py-3 border-b">
+          <h2 className="text-sm font-semibold text-slate-700">Mis Chats</h2>
+        </div>
+        <div className="flex-1 min-h-0 max-h-222 overflow-y-auto overflow-x-hidden">
+          <ChatList chats={chats} onSelectChat={setChatActivo} chatActivo={chatActivo} />
+        </div>
+      </div>
+
+      {/* columna: conversación (header fijo + ventana scrolleable + input fijo) */}
+      <div className="min-w-0 min-h-0 max-h-222 flex flex-col">
+        <div className="shrink-0">
+          <ChatHeader chatActivo={chatSeleccionado} />
+        </div>
+        <div className="flex-1 min-h-0 max-h-222">
+          <ChatWindow mensajes={chatSeleccionado?.mensajes ?? []} />
+        </div>
+        <div className="shrink-0">
+          <ChatInput onSend={handleSend} />
+        </div>
       </div>
     </div>
-  );
+  )
 }
