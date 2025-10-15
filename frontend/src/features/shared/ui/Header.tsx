@@ -81,6 +81,7 @@ export const Header: React.FC = () => {
             <li><NavLink className={styles.navLink} to="/home">Inicio</NavLink></li>
             <li><NavLink className={styles.navLink} to="/crear">Crear Publicación</NavLink></li>
             <li><NavLink className={styles.navLink} to="/mis-publicaciones">Mis Publicaciones</NavLink></li>
+            <li><NavLink className={styles.navLink} to='/Ayuda'>Ayuda</NavLink></li>
             <li><NavLink className={styles.navLink} to="/about">Acerca de</NavLink></li>
           </ul>
         </nav>
@@ -104,6 +105,7 @@ export const Header: React.FC = () => {
               <li><NavLink to="/home" onClick={() => setOpen(false)}>Inicio</NavLink></li>
               <li><NavLink to="/crear" onClick={() => setOpen(false)}>Crear Publicación</NavLink></li>
               <li><NavLink to="/mis-publicaciones" onClick={() => setOpen(false)}>Mis Publicaciones</NavLink></li>
+              <li><NavLink to="/ayuda" onClick={() => setOpen(false)}>Ayuda</NavLink></li>
               <li><NavLink to="/about" onClick={() => setOpen(false)}>Acerca de</NavLink></li>
             </ul>
           </nav>
