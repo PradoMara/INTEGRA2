@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logo from "../../../../assets/img/logouct.png";
+import logo from "../../../assets/img/logouct.png";
 
 type SidebarProps = {
   active?: "marketplace" | "chats";

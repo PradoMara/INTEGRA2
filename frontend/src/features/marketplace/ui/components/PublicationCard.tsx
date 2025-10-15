@@ -1,6 +1,6 @@
-import type { Item } from "../types";
-import { formatCLP, formatInt, placeholder } from "../utils/format";
-import { RatingStars } from "./RatingStars";
+import type { Item } from "../../../../types/types";
+import { formatCLP, formatInt, placeholder } from "../../utils/format";
+import { RatingStars } from "../../../shared/ui/RatingStars";
 
 export function PublicationCard({
 item,

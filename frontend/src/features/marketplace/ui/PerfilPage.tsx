@@ -2,7 +2,7 @@ import React from "react";
 import { useMemo, useState, useCallback } from "react";
 import {Sidebar} from "./components/Sidebar"; // mini sidebar con íconos (Marketplace / Chats)
 import MyPublicationsFeed from "./components/MyPublicationsFeed";
-import { RatingStars } from "./components/RatingStars"; // opcional: cámbialo o quítalo si no existe
+import { RatingStars } from "../../shared/ui/RatingStars"; // opcional: cámbialo o quítalo si no existe
 
 type Review = {
   id: string;

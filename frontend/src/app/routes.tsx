@@ -1,14 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LoginPage } from '../features/auth/ui'
-import HomePage from '../features/marketplace/ui/HomePage.tsx'
-import CrearPublicacionPage from '../features/marketplace/ui/CrearPublicacionPage.tsx'
-import MisPublicacionesPage from '../features/marketplace/ui/MisPublicacionesPage.tsx'
-import PerfilPage from '../features/marketplace/ui/PerfilPage.tsx'
-import PageLayout from '../features/shared/ui/PageLayout.tsx'
-import ChatPage from '../features/chat/pages/ChatPage.tsx'
-import AyudaPage from '../features/marketplace/ui/AyudaPage.tsx'
-import TermsPage from '../features/marketplace/ui/TermsPage.tsx'
-import AboutPage from '../features/shared/ui/AboutPage.tsx'
+import HomePage from '../features/marketplace/ui/HomePage'
+import CrearPublicacionPage from '../features/marketplace/ui/CrearPublicacionPage'
+import MisPublicacionesPage from '../features/marketplace/ui/MisPublicacionesPage'
+import PerfilPage from '../features/marketplace/ui/PerfilPage'
+import PageLayout from '../features/shared/ui/PageLayout'
+import ChatPage from '../features/chat/pages/ChatPage'
+import AyudaPage from '../features/marketplace/ui/AyudaPage'
+import TermsPage from '../features/marketplace/ui/TermsPage'
+import AboutPage from '../features/shared/ui/AboutPage'
 
 export function AppRoutes() {
   return (

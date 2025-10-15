@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePostsWithFilters } from '../../../../hooks/usePostsWithFilters'
-import { RatingStars } from './RatingStars'
+import { RatingStars } from '../../../shared/ui/RatingStars'
 import { formatInt } from '../../utils/format'
-import { PostDetailModal, PostDetailData } from './modals/PostDetailModal'
+import { PostDetailModal, PostDetailData } from '../../../shared/ui/modals/PostDetailModal'
 
 interface InfiniteFeedProps {
   searchTerm: string

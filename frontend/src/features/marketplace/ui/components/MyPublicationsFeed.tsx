@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { RatingStars } from './RatingStars'
+import { RatingStars } from '../../../shared/ui/RatingStars'
 import { formatInt } from '../../utils/format'
 // Reutiliza tu hook; si tu hook acepta authorId/onlyMine, pásalo aquí.
 // Si no, puedes cambiar la import por tu hook real para “mis publicaciones”.
