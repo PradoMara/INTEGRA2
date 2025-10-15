@@ -9,7 +9,7 @@ export default function PageLayout() {
   const showFloatingChat = !isDM
 
   return (
-    <div className="grid h-screen grid-rows-[auto,1fr] bg-gray-50">
+    <div className="grid h-screen grid-rows-[auto,1fr] min-h-screen">
       <Header />
 
       {/* En /chats: ocultamos scroll global para evitar doble scroll.

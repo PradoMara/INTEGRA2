@@ -4,10 +4,11 @@ import { ChatList } from '../components/ChatList'
 import { ChatHeader } from '../components/ChatHeader'
 import { ChatWindow } from '../components/ChatWindow'
 import { ChatInput } from '../components/ChatInput'
-import { MiniSidebar } from '../../marketplace/ui/components/MiniSidebar'
-import type { Chat, Mensaje } from '@/types/chat'
+import {MiniSidebar} from '../../marketplace/ui/components/MiniSidebar'
+import type { Chat, Mensaje } from '@/features/chat/types/chat'
+import { MockChatWS } from '../mocks/MockChatWS'
+import { mockChats } from '../mocks/mockChats'
 
-/* Helpers */
 const useEnv = () => {
   const API = useMemo(() => import.meta.env.VITE_API_URL as string, [])
   const WS_URL = useMemo(() => import.meta.env.VITE_WS_URL as string, [])
@@ -21,7 +22,8 @@ export default function ChatPage() {
   const [chats, setChats] = useState<Chat[]>([])
   const [chatActivo, setChatActivo] = useState<number | null>(null)
   const userIdActual = useMemo(() => 'u1', [])
-  const ws = useRef<WebSocket | null>(null)
+  const ws = useRef<WebSocket | MockChatWS | null>(null)
+  const isMockWS = !WS_URL || WS_URL === "mock"
 
   // 0) Target opcional para iniciar/abrir chat (desde /chat?toId=...&toName=...&toAvatar=... o location.state.toUser)
   const startTarget = useMemo(() => {
@@ -41,6 +43,11 @@ export default function ChatPage() {
 
   /* 1) Cargar lista de chats */
   useEffect(() => {
+    if (isMockWS) {
+      setChats(mockChats)
+      setChatActivo(mockChats[0]?.id ?? null)
+      return
+    }
     (async () => {
       try {
         const res = await fetch(`${API}/chats`, { credentials: 'include' })
@@ -131,15 +138,18 @@ export default function ChatPage() {
 
   /* 2) Conectar WebSocket una vez */
   useEffect(() => {
-    const socket = new WebSocket(`${WS_URL}?userId=${encodeURIComponent(userIdActual)}`)
+    const socket = isMockWS
+      ? new MockChatWS()
+      : new WebSocket(`${WS_URL}?userId=${encodeURIComponent(userIdActual)}`)
     ws.current = socket
 
     socket.onopen = () => console.log('[ChatPage] WS conectado')
     socket.onclose = () => console.log('[ChatPage] WS cerrado')
-    socket.onerror = (e) => console.error('[ChatPage] WS error:', e)
-    socket.onmessage = (evt) => {
+    socket.onerror = (e: any) => console.error('[ChatPage] WS error:', e)
+    socket.onmessage = (evt: { data: string }) => {
       const data = JSON.parse(evt.data)
 
+      // mensaje entrante
       if (data.tipo === 'nuevo' || data.tipo === 'mensaje') {
         setChats(prev =>
           prev.map((c: any) =>
@@ -153,7 +163,7 @@ export default function ChatPage() {
           )
         )
       }
-
+      // actualización de estado
       if (data.tipo === 'estado') {
         setChats(prev =>
           prev.map((c: any) =>
@@ -173,16 +183,16 @@ export default function ChatPage() {
     }
 
     return () => socket.close()
-  }, [WS_URL, userIdActual])
+  }, [WS_URL, userIdActual, isMockWS])
 
-  /* 3) Unirse al chat cuando cambie */
+  // 3) Unirse al chat cuando cambie
   useEffect(() => {
-    if (chatActivo && ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ tipo: 'join', chatId: chatActivo, userId: userIdActual }))
-    }
-  }, [chatActivo, userIdActual])
+    if (!chatActivo || !ws.current) return
+    if (!isMockWS && ws.current.readyState !== WebSocket.OPEN) return
+    ws.current.send(JSON.stringify({ tipo: 'join', chatId: chatActivo, userId: userIdActual }))
+  }, [chatActivo, userIdActual, isMockWS])
 
-  /* 4) Enviar mensaje */
+  // 4) Enviar mensaje
   const handleSend = useCallback(
     async (texto: string) => {
       if (!chatActivo) return
@@ -196,32 +206,44 @@ export default function ChatPage() {
         )
       )
 
-      try {
-        const res = await fetch(`${API}/mensajes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ texto, autor: 'yo', hora: nuevo.hora, chatId: chatActivo }),
-        })
-        if (!res.ok) throw new Error('HTTP ' + res.status)
-        const guardado: Mensaje = await res.json()
-
-        setChats(prev =>
-          prev.map((c: any) =>
-            c.id === chatActivo
-              ? { ...c, mensajes: c.mensajes.map((m: any) => (m.id === tempId ? { ...guardado, estado: 'enviado' } : m)) }
-              : c
+      if (isMockWS) {
+        setTimeout(() => {
+          const guardado: Mensaje = { ...nuevo, id: Date.now(), estado: 'enviado' }
+          setChats(prev =>
+            prev.map(c =>
+              c.id === chatActivo
+                ? { ...c, mensajes: c.mensajes.map(m => (m.id === tempId ? { ...guardado, estado: 'enviado' } : m)) }
+                : c
+            )
           )
-        )
-
-        ws.current?.send(JSON.stringify({ tipo: 'nuevo', chatId: chatActivo, mensaje: guardado }))
-      } catch (e) {
-        console.error('[ChatPage] No se pudo enviar:', e)
+          ws.current?.send(JSON.stringify({ tipo: 'nuevo', chatId: chatActivo, mensaje: guardado }))
+        }, 500)
+      } else {
+        try {
+          const res = await fetch(`${API}/mensajes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto, autor: 'yo', hora: nuevo.hora, chatId: chatActivo }),
+          })
+          if (!res.ok) throw new Error('HTTP ' + res.status)
+          const guardado: Mensaje = await res.json()
+          setChats(prev =>
+            prev.map(c =>
+              c.id === chatActivo
+                ? { ...c, mensajes: c.mensajes.map(m => (m.id === tempId ? { ...guardado, estado: 'enviado' } : m)) }
+                : c
+            )
+          )
+          ws.current?.send(JSON.stringify({ tipo: 'nuevo', chatId: chatActivo, mensaje: guardado }))
+        } catch (e) {
+          console.error('[ChatPage] No se pudo enviar:', e)
+        }
       }
     },
-    [API, chatActivo]
+    [API, chatActivo, isMockWS]
   )
 
-  /* 5) Marcar leído al entrar/actualizar chat */
+  // 5) Marcar leído al entrar/actualizar chat
   useEffect(() => {
     if (!chatActivo || !ws.current) return
     const chat: any = chats.find((c: any) => c.id === chatActivo)
@@ -248,6 +270,7 @@ export default function ChatPage() {
         </div>
       </div>
 
+      {/* columna: conversación (header fijo + ventana scrolleable + input fijo) */}
       <div className="min-w-0 min-h-0 max-h-222 flex flex-col">
         <div className="shrink-0">
           <ChatHeader chatActivo={chatSeleccionado as any} />

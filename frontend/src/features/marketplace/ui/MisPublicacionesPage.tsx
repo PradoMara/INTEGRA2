@@ -18,9 +18,9 @@ export default function MisPublicacionesPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50 grid grid-cols-1 lg:grid-cols-[260px_1fr]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr]">
       {/* Sidebar */}
-      <aside className="border-r bg-white">
+      <aside className="border-r">
         <Sidebar active="mis-publicaciones" />
       </aside>
 

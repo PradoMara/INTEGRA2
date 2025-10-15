@@ -36,13 +36,11 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   };
 
   return (
-    <div className="search-filter-container">
-      {/* Contenedor principal de los controles */}
-      <div className="search-filter-wrapper">
-        
+    <div className="search-filter-container bg-transparent">
+      <div className="search-filter-wrapper bg-transparent flex flex-wrap gap-2 items-center">
         {/* Barra de búsqueda */}
-        <div className="search-input-container">
-          <div className={`search-input-wrapper ${isSearchFocused ? 'search-input-focused' : ''}`}>
+        <div className="search-input-container bg-transparent">
+          <div className={`search-input-wrapper ${isSearchFocused ? 'search-input-focused' : ''} bg-transparent`}>
             {/* Input de búsqueda */}
             <input
               type="text"
@@ -51,14 +49,14 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               onChange={handleSearchChange}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
-              className="search-input"
+              className="search-input bg-white bg-opacity-70 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             />
 
             {/* Botón para limpiar búsqueda */}
             {searchTerm && (
               <button
                 onClick={() => onSearchChange('')}
-                className="search-clear-btn"
+                className="search-clear-btn text-gray-500 hover:text-gray-700 bg-transparent"
                 type="button"
                 title="Limpiar búsqueda"
               >
@@ -69,13 +67,13 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         </div>
 
         {/* Select de categorías */}
-        <div className="category-select-container">
-          <div className="category-select-wrapper">
+        <div className="category-select-container bg-transparent">
+          <div className="category-select-wrapper bg-transparent">
             {/* Select de categorías */}
             <select
               value={selectedCategory}
               onChange={handleCategoryChange}
-              className="category-select"
+              className="category-select bg-white bg-opacity-70 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
               <option value="">Todas las categorías</option>
               {categories.map((category) => (
@@ -91,7 +89,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         {(searchTerm || selectedCategory) && onClearFilters && (
           <button
             onClick={onClearFilters}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200 border border-gray-300"
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-white bg-opacity-60 hover:bg-opacity-80 rounded-md transition-colors duration-200 border border-gray-300"
             type="button"
           >
             Limpiar filtros
@@ -131,7 +129,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
       {/* Mensaje de no resultados mejorado */}
       {(searchTerm || selectedCategory) && !hasResults && (
-        <div className="no-results-container">
+        <div className="no-results-container bg-transparent">
           <div className="no-results-message">
             <div className="text-4xl mb-3">🔍</div>
             <h3>No se encontraron resultados</h3>

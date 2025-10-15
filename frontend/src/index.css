@@ -11,6 +11,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  background-image: url('/FONDO.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 a {
@@ -201,4 +205,11 @@ button:focus-visible {
   .no-results-suggestions {
     @apply max-w-none;
   }
+}
+
+.bg-fondo {
+  background-image: url('/FONDO.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }

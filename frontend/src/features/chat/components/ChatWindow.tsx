@@ -12,7 +12,7 @@ export function ChatWindow({ mensajes }: { mensajes: Mensaje[] }) {
 
   return (
     // 👇 este div ocupa el espacio disponible (no crece la página)
-    <div className="h-full min-h-0 overflow-y-auto bg-[#EEF3F8]">
+    <div className="h-full min-h-0 overflow-y-auto bg-transparent">
       <div className="px-8 py-6 space-y-2">
         {mensajes.map((m) => <ChatBubble key={m.id} mensaje={m} />)}
         <div ref={endRef} />

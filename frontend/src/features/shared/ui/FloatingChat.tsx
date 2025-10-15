@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { mockChats as rawMockChats } from "../../chat/mocks/mockChats"; // Ajusta la ruta si es necesario
 
 /* ===================== Tipos ===================== */
 type Estado = "enviando" | "enviado" | "recibido" | "leido";
@@ -7,13 +8,9 @@ type Chat = { id: number; nombre: string; ultimoMensaje?: string; mensajes: Mens
 type Mode = "closed" | "list" | "chat";
 
 type FloatingChatProps = {
-  /** ancho del panel en px (default 360) */
   width?: number;
-  /** alto del panel en px (default 560) */
   height?: number;
-  /** esquina donde anclar (default "right") */
   corner?: "right" | "left";
-  /** si no usas localStorage para userId, puedes pasar el userId aquí */
   userId?: string;
 };
 
@@ -21,158 +18,61 @@ type FloatingChatProps = {
 const horaActual = () =>
   new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+/* ===================== Transform mockChats ===================== */
+// Convierte todos los id de mensajes a string para cumplir el tipado
+const mockChats: Chat[] = rawMockChats.map(c => ({
+  ...c,
+  mensajes: c.mensajes.map(m => ({
+    ...m,
+    id: String(m.id),
+  })),
+}));
+
 /* ===================== Componente principal ===================== */
 export default function FloatingChat({
   width = 360,
   height = 560,
   corner = "right",
-  userId,
 }: FloatingChatProps) {
-  // env
-  const API = useMemo(() => import.meta.env.VITE_API_URL as string, []);
-  const WS_URL = useMemo(() => import.meta.env.VITE_WS_URL as string, []);
-  const userIdActual = useMemo(
-    () => userId ?? localStorage.getItem("userId") ?? "u1",
-    [userId]
-  );
-
   // ui
   const [mode, setMode] = useState<Mode>("closed");
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [activeId, setActiveId] = useState<number | null>(null);
+  const [chats, setChats] = useState<Chat[]>(mockChats);
+  const [activeId, setActiveId] = useState<number | null>(mockChats[0]?.id ?? null);
 
-  // ws
-  const ws = useRef<WebSocket | null>(null);
-
-  /* --------- Cargar lista cuando se abre --------- */
-  useEffect(() => {
-    if (mode === "closed") return;
-    (async () => {
-      try {
-        const res = await fetch(`${API}/chats`, { credentials: "include" });
-        if (!res.ok) throw new Error(String(res.status));
-        const data: Chat[] = await res.json();
-        setChats(data);
-        if (!activeId && data.length && mode === "chat") setActiveId(data[0].id);
-      } catch (e) {
-        console.error("[FloatingChat] Error cargando chats:", e);
-      }
-    })();
-  }, [API, mode, activeId]);
-
-  /* --------- Conectar WebSocket una vez --------- */
-  useEffect(() => {
-    const socket = new WebSocket(`${WS_URL}?userId=${encodeURIComponent(userIdActual)}`);
-    ws.current = socket;
-
-    socket.onopen   = () => console.log("[FloatingChat] WS conectado");
-    socket.onclose  = () => console.log("[FloatingChat] WS cerrado");
-    socket.onerror  = (e) => console.error("[FloatingChat] WS error:", e);
-    socket.onmessage = (evt) => {
-      const data = JSON.parse(evt.data);
-
-      // nuevo mensaje entrante
-      if (data.tipo === "nuevo" || data.tipo === "mensaje") {
-        setChats(prev =>
-          prev.map(c =>
-            c.id === data.chatId
-              ? {
-                  ...c,
-                  mensajes: [...c.mensajes, { ...data.mensaje, estado: "recibido" }],
-                  ultimoMensaje: data.mensaje?.texto ?? c.ultimoMensaje,
-                }
-              : c
-          )
-        );
-      }
-
-      // actualización de estado
-      if (data.tipo === "estado") {
-        setChats(prev =>
-          prev.map(c =>
-            c.id === data.chatId
-              ? {
-                  ...c,
-                  mensajes: c.mensajes.map(m =>
-                    data.mensajeId
-                      ? (m.id === data.mensajeId ? { ...m, estado: data.estado } : m)
-                      : (m.autor === "yo" ? { ...m, estado: data.estado } : m)
-                  ),
-                }
-              : c
-          )
-        );
-      }
-    };
-
-    return () => socket.close();
-  }, [WS_URL, userIdActual]);
-
-  /* --------- Unirse al chat cuando lo abres --------- */
-  useEffect(() => {
-    if (mode !== "chat" || !activeId) return;
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ tipo: "join", chatId: activeId, userId: userIdActual }));
-    }
-  }, [mode, activeId, userIdActual]);
-
-  /* --------- Enviar mensaje --------- */
-  const handleSend = useCallback(
-    async (texto: string) => {
-      if (!activeId) return;
-
-      const tempId = "tmp-" + Date.now();
-      const msg: Mensaje = { id: tempId, texto, autor: "yo", hora: horaActual(), estado: "enviando" };
-
-      // pinta local
-      setChats(prev =>
-        prev.map(c =>
-          c.id === activeId ? { ...c, mensajes: [...c.mensajes, msg], ultimoMensaje: texto } : c
-        )
-      );
-
-      try {
-        const res = await fetch(`${API}/mensajes`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ texto, autor: "yo", hora: msg.hora, chatId: activeId }),
-        });
-        if (!res.ok) throw new Error(String(res.status));
-        const saved: Mensaje = await res.json();
-
-        // reemplaza temporal
-        setChats(prev =>
-          prev.map(c =>
-            c.id === activeId
-              ? { ...c, mensajes: c.mensajes.map(m => (m.id === tempId ? { ...saved, estado: "enviado" } : m)) }
-              : c
-          )
-        );
-
-        // notifica por WS
-        ws.current?.send(JSON.stringify({ tipo: "nuevo", chatId: activeId, mensaje: saved }));
-      } catch (e) {
-        console.error("[FloatingChat] No se pudo enviar:", e);
-      }
-    },
-    [API, activeId]
-  );
-
-  /* --------- Marcar leído al abrir chat --------- */
-  useEffect(() => {
-    if (!activeId || !ws.current) return;
-    const chat = chats.find(c => c.id === activeId);
-    const last = chat?.mensajes?.[chat.mensajes.length - 1];
-    if (last?.id) {
-      ws.current.send(JSON.stringify({
-        tipo: "estado", chatId: activeId, estado: "leido", mensajeId: last.id
-      }));
-    }
-  }, [activeId, chats]);
-
-  /* --------- Render --------- */
+  // Render helpers
   const activeChat = chats.find(c => c.id === activeId) ?? null;
   const panelPos = corner === "right" ? "right-6 bottom-6" : "left-6 bottom-6";
+
+  // CHAT BADGE: cuántos chats tienen mensajes no leídos
+  const unreadChatsCount = chats.filter(chat =>
+    chat.mensajes.some((msg: Mensaje) => msg.autor === "otro" && msg.estado !== "leido")
+  ).length;
+
+  // Enviar mensaje simulado
+  const handleSend = useCallback(async (texto: string) => {
+    if (!activeId) return;
+    const tempId = "tmp-" + Date.now();
+    const msg: Mensaje = { id: tempId, texto, autor: "yo", hora: horaActual(), estado: "enviando" };
+    setChats(prev =>
+      prev.map((c: Chat) =>
+        c.id === activeId ? { ...c, mensajes: [...c.mensajes, msg], ultimoMensaje: texto } : c
+      )
+    );
+    // Simula cambio de estado (enviado) después de 500ms
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setChats(prev =>
+      prev.map((c: Chat) =>
+        c.id === activeId
+          ? {
+              ...c,
+              mensajes: c.mensajes.map((m: Mensaje) =>
+                m.id === tempId ? { ...msg, estado: "enviado", id: String(Date.now()) } : m
+              ),
+            }
+          : c
+      )
+    );
+  }, [activeId]);
 
   return (
     <>
@@ -182,7 +82,7 @@ export default function FloatingChat({
         className={[
           "fixed z-50 h-12 w-12 rounded-full bg-white text-slate-700 shadow-lg ring-1 ring-slate-200",
           "grid place-items-center hover:bg-slate-50",
-          corner === "right" ? "right-6 bottom-6" : "left-6 bottom-6",
+          panelPos,
         ].join(" ")}
         aria-label="Abrir chat"
       >
@@ -190,6 +90,25 @@ export default function FloatingChat({
           <path d="M7 15l-3 3V6a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H7z" stroke="currentColor" strokeWidth="1.8" />
           <path d="M8.5 9h7M8.5 12h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
+        {unreadChatsCount > 0 && (
+          <span
+            style={{
+              position: "absolute",
+              top: 6,
+              right: 6,
+              background: "#EDC500",
+              color: "#222",
+              borderRadius: "50%",
+              padding: "2px 7px",
+              fontSize: "13px",
+              fontWeight: "bold",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.19)",
+              pointerEvents: "none",
+            }}
+          >
+            {unreadChatsCount}
+          </span>
+        )}
       </button>
 
       {/* Panel fijo vertical/rectangular */}
@@ -273,28 +192,11 @@ function MiniChatWindow({
 }: { mensajes: Mensaje[]; onSend: (t: string) => Promise<void> }) {
   const listRef = useRef<HTMLDivElement | null>(null);
   const [value, setValue] = useState("");
-  const [stick, setStick] = useState(true);
-
-  const nearBottom = () => {
-    const el = listRef.current;
-    if (!el) return true;
-    return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-  };
-
-  // seguir o no al fondo
-  useEffect(() => {
-    const el = listRef.current;
-    if (!el) return;
-    const onScroll = () => setStick(nearBottom());
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
-    if (!stick) return;
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight; // sin smooth para evitar jitter
-  }, [mensajes, stick]);
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [mensajes]);
 
   const submit = async () => {
     const t = value.trim();
@@ -311,7 +213,6 @@ function MiniChatWindow({
       >
         {mensajes.map((m) => (
           <div key={m.id} className={`flex ${m.autor === "yo" ? "justify-end" : "justify-start"}`}>
-            {/* Si ya tienes <ChatBubble mensaje={m}/> puedes usarlo aquí */}
             <div
               className={[
                 "max-w-[82%] px-3 py-2 rounded-lg text-sm shadow",
