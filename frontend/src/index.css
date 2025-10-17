@@ -207,9 +207,3 @@ button:focus-visible {
   }
 }
 
-.bg-fondo {
-  background-image: url('/FONDO.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
