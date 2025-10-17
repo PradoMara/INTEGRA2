@@ -9,55 +9,55 @@ graph TB
         UI[Interfaz de Usuario]
         DASH[Dashboard Usuario]
         ADMIN[Panel Administrador]
-        MSGS[Mensajería Directa]
+        MSGS[Mensajeria Directa]
         FOROS[Foros y Grupos]
         NOTIF[Notificaciones]
     end
 
     %% API Gateway
-    API[API Gateway<br/>Express/Node.js]
+    API[API Gateway - Express Node.js]
 
     %% Backend Services
     subgraph "Servicios Backend"
-        AUTH[Autenticación OAuth<br/>+ Gestión de Roles]
-        USER[Gestión de Usuarios<br/>y Perfiles]
-        PUB[Gestión de Publicaciones]
-        PROD[Gestión de Productos<br/>y Categorías]
-        TRANS[Transacciones<br/>y Confirmaciones]
-        VAL[Valoraciones<br/>y Reputación]
-        MSG[Servicio de Mensajería]
+        AUTH[Autenticacion OAuth y Gestion de Roles]
+        USER[Gestion de Usuarios y Perfiles]
+        PUB[Gestion de Publicaciones]
+        PROD[Gestion de Productos y Categorias]
+        TRANS[Transacciones y Confirmaciones]
+        VAL[Valoraciones y Reputacion]
+        MSG[Servicio de Mensajeria]
         ACT[Actividad de Usuario]
-        REP[Gestión de Reportes]
-        MOD[Moderación<br/>+ IA/NLP (Futuro)]
+        REP[Gestion de Reportes]
+        MOD[Moderacion y IA NLP Futuro]
         REC[Recomendaciones ML]
         NOTS[Servicio de Notificaciones]
     end
 
     %% Database Layer
     subgraph "Base de Datos – PostgreSQL"
-        DB_USER[(Usuarios / Perfiles)]
+        DB_USER[(Usuarios y Perfiles)]
         DB_PUB[(Publicaciones)]
-        DB_PROD[(Productos / Categorías / Imágenes)]
-        DB_TRANS[(Transacciones / Historial)]
+        DB_PROD[(Productos Categorias Imagenes)]
+        DB_TRANS[(Transacciones Historial)]
         DB_VAL[(Valoraciones)]
-        DB_MSG[(Mensajes / Conversaciones)]
-        DB_FOROS[(Foros / Grupos)]
+        DB_MSG[(Mensajes Conversaciones)]
+        DB_FOROS[(Foros Grupos)]
         DB_ACT[(Actividad Usuario)]
         DB_REP[(Reportes)]
         DB_NOTIF[(Notificaciones)]
-        DB_LOC[(Ubicaciones / Campus)]
+        DB_LOC[(Ubicaciones Campus)]
     end
 
     %% External Services
     subgraph "Servicios Externos"
         OAUTH[Google OAuth 2.0]
-        STORAGE[Almacenamiento<br/>AWS S3 / Cloudinary]
-        CDN[CDN / CloudFlare]
-        ML_API[API ML<br/>Recomendaciones]
+        STORAGE[Almacenamiento AWS S3 o Cloudinary]
+        CDN[CDN CloudFlare]
+        ML_API[API ML Recomendaciones]
     end
 
     %% Real-time Communication
-    WS[WebSocket Server<br/>Socket.io]
+    WS[WebSocket Server Socket.io]
 
     %% Conexiones Frontend → API
     UI --> API
@@ -119,7 +119,7 @@ graph TB
     %% Almacenamiento
     PROD --> STORAGE
 
-    %% Clases y colores para visualización
+    %% Clases y colores para visualizacion
     classDef frontend fill:#1976D2,stroke:#0D47A1,stroke-width:3px,color:#FFFFFF
     classDef backend fill:#7B1FA2,stroke:#4A148C,stroke-width:3px,color:#FFFFFF
     classDef database fill:#388E3C,stroke:#1B5E20,stroke-width:3px,color:#FFFFFF
