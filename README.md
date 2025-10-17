@@ -48,3 +48,7 @@ Repositorio del proyecto de Taller de integracion II, grupo 8 de la UCT
 [Diagrama Casos de uso: Usuarios](./Docs/Diagramas/caso-de-uso-usuarios.drawio.xml)
 
 [Diagrama Casos de uso: Admin](./Docs/Diagramas/caso-de-uso-admin.drawio.xml)
+
+[Diagrama arquitectura](./Docs/Diagramas/diagrama-arquitectura-sistema.md)
+
+[Diagrama arquitectura flujo de datos](./Docs/Diagramas/arquitectura_flujo-de-datos.md)
