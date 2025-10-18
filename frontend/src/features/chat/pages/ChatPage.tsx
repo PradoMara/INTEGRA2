@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import { ChatList } from '../components/ChatList'
 import { ChatHeader } from '../components/ChatHeader'
 import { ChatWindow } from '../components/ChatWindow'
 import { ChatInput } from '../components/ChatInput'
-import {MiniSidebar} from '../../marketplace/ui/components/MiniSidebar'
+import { ChatList } from '../components/ChatList' // ya presente
+import { MiniSidebar } from '../../marketplace/ui/components/MiniSidebar'
 import type { Chat, Mensaje } from '@/features/chat/types/chat'
 import { MockChatWS } from '../mocks/MockChatWS'
 import { mockChats } from '../mocks/mockChats'
+import React from 'react'
+import ChatRules from '../components/ChatRules' // aseguro import presente
 
 const useEnv = () => {
   const API = useMemo(() => import.meta.env.VITE_API_URL as string, [])
@@ -265,6 +267,12 @@ export default function ChatPage() {
         <div className="shrink-0 px-4 py-3 border-b">
           <h2 className="text-sm font-semibold text-slate-700">Mis Chats</h2>
         </div>
+
+        {/* Inserto ChatRules inline para que el botón sea visible en la columna de chats */}
+        <div className="shrink-0 px-3 py-2">
+          <ChatRules inline />
+        </div>
+
         <div className="flex-1 min-h-0 max-h-222 overflow-y-auto overflow-x-hidden">
           <ChatList chats={chats} onSelectChat={setChatActivo} chatActivo={chatActivo} />
         </div>
