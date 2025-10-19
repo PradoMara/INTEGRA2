@@ -8,7 +8,7 @@ export function ChatList({
 }: { chats: Chat[]; onSelectChat: (id:number)=>void; chatActivo: number|null }) {
   if (!chats || chats.length === 0) {
     return (
-      <aside className="h-full w-full min-w-0 flex flex-col bg-transparent">
+      <aside className="h-full w-full min-w-0 flex flex-col bg-transparent p-2">
         <div className="flex flex-1 items-center justify-center text-slate-500">
           No hay conversaciones
         </div>
@@ -16,7 +16,7 @@ export function ChatList({
     );
   }
   return (
-    <aside className="h-full w-full min-w-0 flex flex-col bg-transparent">
+    <aside className="h-full w-full min-w-0 flex flex-col bg-transparent p-2">
       <ul className="min-h-0 overflow-y-auto overflow-x-hidden">
         {chats.map((chat) => {
           const active = chatActivo === chat.id;

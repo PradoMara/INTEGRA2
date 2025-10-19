@@ -1,78 +1,118 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>Promise<void> }) {
   const [texto, setTexto] = useState("");
   const [file, setFile] = useState<File|null>(null);
   const [preview, setPreview] = useState<string|null>(null);
+  const fileInputRef = useRef<HTMLInputElement|null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const submit = async () => {
     const t = texto.trim();
     if (!t && !file) return;
     await onSend(t, file);
     setTexto("");
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
     setFile(null);
-    setPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] || null;
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
     setFile(f);
-    if (f) {
-      if (f.type.startsWith("image/")) {
-        setPreview(URL.createObjectURL(f));
-      } else {
-        setPreview(null);
-      }
+    if (f && f.type.startsWith("image/")) {
+      setPreview(URL.createObjectURL(f));
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+  const cancelFile = () => {
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Cambiado: KeyboardEvent para input; Enter envía el mensaje
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
       submit();
     }
   };
 
   return (
-    <div className="bg-transparent border-t">
-      <div className="px-8 py-4">
-        {/* Miniatura arriba de la entrada de texto */}
-        {preview && (
-          <div className="mb-2 flex justify-start">
-            <img src={preview} alt="preview" className="max-h-24 rounded shadow" />
-          </div>
-        )}
-        {file && !preview && (
-          <div className="mb-2 text-sm text-gray-700 flex items-center gap-2">
-            <span>Archivo: {file.name}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-3">
-          <textarea
+    <footer className="w-full border-t bg-white/60 px-4 py-3">
+      <div className="max-w-full mx-auto flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <input
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje..."
-            rows={2}
-            className="flex-1 min-h-[44px] max-h-32 rounded-full border border-slate-300 bg-white px-4 text-[15px] outline-none focus:border-slate-400 resize-none"
+            className="flex-1 min-w-0 h-10 rounded-full border px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
           <input
+            ref={fileInputRef}
             type="file"
-            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+            accept="image/*,application/pdf"
             onChange={handleFileChange}
             className="hidden"
-            id="chat-file-input"
+            aria-hidden
           />
-          <label htmlFor="chat-file-input" className="cursor-pointer px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
+            title="Adjuntar archivo"
+          >
             📎
-          </label>
+          </button>
           <button
             onClick={submit}
-            className="h-11 px-5 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-900"
+            disabled={!texto.trim() && !file}
+            className="ml-2 inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             Enviar
           </button>
         </div>
+
+        {file && (
+          <div className="flex items-center gap-3 px-2">
+            {preview ? (
+              <img src={preview} alt="preview" className="h-16 w-16 object-cover rounded-md border" />
+            ) : (
+              <div className="h-16 w-16 rounded-md border grid place-items-center text-sm text-slate-600">
+                {file.name}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 text-sm truncate">
+              <div className="font-medium">{file.name}</div>
+              <div className="text-xs text-slate-500">{(file.size/1024).toFixed(1)} KB</div>
+            </div>
+            <button
+              onClick={cancelFile}
+              className="inline-flex items-center justify-center rounded-md bg-red-100 px-2 py-1 text-sm text-red-700 hover:bg-red-200"
+              title="Cancelar archivo"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </footer>
   );
 }

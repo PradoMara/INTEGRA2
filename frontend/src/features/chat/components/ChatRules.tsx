@@ -4,8 +4,8 @@ type Props = {
   inline?: boolean // si true, renderiza dentro del flujo (útil para la columna de chats)
 }
 
-// Cambiado: use React.ReactElement en vez de JSX.Element para evitar el error "Cannot find namespace 'JSX'."
-export default function ChatRules({ inline = false }: Props): React.ReactElement {
+// Componente unificado (evita duplicados)
+function ChatRulesComponent({ inline = false }: Props): React.ReactElement {
   // si está inline (pegado al listado de chats) dejamos cerrado por defecto
   const [open, setOpen] = useState<boolean>(() => !inline)
 
@@ -90,3 +90,7 @@ export default function ChatRules({ inline = false }: Props): React.ReactElement
     </>
   )
 }
+
+// export por defecto y named export para compatibilidad
+export default ChatRulesComponent
+export { ChatRulesComponent as ChatRules }

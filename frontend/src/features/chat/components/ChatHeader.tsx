@@ -2,7 +2,7 @@ import type { Chat } from "@/types/chat";
 
 export function ChatHeader({ chatActivo }: { chatActivo: Chat | null }) {
   return (
-    <header className="h-[64px] bg-transparent border-b flex items-center px-6">
+    <header className="w-full flex items-center gap-3 px-4 py-3 border-b bg-white/60">
       {/* Avatar + nombre + correo */}
       <div className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-full bg-gray-200 grid place-items-center text-gray-400">

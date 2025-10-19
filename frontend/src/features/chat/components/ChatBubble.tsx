@@ -28,20 +28,19 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
         break;
       case "leido":
         texto = "✔✔ Leído";
-        color = "text-blue-500 font-semibold"; // en vez de green
+        color = "text-blue-500 font-semibold";
         break;
     }
 
     return <span className={`ml-2 text-xs ${color}`}>{texto}</span>;
   };
 
+  // Cambiado: contenedor flex w-full con justify-start/justify-end para alinear correctamente
   return (
-    <div
-      className={`flex mb-2 ${esPropio ? "justify-end" : "justify-start"}`}
-    >
-      <div>
+    <div className={`w-full px-3 py-2 flex ${esPropio ? "justify-end" : "justify-start"}`}>
+      <div className="mx-2 max-w-[80%]">
         <div
-          className={`max-w-xs px-4 py-2 rounded-lg shadow text-sm ${
+          className={`w-fit px-4 py-2 rounded-lg shadow text-sm ${
             esPropio
               ? "bg-[#0075B4] text-white rounded-br-none"
               : "bg-[#EDC500] text-black rounded-bl-none"
@@ -49,8 +48,11 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
         >
           {mensaje.texto}
         </div>
-        {esPropio && (
-          <div className="flex justify-end">{renderEstado()}</div>
+        {esPropio ? (
+          <div className="flex justify-end mt-1 text-xs">{renderEstado()}</div>
+        ) : (
+          // para mensajes ajenos dejamos el texto de estado oculto (o puedes mostrar uno distinto)
+          null
         )}
       </div>
     </div>
