@@ -207,9 +207,22 @@ button:focus-visible {
   }
 }
 
-.bg-fondo {
-  background-image: url('/FONDO.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+/* Fondo global (FONDO.jpg en public/) */
+html, body, #root {
+    height: 100%;
+}
+
+body {
+    background-image: url('/FONDO.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin: 0;
+    min-height: 100vh;
+}
+
+/* Forzar transparencia en contenedores comunes para dejar ver el fondo */
+#root, .App, .app, main, .page, .page-root, .page-layout, .container, .min-h-screen {
+    background: transparent !important;
 }

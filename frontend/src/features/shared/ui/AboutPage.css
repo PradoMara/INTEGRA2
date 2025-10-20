@@ -203,3 +203,8 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Asegurar que el root de la página About sea transparente y deje ver el fondo global */
+.about-page-root {
+  background: transparent !important;
+}

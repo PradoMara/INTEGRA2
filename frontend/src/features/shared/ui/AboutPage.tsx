@@ -47,7 +47,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen flex flex-col bg-transparent about-page-root">
       {/* Hero Section con animación de entrada */}
       <header className="text-center py-12 md:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Elementos decorativos animados */}
