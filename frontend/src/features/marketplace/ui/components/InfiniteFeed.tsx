@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePostsWithFilters } from '../../../../hooks/usePostsWithFilters'
 import { RatingStars } from './RatingStars'
-import { formatInt } from '../../utils/format'
+import { formatInt, formatCLP } from '../../utils/format'
 import { PostDetailModal, PostDetailData } from './modals/PostDetailModal'
 
 interface InfiniteFeedProps {
@@ -275,7 +275,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                       />
                       {post.price && (
                         <div className="absolute top-3 right-3 bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-bold shadow-lg">
-                          {post.price}
+                          {formatCLP(parseFloat(String(post.price)) || 0)}
                         </div>
                       )}
                       {post.categoryName && (

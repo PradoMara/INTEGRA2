@@ -1,4 +1,5 @@
 import React from "react";
+import { formatCLP } from "../../utils/format";
 
 interface Post {
   id: number;
@@ -51,7 +52,9 @@ export default function PostCard({ post, onView, onEdit, onDelete, className = "
 
             {post.price !== undefined && (
               <div className="flex-shrink-0 text-right ml-3">
-                <div className="text-sm font-semibold text-gray-900 leading-6">{typeof post.price === "number" ? post.price.toLocaleString() : post.price}</div>
+                <div className="text-sm font-semibold text-gray-900 leading-6">
+                  {typeof post.price === "number" ? formatCLP(post.price) : formatCLP(parseFloat(String(post.price)) || 0)}
+                </div>
                 <div className="text-xs text-gray-400">{formatDate(post.createdAt)}</div>
               </div>
             )}

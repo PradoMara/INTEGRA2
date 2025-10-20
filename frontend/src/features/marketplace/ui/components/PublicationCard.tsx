@@ -2,6 +2,7 @@ import type { Post as PostType } from "@/types/Post";
 import React from "react";
 import Card from "../../../../../public/components/Card";
 import Button from "../../../../../public/components/Button";
+import { formatCLP } from "../../utils/format";
 
 /* Usamos una interfaz flexible con campos opcionales para evitar errores
    cuando el tipo externo no tiene exactamente las mismas propiedades */
@@ -26,10 +27,9 @@ type PublicationCardProps = {
 
 function formatPrice(value?: string | number) {
   if (value === undefined || value === null) return "";
-  if (typeof value === "number") {
-    return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
-  }
-  return String(value);
+  const numValue = typeof value === "number" ? value : parseFloat(String(value));
+  if (isNaN(numValue)) return String(value);
+  return formatCLP(numValue);
 }
 
 function formatDate(d?: string | Date | null) {
