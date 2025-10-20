@@ -16,12 +16,12 @@ function ChatRulesComponent({ inline = false }: Props): React.ReactElement {
 
   const headerClass = 'flex items-center justify-between gap-2'
   const titleClass = 'font-semibold text-sm text-slate-800'
-  const primaryBtn = 'px-3 py-1 rounded-full bg-black text-white text-sm hover:bg-gray-800'
+  const primaryBtn = 'px-3 py-1 rounded-full bg-yellow-300 text-black text-sm hover:bg-yellow-200'
   const toggleBtn = 'px-2 py-1 rounded bg-gray-100 text-sm hover:bg-gray-200'
 
   const reopenBtnClass = inline
-    ? 'w-full max-w-xs mx-auto px-3 py-2 rounded-full z-30 bg-black text-white text-sm shadow-lg hover:bg-gray-800'
-    : 'fixed bottom-24 right-6 z-50 px-3 py-2 rounded-full bg-black text-white text-sm shadow-lg hover:bg-gray-800'
+    ? 'w-full max-w-xs mx-auto px-3 py-2 rounded-full z-30 bg-yellow-300 text-black text-sm shadow-lg hover:bg-yellow-200'
+    : 'fixed bottom-24 right-6 z-50 px-3 py-2 rounded-full bg-yellow-300 text-black text-sm shadow-lg hover:bg-yellow-200'
 
   const content = (
     <div className="mt-3 space-y-2 text-gray-700">
