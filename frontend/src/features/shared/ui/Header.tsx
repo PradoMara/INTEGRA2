@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import styles from './Header.module.css'
-import LogoMUCT from '../../../assets/img/logoMUCT.png' // logo como componente React
+import LogoMUCT from '../../../assets/img/logoMUCT.png'
+import { LogoutUser } from '../../auth/use-cases/LogoutUser'
 
 export const Header: React.FC = () => {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -47,13 +49,29 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', onClick)
   }, [open])
 
+  const handleLogout = () => {
+    try {
+      const logoutUseCase = new LogoutUser()
+      logoutUseCase.execute()
+      
+      // Cerrar menú móvil si está abierto
+      setOpen(false)
+      
+      // Redireccionar al login
+      navigate('/login', { replace: true })
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+      alert('Hubo un error al cerrar sesión. Por favor, intenta nuevamente.')
+    }
+  }
+
   return (
     <header className={styles.headerRoot}>
       <div className={styles.headerInner}>
         <button
           id="menu-toggle-btn"
           type="button"
-            className={styles.menuToggle}
+          className={styles.menuToggle}
           aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
           aria-expanded={open}
           aria-controls="mobile-menu-panel"
@@ -65,13 +83,13 @@ export const Header: React.FC = () => {
 
         <div className={styles.logoArea}>      
           <div className={styles.logoPlaceholder} aria-hidden="true">
-                    <img
-        src={LogoMUCT}
-        alt="Marketplace UCT"
-        className={styles.logoImg}
-        decoding="async"
-        fetchPriority="high"   // es el logo del header; mejor alta prioridad
-      />
+            <img
+              src={LogoMUCT}
+              alt="Marketplace UCT"
+              className={styles.logoImg}
+              decoding="async"
+              fetchPriority="high"
+            />
           </div>
           <span>Marketplace UCT</span>
         </div>
@@ -91,6 +109,16 @@ export const Header: React.FC = () => {
             <span className={styles.profileAvatar} aria-hidden="true" />
             <span>Perfil</span>
           </NavLink>
+          
+          <button
+            onClick={handleLogout}
+            className={styles.logoutButton}
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+          >
+            <span className={styles.logoutAvatar} aria-hidden="true" />
+            <span>Salir</span>
+          </button>
         </div>
       </div>
 
@@ -128,6 +156,15 @@ export const Header: React.FC = () => {
               <span className={styles.profileAvatar} aria-hidden="true" />
               <span>Perfil</span>
             </NavLink>
+            
+            <button
+              onClick={handleLogout}
+              className={styles.logoutButtonMobile}
+              aria-label="Cerrar sesión"
+            >
+              <span className={styles.logoutAvatar} aria-hidden="true" />
+              <span>Salir</span>
+            </button>
           </div>
         </div>
       </div>
