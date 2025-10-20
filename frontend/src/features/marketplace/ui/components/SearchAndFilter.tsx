@@ -1,167 +1,159 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useState } from 'react';
 
-type Option = { value: string; label: string };
+// Tipos para las props del componente
+interface SearchAndFilterProps {
+  onSearchChange: (searchTerm: string) => void;
+  onCategoryChange: (category: string) => void;
+  onClearFilters?: () => void;
+  categories: string[];
+  selectedCategory: string;
+  searchTerm: string;
+  hasResults?: boolean;
+  totalResults?: number;
+}
 
-type Props = {
-  initialSearch?: string;
-  initialCategory?: string;
-  categories?: Option[];
-  sorts?: Option[];
-  onSearchChange?: (q: string) => void;
-  onCategoryChange?: (categoryId: string) => void;
-  onSortChange?: (sortBy: string) => void;
-  className?: string;
-};
-
-export default function SearchAndFilter({
-  initialSearch = "",
-  initialCategory = "",
-  categories = [],
-  sorts = [
-    { value: "relevance", label: "Relevancia" },
-    { value: "newest", label: "Más recientes" },
-    { value: "price_asc", label: "Precio ↑" },
-    { value: "price_desc", label: "Precio ↓" },
-  ],
+// Componente principal de búsqueda y filtros
+const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   onSearchChange,
   onCategoryChange,
-  onSortChange,
-  className = "",
-}: Props) {
-  const [query, setQuery] = useState<string>(initialSearch);
-  const [category, setCategory] = useState<string>(initialCategory);
-  const [sortBy, setSortBy] = useState<string>(sorts[0]?.value ?? "");
-  const debounceRef = useRef<number | null>(null);
+  onClearFilters,
+  categories,
+  selectedCategory,
+  searchTerm,
+  hasResults = true,
+  totalResults = 0
+}) => {
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  // keep local state in sync if parent changes initial props
-  useEffect(() => setQuery(initialSearch ?? ""), [initialSearch]);
-  useEffect(() => setCategory(initialCategory ?? ""), [initialCategory]);
-
-  // if sorts prop changes ensure current sort is valid, otherwise pick default
-  useEffect(() => {
-    const defaultSort = sorts[0]?.value ?? "";
-    const found = sorts.some((s) => s.value === sortBy);
-    if (!found) setSortBy(defaultSort);
-  }, [sorts, sortBy]);
-
-  // expose categories with a default "Todas"
-  const categoryOptions = useMemo(() => [{ value: "", label: "Todas" }, ...categories], [categories]);
-
-  // Debounced search: call onSearchChange after 350ms of inactivity
-  useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = window.setTimeout(() => {
-      onSearchChange?.(query.trim());
-      debounceRef.current = null;
-    }, 350);
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = null;
-      }
-    };
-  }, [query, onSearchChange]);
-
-  // category & sort emit immediately
-  useEffect(() => {
-    onCategoryChange?.(category);
-  }, [category, onCategoryChange]);
-
-  useEffect(() => {
-    onSortChange?.(sortBy);
-  }, [sortBy, onSortChange]);
-
-  const clearAll = () => {
-    // clear timers to avoid stale callbacks
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
-    }
-    setQuery("");
-    setCategory("");
-    const defaultSort = sorts[0]?.value ?? "";
-    setSortBy(defaultSort);
-
-    // emit cleared values immediately
-    onSearchChange?.("");
-    onCategoryChange?.("");
-    onSortChange?.(defaultSort);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(event.target.value);
   };
 
-  const onKeyDownSearch: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === "Enter") {
-      // trigger immediate search on Enter
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = null;
-      }
-      onSearchChange?.(query.trim());
-    }
+  const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    onCategoryChange(event.target.value);
   };
 
   return (
-    <div className={`search-and-filter w-full ${className}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <label htmlFor="market-search" className="sr-only">
-          Buscar
-        </label>
-        <input
-          id="market-search"
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKeyDownSearch}
-          placeholder="Buscar productos, servicios, títulos..."
-          className="flex-1 rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"
-          aria-label="Buscar en el marketplace"
-        />
+    <div className="search-filter-container">
+      <div className="search-filter-wrapper">
+        
+        <div className="search-input-container">
+          <div className={`search-input-wrapper ${isSearchFocused ? 'search-input-focused' : ''}`}>
+            <input
+              type="text"
+              placeholder="Buscar por título o descripción..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              className="search-input"
+            />
 
-        <label htmlFor="market-category" className="sr-only">
-          Categoría
-        </label>
-        <select
-          id="market-category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"
-          aria-label="Filtrar por categoría"
-        >
-          {categoryOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+            {searchTerm && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="search-clear-btn"
+                type="button"
+                title="Limpiar búsqueda"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
-        <label htmlFor="market-sort" className="sr-only">
-          Ordenar
-        </label>
-        <select
-          id="market-sort"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"
-          aria-label="Ordenar resultados"
-        >
-          {sorts.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+        <div className="category-select-container">
+          <div className="category-select-wrapper">
+            <select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="category-select"
+            >
+              <option value="">Todas las categorías</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-        <button
-          type="button"
-          onClick={clearAll}
-          className="rounded-md border px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100"
-          aria-label="Limpiar filtros"
-        >
-          Limpiar
-        </button>
+        {(searchTerm || selectedCategory) && onClearFilters && (
+          <button
+            onClick={onClearFilters}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200 border border-gray-300"
+            type="button"
+          >
+            Limpiar filtros
+          </button>
+        )}
       </div>
+
+      <div className="search-info">
+        {(searchTerm || selectedCategory) && (
+          <>
+            {searchTerm && (
+              <span className="search-results-text">
+                Búsqueda: <strong>"{searchTerm}"</strong>
+              </span>
+            )}
+            {selectedCategory && (
+              <span className="category-results-text">
+                Categoría: <strong>{selectedCategory}</strong>
+              </span>
+            )}
+            {hasResults && totalResults > 0 && (
+              <span className="results-count-text">
+                {totalResults} resultado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
+              </span>
+            )}
+          </>
+        )}
+        
+        {!searchTerm && !selectedCategory && totalResults > 0 && (
+          <span className="text-gray-500 text-xs">
+            Mostrando {totalResults} publicaciones
+          </span>
+        )}
+      </div>
+
+      {(searchTerm || selectedCategory) && !hasResults && (
+        <div className="no-results-container">
+          <div className="no-results-message">
+            <div className="text-4xl mb-3">🔍</div>
+            <h3>No se encontraron resultados</h3>
+            <p>
+              {searchTerm && selectedCategory 
+                ? `No hay publicaciones que coincidan con "${searchTerm}" en la categoría "${selectedCategory}"`
+                : searchTerm
+                ? `No hay publicaciones que coincidan con "${searchTerm}"`
+                : `No hay publicaciones en la categoría "${selectedCategory}"`
+              }
+            </p>
+            <div className="no-results-suggestions">
+              <h4>Sugerencias:</h4>
+              <ul>
+                <li>Verifica la ortografía de las palabras</li>
+                <li>Intenta con términos más generales</li>
+                <li>Prueba con una categoría diferente</li>
+                {onClearFilters && (
+                  <li>
+                    <button 
+                      onClick={onClearFilters}
+                      className="clear-filters-btn"
+                    >
+                      Limpiar todos los filtros
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default SearchAndFilter;

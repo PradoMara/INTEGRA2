@@ -4,8 +4,6 @@ import { Sidebar } from './components/Sidebar'
 import SearchAndFilter from './components/SearchAndFilter'
 import InfiniteFeed from './components/InfiniteFeed'
 
-const AnyInfiniteFeed = InfiniteFeed as any
-
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -32,33 +30,31 @@ export default function HomePage() {
   const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => setFeedStats({ hasResults, totalResults }), [])
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr]">
+    <div className="min-h-screen bg-gray-50 grid grid-cols-1 lg:grid-cols-[260px_1fr]">
       <Sidebar active="marketplace" />
 
       <div className="min-w-0">
-        <div className="sticky top-0 z-10 backdrop-blur border-b">
+        <div className="sticky top-0 z-10 bg-white/70 backdrop-blur border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <SearchAndFilter
-              initialSearch={searchTerm}
-              initialCategory={selectedCategory}
-              categories={categories.map((c) => ({ value: c, label: c }))}
+              searchTerm={searchTerm}
+              selectedCategory={selectedCategory}
+              categories={categories}
               onSearchChange={handleSearchChange}
               onCategoryChange={handleCategoryChange}
-              onSortChange={() => {}}
-              className="w-full"
+              onClearFilters={handleClearFilters}
+              hasResults={feedStats.hasResults}
+              totalResults={feedStats.totalResults}
             />
           </div>
         </div>
 
         <main className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-0">
-            <AnyInfiniteFeed
-              items={[]} // placeholder
-              renderItem={() => null}
-              loadMore={() => {}}
-              className="min-h-0"
-            />
-          </div>
+          <InfiniteFeed
+            searchTerm={searchTerm.trim()}
+            selectedCategoryId={selectedCategoryId}
+            onStatsChange={handleFeedStatsChange}
+          />
         </main>
       </div>
     </div>
