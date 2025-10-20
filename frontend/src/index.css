@@ -226,3 +226,29 @@ body {
 #root, .App, .app, main, .page, .page-root, .page-layout, .container, .min-h-screen {
     background: transparent !important;
 }
+
+/* Ocultar scrollbar en carrusel de valoraciones */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animaciones suaves para el carrusel */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.carousel-card {
+  animation: fadeIn 0.3s ease-out;
+}
