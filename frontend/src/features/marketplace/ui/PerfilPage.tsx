@@ -1,118 +1,65 @@
 import React from "react";
-import { useMemo } from "react";
-import { Sidebar } from "./components/Sidebar";
-import MyPublicationsFeed from "./components/MyPublicationsFeed";
+import { Link } from 'react-router-dom';
+import { useUser } from '@/features/auth/hooks/useUser';
+import { useUserPosts } from '@/features/marketplace/application/useUserPosts';
+import { RatingStars } from '@/features/marketplace/ui/components/RatingStars';
 
-const MyPublicationsFeedAny = MyPublicationsFeed as any;
+const PerfilPage = () => {
+  const { data: user, isLoading: isLoadingUser, isError: isErrorUser, error: errorUser } = useUser();
+  const { data: posts, isLoading: isLoadingPosts, isError: isErrorPosts, error: errorPosts } = useUserPosts(user?.id);
 
-type Review = {
-  id: string;
-  author: string;
-  rating: number;
-};
+  if (isLoadingUser || isLoadingPosts) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600" />
+      </div>
+    );
+  }
 
-type Publication = {
-  id: string;
-  title: string;
-  price: number;
-  status: "Disponible" | "Agotado";
-  imageUrl?: string;
-};
-
-function StarRating({ value = 0, size = 18 }: { value?: number; size?: number }) {
-  const full = Math.floor(value);
-  const half = value - full >= 0.5;
-  const total = 5;
-
-  return (
-    <div className="inline-flex items-center gap-1" aria-hidden>
-      {Array.from({ length: total }).map((_, i) => {
-        const fill = i < full ? "currentColor" : i === full && half ? "url(#half)" : "none";
-        return (
-          <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="text-amber-500 flex-shrink-0">
-            <defs>
-              <linearGradient id="half">
-                <stop offset="50%" stopColor="currentColor" />
-                <stop offset="50%" stopColor="transparent" />
-              </linearGradient>
-            </defs>
-            <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill={fill} stroke="currentColor" strokeWidth="1" />
-          </svg>
-        );
-      })}
-    </div>
-  );
-}
-
-export default function PerfilPage() {
-  const user = {
-    name: "Nombre",
-    email: "nombre@alu.uct.cl",
-    campus: "Campus San Juan Pablo II",
-    rating: 4.5,
-  };
-
-  const reviews: Review[] = [
-    { id: "r1", author: "Usuario", rating: 4.5 },
-    { id: "r2", author: "Usuario", rating: 5 },
-    { id: "r3", author: "Usuario", rating: 4 },
-  ];
-
-  const publications: Publication[] = [
-    { id: "p1", title: "Publicación", price: 8900, status: "Disponible" },
-    { id: "p2", title: "Publicación", price: 5900, status: "Disponible" },
-    { id: "p3", title: "Publicación", price: 12900, status: "Agotado" },
-  ];
+  if (isErrorUser || isErrorPosts) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-800">
+        <h4 className="font-medium text-lg">Error al cargar el perfil</h4>
+        <p className="text-sm mt-1">
+          {errorUser?.message || errorPosts?.message || 'Ha ocurrido un error inesperado.'}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
-      <Sidebar />
-
-      <div className="min-w-0">
-        <header className="border-b">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
-            <div className="flex items-center gap-5 min-w-0">
-              <div className="h-20 w-20 rounded-full bg-gray-300 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-semibold text-gray-900 truncate">{user.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <StarRating value={user.rating} />
-                  <span className="text-sm text-gray-600">{user.rating.toFixed(1)}</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-1 truncate">{user.email}</p>
-                <p className="text-sm text-gray-600 truncate">{user.campus}</p>
+    <div className="container mx-auto p-4">
+      {user && (
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <div className="flex items-center">
+            <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full mr-6" />
+            <div>
+              <h1 className="text-3xl font-bold">{user.name}</h1>
+              <p className="text-gray-600">{user.email}</p>
+              <p className="text-gray-600">Campus: {user.campus}</p>
+              <div className="flex items-center mt-2">
+                <RatingStars rating={user.rating} />
+                <span className="ml-2 text-gray-700 font-semibold">{user.rating.toFixed(1)}</span>
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      )}
 
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-          <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Valoraciones</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {reviews.map((r) => (
-                <div key={r.id} className="bg-white border rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{r.author}</p>
-                      <StarRating value={r.rating} size={16} />
-                    </div>
-                  </div>
-                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M9 18l6-6-6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tus Publicaciones</h2>
-            <MyPublicationsFeedAny publications={publications} />
-          </section>
-        </main>
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <h2 className="text-2xl font-bold mb-4">Mis Publicaciones</h2>
+        <p className="text-gray-600 mb-4">
+          Tienes {posts?.length ?? 0} publicación{posts?.length === 1 ? '' : 'es'} activa{posts?.length === 1 ? '' : 's'}.
+        </p>
+        <Link
+          to="/mis-publicaciones"
+          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Ver mis publicaciones
+        </Link>
       </div>
     </div>
   );
-}
+};
+
+export default PerfilPage;
