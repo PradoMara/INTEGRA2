@@ -5,7 +5,6 @@ import { formatInt } from '../../utils/format'
 // Reutiliza tu hook; si tu hook acepta authorId/onlyMine, pásalo aquí.
 // Si no, puedes cambiar la import por tu hook real para “mis publicaciones”.
 import { usePostsWithFilters } from '../../../../hooks/usePostsWithFilters'
-import { useUserPosts } from '@/features/marketplace/application/useUserPosts'
 
 type MyPublicationsFeedProps = {
   searchTerm?: string
@@ -25,34 +24,22 @@ const MyPublicationsFeed: React.FC<MyPublicationsFeedProps> = ({
   const observer = useRef<IntersectionObserver | null>(null)
   const lastPostElementRef = useRef<HTMLDivElement | null>(null)
 
-  // Si recibimos authorId usamos el hook específico para las publicaciones del usuario
-  const isUsingUserHook = Boolean(authorId)
-
-  const userPostsQuery = isUsingUserHook ? useUserPosts(authorId) : null
-
   const {
-    posts: filteredPosts = [],
-    hasResults = false,
-    totalResults = 0,
+    posts,
+    hasResults,
+    totalResults,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: isLoadingFiltered,
-    isError: isErrorFiltered,
-    error: errorFiltered
-  } = isUsingUserHook
-    ? // valores por defecto cuando usamos el hook de usuario (no paginado)
-      ({ posts: [], hasResults: false, totalResults: 0, fetchNextPage: () => {}, hasNextPage: false, isFetchingNextPage: false, isLoading: false, isError: false, error: null } as any)
-    : usePostsWithFilters({
-        searchTerm: searchTerm.trim(),
-        categoryId: selectedCategoryId
-      })
-
-  // Derivar el set de publicaciones y estados a usar en el render
-  const posts = isUsingUserHook ? (userPostsQuery?.data ?? []) : filteredPosts
-  const isLoading = isUsingUserHook ? (userPostsQuery?.isLoading ?? false) : isLoadingFiltered
-  const isError = isUsingUserHook ? (userPostsQuery?.isError ?? false) : isErrorFiltered
-  const error = isUsingUserHook ? (userPostsQuery?.error ?? null) : errorFiltered
+    isLoading,
+    isError,
+    error
+  } = usePostsWithFilters({
+    searchTerm: searchTerm.trim(),
+    categoryId: selectedCategoryId,
+    authorId,          // ⚠️ si tu hook no soporta esto, elimínalo o adapta
+    onlyMine: true     // idem: si tu hook soporta esta flag, genial; si no, remuévela
+  } as any)
 
   useEffect(() => {
     if (onStatsChange && !isLoading) onStatsChange(hasResults, totalResults)
@@ -268,7 +255,7 @@ const MyPublicationsFeed: React.FC<MyPublicationsFeedProps> = ({
                       {/* botón Editar */}
                       {onEdit ? (
                         <button
-                          onClick={() => onEdit(String(post.id))}
+                          onClick={() => onEdit(post.id)}
                           className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                         >
                           Editar

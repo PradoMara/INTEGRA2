@@ -1,10 +1,6 @@
-export interface User {
+export type User = {
   id: string
-  name: string
   email: string
-  avatar: string
-  campus: string
-  rating: number
-  preferredDeliverySpots: string[]
-  role: 'user' | 'admin'
+  name?: string
+  token?: string
 }
