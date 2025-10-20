@@ -29,7 +29,7 @@ export function CreatePostForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const pricePreview = useMemo(() => formatCLP(precio || 0), [precio]);
+  const pricePreview = useMemo(() => formatCLP(Number(precio) || 0), [precio]);
 
   const validate = (): Errors => {
     const e: Errors = {};
@@ -120,7 +120,7 @@ export function CreatePostForm() {
   return (
     <div className="relative">
       <form
-        className="bg-slate-50 border border-gray-200 rounded-xl p-4 min-w-0"
+        className="bg-slate-50 border border-gray-200 rounded-xl p-6 min-w-0"
         onSubmit={onSubmit}
         noValidate
         aria-busy={isSubmitting}
@@ -136,9 +136,9 @@ export function CreatePostForm() {
           </div>
         )}
 
-        {/* Descripción */}
-        <section className="grid gap-1.5 mb-5 rounded-xl p-4 border border-gray-200">
-          <label className="text-sm font-semibold text-gray-700">Descripción</label>
+        {/* Descripción */} 
+        <section className="grid gap-2 mb-5 rounded-xl p-4 border border-gray-200">
+          <label className="text-sm font-semibold text-gray-700 mb-2">Descripción</label>
             <LabeledTextArea
             value={descripcion}
             onChange={setDescripcion}
@@ -250,7 +250,7 @@ export function CreatePostForm() {
               <div className="md:col-span-3">
                 <button
                   type="submit"
-                  className="h-11 w-full rounded-full px-4 border-2 border-violet-500 bg-violet-500 text-black opacity-80 font-medium hover:brightness-95 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="h-10 w-full rounded-lg px-4 border-2 border-violet-500 bg-violet-500 text-black opacity-90 font-medium hover:brightness-95 active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Publicando…" : "Publicar"}
@@ -264,7 +264,7 @@ export function CreatePostForm() {
             {/* Cuadrado de vista previa (color celeste) */}
             <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
               {imagenes.length > 0 ? (
-                <div className="flex gap-2 flex-wrap p-2">
+                <div className="flex gap-2 flex-wrap items-start p-2">
                   {imagenes.map((file, idx) => {
                     const url = URL.createObjectURL(file);
                     return (
@@ -279,7 +279,7 @@ export function CreatePostForm() {
                   })}
                 </div>
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-cyan-200" />
+                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-cyan-200 flex items-center justify-center" />
               )}
             </div>
             
