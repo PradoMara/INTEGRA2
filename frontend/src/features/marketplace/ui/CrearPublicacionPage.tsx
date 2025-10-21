@@ -31,7 +31,6 @@ export default function CrearPublicacionPage() {
   // --- Estado para la animación de entrada ---
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
-    // Pequeño retraso para que la animación sea perceptible
     const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);
   }, []);
@@ -45,25 +44,8 @@ export default function CrearPublicacionPage() {
 
       <div className="min-w-0 flex flex-col h-screen">
         
-        <header className="h-[64px] bg-blue-900 flex items-center justify-between px-6 shrink-0 z-20"> {/* Header con z-index alto */}
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9">
-              <img src={logo} alt="MarketUCT Logo" className="h-full w-full object-contain" />
-            </div>
-            <strong className="font-semibold text-white text-lg">MarketUCT</strong>
-          </div>
-          <button className="flex items-center gap-2 rounded-full bg-blue-700 pl-2 pr-4 py-1.5 text-sm font-medium text-white hover:bg-blue-600 transition-colors">
-            <div className="h-7 w-7 rounded-full bg-white grid place-items-center text-blue-700">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5Z" fill="currentColor"/>
-                <path d="M4 20c0-3.31 3.58-6 8-6s8 2.69 8 6v1H4v-1Z" fill="currentColor"/>
-              </svg>
-            </div>
-            Perfil
-          </button>
-        </header>
-
-        {/* --- CAMBIO: <main> ahora es 'relative' y tiene 'overflow-hidden' --- */}
+        {/* Header local eliminado para evitar duplicado — se usa el header global de la app */}
+        
         <main className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-blue-100 to-white relative overflow-hidden">
           
           {/* --- CAMBIO: Fondo decorativo con iconos --- */}
@@ -82,11 +64,7 @@ export default function CrearPublicacionPage() {
             </span>
           </div>
 
-          {/* --- CAMBIO: Tarjeta blanca con animación de entrada ---
-            - 'relative z-10' para estar sobre el fondo de iconos
-            - 'transition-all' y 'duration-700' para la animación
-            - Clases 'opacity-0' y 'translate-y-5' que se quitan con el estado 'isLoaded'
-          */}
+          {/* --- CAMBIO: Tarjeta blanca con animación de entrada --- */}
           <div 
             className={`
               max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-8 
