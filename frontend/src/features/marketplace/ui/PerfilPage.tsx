@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { useMemo } from "react";
 import { Sidebar } from "./components/Sidebar";
 import MyPublicationsFeed from "./components/MyPublicationsFeed";
+import UserDefault from "../../../assets/img/user_default.png";
 
 const MyPublicationsFeedAny = MyPublicationsFeed as any;
 
@@ -103,7 +104,11 @@ export default function PerfilPage() {
         <header className="border-b">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
             <div className="flex items-center gap-5 min-w-0">
-              <div className="h-20 w-20 rounded-full bg-gray-300 flex-shrink-0" />
+              <img 
+                src={UserDefault} 
+                alt={user.name} 
+                className="h-20 w-20 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
+              />
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-semibold text-gray-900 truncate">{user.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
