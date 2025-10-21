@@ -3,6 +3,8 @@ import { useMemo } from "react";
 import { Sidebar } from "./components/Sidebar";
 import MyPublicationsFeed from "./components/MyPublicationsFeed";
 import UserDefault from "../../../assets/img/user_default.png";
+// CAMBIO: Añadido el import para el logo (ajusta la ruta si es necesario)
+import logo from "../../../assets/img/logouct.png"; 
 
 const MyPublicationsFeedAny = MyPublicationsFeed as any;
 
@@ -20,6 +22,7 @@ type Publication = {
   imageUrl?: string;
 };
 
+// --- Componente StarRating (sin cambios) ---
 function StarRating({ value = 0, size = 18 }: { value?: number; size?: number }) {
   const full = Math.floor(value);
   const half = value - full >= 0.5;
@@ -45,6 +48,7 @@ function StarRating({ value = 0, size = 18 }: { value?: number; size?: number })
   );
 }
 
+// --- Componente Principal PerfilPage ---
 export default function PerfilPage() {
   const user = {
     name: "Nombre",
@@ -68,89 +72,75 @@ export default function PerfilPage() {
     { id: "p3", title: "Publicación", price: 12900, status: "Agotado" },
   ];
 
-  // Estado para el carrusel de valoraciones
-  const [scrollPosition, setScrollPosition] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const containerWidth = container.clientWidth;
-    // Desplazar el ancho completo del contenedor para mostrar las siguientes tarjetas
-    const scrollAmount = direction === 'left' ? -containerWidth : containerWidth;
-    
-    container.scrollBy({
-      left: scrollAmount,
-      behavior: 'smooth'
-    });
-  };
-
-  const handleScrollUpdate = () => {
-    if (!scrollContainerRef.current) return;
-    setScrollPosition(scrollContainerRef.current.scrollLeft);
-  };
-
-  const canScrollLeft = scrollPosition > 10;
-  const canScrollRight = scrollContainerRef.current 
-    ? scrollPosition < (scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth - 10)
-    : reviews.length > 3;
-
+  
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
       <Sidebar />
 
-      <div className="min-w-0">
-        <header className="border-b">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
-            <div className="flex items-center gap-5 min-w-0">
-              <img 
-                src={UserDefault} 
-                alt={user.name} 
-                className="h-20 w-20 rounded-full object-cover flex-shrink-0 border-2 border-gray-200"
-              />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-semibold text-gray-900 truncate">{user.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <StarRating value={user.rating} />
-                  <span className="text-sm text-gray-600">{user.rating.toFixed(1)}</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-1 truncate">{user.email}</p>
-                <p className="text-sm text-gray-600 truncate">{user.campus}</p>
-              </div>
+      <div className="min-w-0 flex flex-col h-screen">
+        
+        {/* ================================================================== */}
+        {/* CAMBIO: Header actualizado para coincidir con 'image_055d80.png' */}
+        {/* ================================================================== */}
+        <header className="h-[64px] bg-blue-900 flex items-center justify-between px-6 shrink-0">
+          
+          {/* Lado Izquierdo (Logo + Título) */}
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9">
+              <img src={logo} alt="MarketUCT Logo" className="h-full w-full object-contain" />
             </div>
+            <strong className="font-semibold text-white text-lg">MarketUCT</strong>
           </div>
-        </header>
 
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-          {/* Carrusel de Valoraciones */}
+          {/* Lado Derecho (Botón Perfil) */}
+          <button className="flex items-center gap-2 rounded-full bg-blue-700 pl-2 pr-4 py-1.5 text-sm font-medium text-white hover:bg-blue-600 transition-colors">
+            {/* Círculo blanco del icono */}
+            <div className="h-7 w-7 rounded-full bg-white grid place-items-center text-blue-700">
+               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5Z" fill="currentColor"/>
+                <path d="M4 20c0-3.31 3.58-6 8-6s8 2.69 8 6v1H4v-1Z" fill="currentColor"/>
+              </svg>
+            </div>
+            Perfil
+          </button>
+        </header>
+        {/* ================================================================== */}
+        {/* Fin del Header */}
+        {/* ================================================================== */}
+
+        {/* <main> (Todo el contenido de abajo es idéntico al de la respuesta anterior) */}
+        <main className="flex-1 overflow-y-auto max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 w-full bg-gradient-to-br from-blue-100 to-white">
+          
+          <section className="flex flex-col items-center gap-4 pt-4 pb-8">
+            <img 
+              src={UserDefault} 
+              alt={user.name} 
+              className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-lg"
+            />
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <StarRating value={user.rating} />
+                <span className="text-sm text-gray-700 font-medium">{user.rating.toFixed(1)}</span>
+              </div>
+              <p className="text-base text-gray-600 mt-2">{user.email}</p>
+              <p className="text-base text-gray-600">{user.campus}</p>
+            </div>
+          </section>
+
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Valoraciones</h2>
-            <div className="relative px-12">
-              {/* Flecha Izquierda - Fuera del contenedor */}
-              {canScrollLeft && (
-                <button
-                  onClick={() => handleScroll('left')}
-                  className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-blue-500 shadow-xl flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:scale-110 transition-all duration-200"
-                  aria-label="Ver valoraciones anteriores"
-                >
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              )}
-
-              {/* Contenedor del Carrusel - Grid de 3 columnas */}
+            <div className="relative">
               <div
                 ref={scrollContainerRef}
-                onScroll={handleScrollUpdate}
                 className="grid auto-cols-[calc(33.333%-0.67rem)] grid-flow-col gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {reviews.map((r, index) => (
                   <div
                     key={r.id}
-                    className="bg-white border rounded-xl p-4 flex items-center gap-3 hover:shadow-lg hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 ease-out"
+                    className="bg-amber-100 border border-amber-300 rounded-xl p-4 flex items-center gap-3 hover:shadow-lg hover:border-amber-400 hover:-translate-y-1 transition-all duration-300 ease-out"
                     style={{
                       animationDelay: `${index * 0.05}s`
                     }}
@@ -163,19 +153,6 @@ export default function PerfilPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Flecha Derecha - Fuera del contenedor */}
-              {canScrollRight && (
-                <button
-                  onClick={() => handleScroll('right')}
-                  className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-white border-2 border-blue-500 shadow-xl flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:scale-110 transition-all duration-200"
-                  aria-label="Ver más valoraciones"
-                >
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              )}
             </div>
           </section>
 
