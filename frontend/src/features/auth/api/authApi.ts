@@ -1,5 +1,5 @@
-import type { Credentials } from '../../domain/usecases/LoginUser'
-import type { User } from '../../domain/entities/User'
+import type { Credentials } from '@features/auth/domain/entities/Credentials'
+import type { User } from '../../../types/User'
 
 export async function login(credentials: Credentials): Promise<User> {
   await new Promise((r) => setTimeout(r, 500))
