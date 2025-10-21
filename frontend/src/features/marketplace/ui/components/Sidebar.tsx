@@ -26,7 +26,7 @@ export function Sidebar({
               decoding="async"
             />
           </div>
-          <strong className="font-extrabold text-white text-xl">MarketUCT</strong>
+          <strong className="font-extrabold text-black text-xl">MarketUCT</strong>
         </div>
 
         <nav role="navigation" className="grid gap-1.5">
