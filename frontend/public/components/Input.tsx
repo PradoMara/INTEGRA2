@@ -1,33 +1,46 @@
-import React from "react";
+import React, { forwardRef, useId } from "react";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  error?: string;
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
+  error?: string | null;
+  id?: string;
   className?: string;
-  borderColor?: string; // tailwind value: 'border-gray-200'
-}
+};
 
-const Input: React.FC<InputProps> = ({
-  error,
-  label,
-  className = "",
-  borderColor = "border-gray-300",
-  ...props
-}) => (
-  <div className="w-full">
-    {label && <label className="block mb-1 font-medium text-gray-700">{label}</label>}
-    <input
-      className={`
-        w-full px-4 py-2 rounded-lg transition-colors duration-200
-        focus:outline-none focus:ring-2
-        ${error ? "border-red-500 focus:ring-red-400" : `${borderColor} focus:ring-blue-400`}
-        bg-white text-gray-900
-        ${className}
-      `}
-      {...props}
-    />
-    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-  </div>
+const baseClasses =
+  "block w-full rounded-md border bg-white px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, error, id, className = "", ...rest }, ref) => {
+    const generatedId = useId();
+    const inputId = id ?? `input-${generatedId}`;
+    const errorId = `${inputId}-error`;
+
+    return (
+      <div className="form-control">
+        {label && (
+          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+          </label>
+        )}
+        <input
+          id={inputId}
+          ref={ref}
+          className={`${baseClasses} ${className}`}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          {...rest}
+        />
+        {error ? (
+          <p id={errorId} role="alert" className="mt-1 text-sm text-red-600">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 );
+
+Input.displayName = "Input";
 
 export default Input;

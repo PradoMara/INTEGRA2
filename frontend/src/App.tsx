@@ -1,19 +1,19 @@
 import { useState, useCallback } from 'react'
-import InfiniteFeed from './components/InfiniteFeed'
+import InfiniteFeed from './features/marketplace/ui/components/InfiniteFeed'
 import SearchAndFilter from './features/marketplace/ui/components/SearchAndFilter'
 import { useDebounce } from './hooks/usePostsWithFilters'
 import Header from './features/shared/ui/Header'
-// import LoginInstitutionalPage from './presentation/pages/LoginInstitutionalPage'
+import FloatingChat from './features/shared/ui/FloatingChat'
 
 function App() {
   // Estado para la búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [feedStats, setFeedStats] = useState({ hasResults: true, totalResults: 0 })
-  
+
   // Debounce del término de búsqueda para optimizar las consultas
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  
+
   // Mapeo de categorías para compatibilidad
   const categories = [
     'Electrónicos',
@@ -60,12 +60,8 @@ function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        {/* <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Marketplace UCT</h1>
-          <p className="text-gray-600">Feed optimizado con filtrado en tiempo real</p>
-        </div> */}
+    <div className="min-h-screen">
+      <header>
         <Header/>
       </header>
       
@@ -89,9 +85,10 @@ function App() {
           onStatsChange={handleFeedStatsChange}
         />
       </main>
+      {/* Floating chat widget visible en todas las rutas excepto /chats */}
+      <FloatingChat />
     </div>
   )
 }
 
 export default App
-

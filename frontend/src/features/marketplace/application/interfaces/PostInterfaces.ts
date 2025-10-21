@@ -1,4 +1,4 @@
-import type { Post, PostFilters } from '@/types/Post'
+import { Post, PostFilters } from '../../../shared/domain/entities/Post'
 
 // Interface para el repositorio de posts
 export interface PostRepository {

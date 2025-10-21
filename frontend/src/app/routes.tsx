@@ -6,18 +6,27 @@ import MisPublicacionesPage from '../features/marketplace/ui/MisPublicacionesPag
 import PerfilPage from '../features/marketplace/ui/PerfilPage.tsx'
 import PageLayout from '../features/shared/ui/PageLayout.tsx'
 import ChatPage from '../features/chat/pages/ChatPage.tsx'
+import AyudaPage from '../features/marketplace/ui/AyudaPage.tsx'
+import TermsPage from '../features/marketplace/ui/TermsPage.tsx'
+import AboutPage from '../features/shared/ui/AboutPage.tsx'
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      {/* Redirige la raíz a /home */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
+
       <Route element={<PageLayout />}>
         <Route path="/home" element={<HomePage />} />
         <Route path="/crear" element={<CrearPublicacionPage />} />
-          <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
+        <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
+        <Route path="/ayuda" element={<AyudaPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
+        <Route path="/terminos" element={<TermsPage />} />
         <Route path="/chats" element={<ChatPage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Route>
+      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

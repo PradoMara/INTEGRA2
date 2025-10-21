@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 interface SearchAndFilterProps {
   onSearchChange: (searchTerm: string) => void;
   onCategoryChange: (category: string) => void;
-  onClearFilters?: () => void; // Nueva prop para limpiar filtros
+  onClearFilters?: () => void;
   categories: string[];
   selectedCategory: string;
   searchTerm: string;
-  hasResults?: boolean; // Nueva prop para saber si hay resultados
-  totalResults?: number; // Nueva prop para mostrar cantidad de resultados
+  hasResults?: boolean;
+  totalResults?: number;
 }
 
 // Componente principal de búsqueda y filtros
@@ -25,25 +25,20 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  // Manejador para el cambio en la búsqueda
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(event.target.value);
   };
 
-  // Manejador para el cambio de categoría
   const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     onCategoryChange(event.target.value);
   };
 
   return (
     <div className="search-filter-container">
-      {/* Contenedor principal de los controles */}
       <div className="search-filter-wrapper">
         
-        {/* Barra de búsqueda */}
         <div className="search-input-container">
           <div className={`search-input-wrapper ${isSearchFocused ? 'search-input-focused' : ''}`}>
-            {/* Input de búsqueda */}
             <input
               type="text"
               placeholder="Buscar por título o descripción..."
@@ -54,7 +49,6 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               className="search-input"
             />
 
-            {/* Botón para limpiar búsqueda */}
             {searchTerm && (
               <button
                 onClick={() => onSearchChange('')}
@@ -68,10 +62,8 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           </div>
         </div>
 
-        {/* Select de categorías */}
         <div className="category-select-container">
           <div className="category-select-wrapper">
-            {/* Select de categorías */}
             <select
               value={selectedCategory}
               onChange={handleCategoryChange}
@@ -87,7 +79,6 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           </div>
         </div>
 
-        {/* Botón para limpiar todos los filtros */}
         {(searchTerm || selectedCategory) && onClearFilters && (
           <button
             onClick={onClearFilters}
@@ -99,7 +90,6 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         )}
       </div>
 
-      {/* Información de resultados mejorada */}
       <div className="search-info">
         {(searchTerm || selectedCategory) && (
           <>
@@ -121,7 +111,6 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           </>
         )}
         
-        {/* Mostrar total sin filtros cuando no hay filtros activos */}
         {!searchTerm && !selectedCategory && totalResults > 0 && (
           <span className="text-gray-500 text-xs">
             Mostrando {totalResults} publicaciones
@@ -129,7 +118,6 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         )}
       </div>
 
-      {/* Mensaje de no resultados mejorado */}
       {(searchTerm || selectedCategory) && !hasResults && (
         <div className="no-results-container">
           <div className="no-results-message">

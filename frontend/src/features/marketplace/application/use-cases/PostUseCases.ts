@@ -1,5 +1,5 @@
 import type { PostRepository, PostUseCases } from '../interfaces/PostInterfaces'
-import type { Post, PostFilters } from '../../../auth/entities/Post'
+import type { Post, PostFilters } from '@/types/Post'
 
 export class PostUseCasesImpl implements PostUseCases {
   constructor(private postRepository: PostRepository) {}
