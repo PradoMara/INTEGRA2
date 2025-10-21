@@ -22,15 +22,20 @@ export function TagInput({
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Determina si se alcanzó el límite de etiquetas
+  const isMaxTagsReached = maxTags && tags.length >= maxTags;
+  
   const addTag = (raw: string) => {
     const newTag = raw.trim();
     if (
       !newTag ||
       tags.includes(newTag) ||
-      (maxTags && tags.length >= maxTags) ||
+      isMaxTagsReached || // Usa la variable booleana
       newTag.length > 32
-    )
+    ) {
+      // Opcional: podrías mostrar un mensaje de error si se excede el límite
       return;
+    }
     onChange([...tags, newTag]);
     setInput("");
   };
@@ -54,6 +59,7 @@ export function TagInput({
   };
 
   const onPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    // Esto evita que se peguen caracteres no deseados o lógica compleja de una sola vez
     const pasted = e.clipboardData.getData("text");
     if (pasted.includes(",")) {
       e.preventDefault();
@@ -61,14 +67,29 @@ export function TagInput({
     }
   };
 
+  // Se fuerza a true/false para el tipado correcto
+  const inputIsDisabled = Boolean(disabled || isMaxTagsReached);
+
+
   return (
     <div>
-      {label && <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>}
+      {/* Usamos el ID para enlazar el label con el input */}
+      {label && (
+        <label 
+          htmlFor="tag-input-field" 
+          className="block text-sm font-semibold text-gray-700 mb-1"
+        >
+          {label}
+        </label>
+      )}
+      
+      {/* Contenedor principal con enfoque visual */}
       <div
-        className={[
-          "flex flex-wrap gap-1 rounded-lg border bg-white px-2 py-1 min-h-[40px] focus-within:border-violet-400",
-          error ? "border-rose-400" : "border-gray-200"
-        ].join(" ")}
+        className={`flex flex-wrap gap-1 rounded-lg border bg-white px-2 py-1 min-h-[40px] transition duration-150 ${
+            error ? "border-rose-500 ring-1 ring-rose-500" : 
+            disabled ? "border-gray-100 bg-gray-50 cursor-not-allowed" : 
+            "border-gray-200 focus-within:border-violet-500 focus-within:ring-1 focus-within:ring-violet-500"
+        }`}
       >
         {tags.map((tag, idx) => (
           <span
@@ -78,30 +99,34 @@ export function TagInput({
             {tag}
             <button
               type="button"
-              className="ml-1 text-violet-700 hover:text-rose-600 font-bold px-1 focus:outline-none"
+              className="ml-1 text-violet-700 hover:text-rose-600 font-bold px-1 focus:outline-none disabled:opacity-50"
               onClick={() => removeTag(idx)}
-              disabled={disabled}
+              disabled={inputIsDisabled} // Usamos la variable booleana aquí
               aria-label={`Eliminar etiqueta ${tag}`}
             >
               ×
             </button>
           </span>
         ))}
+        {/* El input donde se corrigió el tipado para evitar el error TS2322 */}
         <input
+          id="tag-input-field"
           ref={inputRef}
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={onInputKeyDown}
           onPaste={onPaste}
-          placeholder={tags.length === 0 ? placeholder : ""}
-          className="flex-1 min-w-[80px] border-none outline-none bg-transparent text-sm py-1"
-          disabled={disabled || (maxTags && tags.length >= maxTags)}
+          placeholder={tags.length === 0 ? placeholder : isMaxTagsReached ? "Límite alcanzado" : ""}
+          className="flex-1 min-w-[80px] border-none outline-none bg-transparent text-sm py-1 disabled:cursor-not-allowed"
+          disabled={inputIsDisabled} // <<-- LÍNEA CORREGIDA PARA SIEMPRE DEVOLVER BOOLEAN
           maxLength={32}
         />
       </div>
-      {error && (
-        <div className="text-xs text-rose-600 font-semibold mt-1">{error}</div>
+      {(error || isMaxTagsReached) && ( // Muestra error o advertencia de límite
+        <div className="text-xs text-rose-600 font-semibold mt-1">
+            {error || (isMaxTagsReached ? `Límite de ${maxTags} etiquetas alcanzado.` : null)}
+        </div>
       )}
     </div>
   );

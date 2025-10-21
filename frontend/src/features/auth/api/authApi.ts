@@ -1,4 +1,4 @@
-import type { Credentials } from '@features/auth/domain/entities/Credentials'
+import type { Credentials } from '../use-cases/LoginUser'
 import type { User } from '../../../types/User'
 
 export async function login(credentials: Credentials): Promise<User> {
