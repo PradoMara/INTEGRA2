@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import styles from './Header.module.css'
 import LogoMUCT from '../../../assets/img/logoMUCT.png'
+import UserDefault from '../../../assets/img/user_default.png'
 import { LogoutUser } from '../../auth/use-cases/LogoutUser'
 
 export const Header: React.FC = () => {
@@ -106,7 +107,11 @@ export const Header: React.FC = () => {
 
         <div className={styles.actions}>
           <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario">
-            <span className={styles.profileAvatar} aria-hidden="true" />
+            <img 
+              src={UserDefault} 
+              alt="Usuario" 
+              className={styles.profileAvatar}
+            />
             <span>Perfil</span>
           </NavLink>
           
@@ -153,7 +158,11 @@ export const Header: React.FC = () => {
           </div>
           <div className={styles.mobilePanelFooter}>
             <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario" onClick={() => setOpen(false)}>
-              <span className={styles.profileAvatar} aria-hidden="true" />
+              <img 
+                src={UserDefault} 
+                alt="Usuario" 
+                className={styles.profileAvatar}
+              />
               <span>Perfil</span>
             </NavLink>
             
