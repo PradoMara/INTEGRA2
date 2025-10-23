@@ -9,6 +9,7 @@ import ChatPage from '../features/chat/pages/ChatPage'
 import AyudaPage from '../features/marketplace/ui/AyudaPage'
 import TermsPage from '../features/marketplace/ui/TermsPage'
 import AboutPage from '../features/shared/ui/AboutPage'
+import { PublicationDetailPage } from '../features/marketplace/ui/PublicationDetailPage'
 
 export function AppRoutes() {
   return (
@@ -25,6 +26,7 @@ export function AppRoutes() {
         <Route path="/terminos" element={<TermsPage />} />
         <Route path="/chats" element={<ChatPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/publications/:id" element={<PublicationDetailPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

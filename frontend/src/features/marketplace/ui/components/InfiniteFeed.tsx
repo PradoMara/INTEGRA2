@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, matchPath } from 'react-router-dom'
 import { usePostsWithFilters } from '../../../../hooks/usePostsWithFilters'
 import { RatingStars } from '../../../shared/ui/RatingStars'
 import { formatInt } from '../../utils/format'
@@ -21,6 +21,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   onStatsChange
 }) => {
   const navigate = useNavigate()
+  const location = useLocation()
   const observer = useRef<IntersectionObserver | null>(null)
   const lastPostElementRef = useRef<HTMLDivElement | null>(null)
 
@@ -43,19 +44,22 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   const [openModal, setOpenModal] = useState(false)
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null)
 
+  // NO mostrar el modal cuando estamos en la página de detalle
+  const isDetailRoute = !!matchPath('/publications/:id', location.pathname)
+
   const parsePrice = (v: unknown): number => {
     const n = parseInt(String(v ?? '').replace(/\D/g, ''), 10)
     return Number.isFinite(n) ? n : 0
   }
 
   const buildDevImages = (seedBase: string, existing: string[]) => {
-  if (!AUGMENT_IMAGES_FOR_DEV) return existing
-  if ((existing?.length ?? 0) > 1) return existing
-  const seed = encodeURIComponent(String(seedBase || 'seed').replace(/\s+/g, '-'))
-  const variants = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/675`)
-  if (existing?.length === 1) return [existing[0], ...variants]
-  return variants
-}
+    if (!AUGMENT_IMAGES_FOR_DEV) return existing
+    if ((existing?.length ?? 0) > 1) return existing
+    const seed = encodeURIComponent(String(seedBase || 'seed').replace(/\s+/g, '-'))
+    const variants = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/675`)
+    if (existing?.length === 1) return [existing[0], ...variants]
+    return variants
+  }
 
   const mapPostToDetail = (post: any): PostDetailData => {
     const baseImages: string[] = post.images ?? (post.image ? [post.image] : [])
@@ -96,12 +100,34 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     }
   }
 
+  // Mapeo mínimo para pasar al state de la DetailPage
+  const mapPostToPublication = (post: any) => {
+    const imgs: string[] = post.images ?? (post.image ? [post.image] : [])
+    return {
+      id: String(post.id),
+      title: post.title ?? 'Sin título',
+      description: post.description ?? 'Sin descripción',
+      price: post.price,
+      images: imgs,
+      stock: post.stock ?? 1,
+      attributes: undefined,
+      seller: {
+        id: post.sellerId ?? post.authorId ?? undefined,
+        name: post.author ?? 'Usuario',
+        avatarUrl: post.avatar ?? undefined,
+      },
+      categoryName: post.categoryName,
+      campus: post.campus,
+      createdAt: post.publishedAt,
+    }
+  }
+
   const onOpenDetail = (post: any) => {
     setSelectedPost(mapPostToDetail(post))
     setOpenModal(true)
   }
 
-  // Punto 4: iniciar chat (ruta correcta: /chats)
+  // Iniciar chat (ruta correcta: /chats)
   const handleContact = (detail: PostDetailData) => {
     const toId = detail.vendedor?.id ?? undefined
     const toName = detail.vendedor?.nombre ?? ''
@@ -111,7 +137,6 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     if (toName) qs.set('toName', toName)
     if (toAvatar) qs.set('toAvatar', toAvatar)
 
-    // IMPORTANTE: usar /chats (plural) tal como está en routes.tsx
     navigate(`/chats${qs.toString() ? `?${qs}` : ''}`, {
       state: { toUser: detail.vendedor }
     })
@@ -333,13 +358,14 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => onOpenDetail(post)}
+                      {/* Ver detalle: LINK a la página (no abre modal) */}
+                      <Link
+                        to={`/publications/${post.id}`}
+                        state={{ publication: mapPostToPublication(post) }}
                         className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                       >
                         Ver detalle
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -360,13 +386,15 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
         </div>
       )}
 
-      {/* Modal de detalle con acción de contacto */}
-      <PostDetailModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        post={selectedPost}
-        onContact={handleContact}
-      />
+      {/* Modal de detalle con acción de contacto (NO se muestra en la ruta de detalle) */}
+      {!isDetailRoute && (
+        <PostDetailModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          post={selectedPost}
+          onContact={handleContact}
+        />
+      )}
     </div>
   )
 }
