@@ -1,4 +1,5 @@
-+Table "actividad_usuario" {
+
+Table "actividad_usuario" {
   "id" int [pk, not null, increment]
   "usuario_id" int [not null]
   "accion" varchar(50) [default: NULL]
@@ -23,6 +24,18 @@ Table "calificaciones" {
     transaccion_id [name: "transaccion_id"]
     calificador_id [name: "calificador_id"]
     calificado_id [name: "calificado_id"]
+  }
+}
+
+Table "carrito" {
+  "id" int [pk, not null, increment]
+  "usuario_id" int [not null]
+  "producto_id" int [not null]
+  "cantidad" int [not null]
+
+  Indexes {
+    usuario_id [name: "usuario_id"]
+    producto_id [name: "producto_id"]
   }
 }
 
@@ -271,6 +284,10 @@ Ref "calificaciones_ibfk_1":"transacciones"."id" < "calificaciones"."transaccion
 Ref "calificaciones_ibfk_2":"cuentas"."id" < "calificaciones"."calificador_id" [delete: cascade]
 
 Ref "calificaciones_ibfk_3":"cuentas"."id" < "calificaciones"."calificado_id" [delete: cascade]
+
+Ref "carrito_ibfk_1":"cuentas"."id" < "carrito"."usuario_id" [delete: cascade]
+
+Ref "carrito_ibfk_2":"productos"."id" < "carrito"."producto_id" [delete: cascade]
 
 Ref "categorias_ibfk_1":"categorias"."id" < "categorias"."categoria_padre_id" [delete: set null]
 
