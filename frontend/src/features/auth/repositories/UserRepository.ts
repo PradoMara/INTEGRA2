@@ -1,4 +1,4 @@
-import type { IUserRepository, Credentials } from '../../../../domain/usecases/LoginUser'
+import type { IUserRepository, Credentials } from '../use-cases/LoginUser'
 import type { User } from '../entities/User'
 import * as api from '../api/authApi'
 
