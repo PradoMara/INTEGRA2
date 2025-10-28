@@ -10,5 +10,15 @@ export default defineConfig({
       "@": "/src"   // alias simple para imports '@/...'
     }
   },
-  build: { outDir: "dist", sourcemap: false }
+  build: { outDir: "dist", sourcemap: false },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        // si tus rutas en el backend NO tienen prefijo /api, descomenta:
+        // rewrite: (p) => p.replace(/^\/api/, ''),
+      },
+    },
+  },
 });
