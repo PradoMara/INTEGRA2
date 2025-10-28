@@ -13,7 +13,7 @@ export const handlers = [
       { id: 2, name: 'User 2', email: 'user2@example.com' },
     ])
   }),
-  http.get('/api/posts', ({ request }) => {
+  http.get('/api/posts', ({ request }: any) => {
     const url = new URL(request.url)
     const page = url.searchParams.get('page') || '1'
     const limit = url.searchParams.get('limit') || '9'

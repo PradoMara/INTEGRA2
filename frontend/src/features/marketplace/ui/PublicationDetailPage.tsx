@@ -1,8 +1,8 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
-import { usePublicationById } from '../hooks/publications/usePublicationById';
+import { usePublicationById } from '@/features/ProductDetail/ProductDetail.Hooks/usePublicationById';
 import { PublicationDetails } from './components/detail/PublicationDetails';
-import type { Publication } from '../types/publication';
+import type { Publication } from '@/features/ProductDetail/ProductDetail.Types/publication';
 
 export const PublicationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

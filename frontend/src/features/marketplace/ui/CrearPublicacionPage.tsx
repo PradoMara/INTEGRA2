@@ -1,7 +1,7 @@
 // src/features/marketplace/ui/CrearPublicacionPage.tsx
 import { useMemo } from 'react'
 import { Sidebar } from './components/Sidebar'
-import { CreatePostForm } from './components/create-post/CreatePostForm'
+import { CreatePostForm } from '@/features/CrearPublicacion/CrearPublicacion.UI/CrearPublicacion.Components/CreatePostForm'
 
 export default function CrearPublicacionPage() {
   // (Opcional) breadcrumbs o título dinámico

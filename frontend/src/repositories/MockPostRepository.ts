@@ -1,4 +1,4 @@
-import type { PostRepository } from '../features/marketplace/application/interfaces/PostInterfaces'
+import type { PostRepository } from '@/features/marketplace/Marketplace.Types/PostInterfaces'
 import type { Post, PostFilters } from '../types/Post'
 
 // Datos de categorías

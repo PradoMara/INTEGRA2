@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import type { Item } from "../../../../types/types";
-import { formatCLP, formatInt, placeholder } from "../../utils/format";
+import { formatCLP, formatInt, placeholder } from "@/features/marketplace/Marketplace.Utils/format";
 import { RatingStars } from "../../../shared/ui/RatingStars";
 
 export function PublicationCard({

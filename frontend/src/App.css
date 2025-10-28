@@ -8,9 +8,8 @@
 */
 .bg-fondo,
 .app-background {
-  background-image: url('/FONDO.jpg');
+  background-image: url('./assets/img/FONDO.jpg');
   background-size: cover;
   background-position: center;
   min-height: 100vh;
 }
-  background-image: url('./assets/img/FONDO.jpg');

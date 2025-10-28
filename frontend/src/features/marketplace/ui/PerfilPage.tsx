@@ -1,7 +1,7 @@
 import React from "react";
 import { useMemo, useState, useCallback } from "react";
 import {Sidebar} from "./components/Sidebar"; // mini sidebar con íconos (Marketplace / Chats)
-import MyPublicationsFeed from "./components/MyPublicationsFeed";
+import MyPublicationsFeed from "@/features/MyPublications/MyPublications.UI/MyPublications.Components/MyPublicationsFeed";
 import { RatingStars } from "../../shared/ui/RatingStars"; // opcional: cámbialo o quítalo si no existe
 
 type Review = {
