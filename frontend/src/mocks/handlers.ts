@@ -1,5 +1,16 @@
 import { http, HttpResponse } from 'msw'
 
+// Estado en memoria para el usuario autenticado (demo)
+let currentUser = {
+  id: 'u-1',
+  nombre: 'Usuario Demo',
+  email: 'usuariodemo@alu.uct.cl',
+  campus: 'Campus San Juan Pablo II',
+  reputacion: 4.5,
+  avatarUrl: 'https://via.placeholder.com/96',
+  about: 'Perfil de prueba (MSW)'
+}
+
 export const handlers = [
   http.get('/posts', () => {
     return HttpResponse.json([
@@ -39,16 +50,40 @@ export const handlers = [
       hasMore: parseInt(page) < 5,
     })
   }),
+  // Usuario autenticado (compat: exponemos ambos esquemas de nombres)
   http.get('/api/me', () => {
     return HttpResponse.json({
-      id: 1,
-      name: 'User 1',
-      email: 'user1@example.com',
+      // Esquema para nuestro dominio
+      ...currentUser,
+      // Campos alternativos para compat con otras vistas antiguas
+      idLegacy: 1,
+      name: currentUser.nombre,
+      rating: currentUser.reputacion,
+      avatar: currentUser.avatarUrl,
       role: 'user',
-      campus: 'Main Campus',
-      rating: 4.5,
-      avatar: 'https://via.placeholder.com/96',
     })
+  }),
+
+  // Obtener usuario por id
+  http.get('/api/users/:id', (ctx: any) => {
+    const { params } = ctx as { params: { id: string } }
+    const { id } = params
+    if (id !== currentUser.id) {
+      return HttpResponse.json({ message: 'User not found' }, { status: 404 })
+    }
+    return HttpResponse.json(currentUser)
+  }),
+
+  // Actualizar usuario por id
+  http.put('/api/users/:id', async (ctx: any) => {
+    const { params, request } = ctx as { params: { id: string }; request: Request }
+    const { id } = params
+    if (id !== currentUser.id) {
+      return HttpResponse.json({ message: 'User not found' }, { status: 404 })
+    }
+    const body = (await request.json().catch(() => ({}))) as Partial<typeof currentUser>
+    currentUser = { ...currentUser, ...body }
+    return HttpResponse.json(currentUser)
   }),
   http.get('/perfil', () => {
     return HttpResponse.json({
