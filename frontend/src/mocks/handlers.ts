@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import type { Post } from '@/types/Post'
 
 // Estado en memoria para el usuario autenticado (demo)
 let currentUser = {
@@ -10,6 +11,34 @@ let currentUser = {
   avatarUrl: 'https://via.placeholder.com/96',
   about: 'Perfil de prueba (MSW)'
 }
+
+// In-memory posts
+function seedPosts(count = 30): Post[] {
+  const now = new Date()
+  const arr: Post[] = []
+  for (let i = 1; i <= count; i++) {
+    arr.push({
+      id: i,
+      title: `Post ${i}`,
+      description: `Descripción del post ${i}`,
+      content: `Contenido simulado para el post ${i}.`,
+      categoryId: i % 2 === 0 ? 'electronics' : 'services',
+      categoryName: i % 2 === 0 ? 'Electrónica' : 'Servicios',
+      author: `Usuario ${((i - 1) % 5) + 1}`,
+      avatar: 'https://via.placeholder.com/40',
+      likes: Math.floor(Math.random() * 50),
+      comments: Math.floor(Math.random() * 20),
+      shares: Math.floor(Math.random() * 10),
+      timeAgo: `${(i % 5) + 1} h`,
+      price: String(10000 + i * 500),
+      createdAt: now,
+      updatedAt: now,
+    })
+  }
+  return arr
+}
+
+let posts: Post[] = seedPosts()
 
 export const handlers = [
   http.get('/posts', () => {
@@ -24,31 +53,64 @@ export const handlers = [
       { id: 2, name: 'User 2', email: 'user2@example.com' },
     ])
   }),
+  // --- Posts in-memory store ---
   http.get('/api/posts', ({ request }: any) => {
     const url = new URL(request.url)
-    const page = url.searchParams.get('page') || '1'
-    const limit = url.searchParams.get('limit') || '9'
-    // Mock data for posts
-    const posts = Array.from({ length: parseInt(limit) }, (_, i) => ({
-      id: (parseInt(page) - 1) * parseInt(limit) + i + 1,
-      title: `Post ${(parseInt(page) - 1) * parseInt(limit) + i + 1}`,
-      description: `Content ${(parseInt(page) - 1) * parseInt(limit) + i + 1}`,
-      price: Math.floor(Math.random() * 100) + 10,
-      category: 'electronics',
-      categoryName: 'Electrónicos',
-      userId: 1,
-      author: 'User ' + (i + 1),
-      avatar: 'https://via.placeholder.com/40',
-      timeAgo: 'hace 2 horas',
-      image: 'https://via.placeholder.com/300x200',
-      sellerRating: 4.5,
-      sellerSales: Math.floor(Math.random() * 50) + 1,
-    }))
-    return HttpResponse.json({
-      posts,
-      nextPage: parseInt(page) < 5 ? parseInt(page) + 1 : undefined, // Mock pagination
-      hasMore: parseInt(page) < 5,
-    })
+    const page = parseInt(url.searchParams.get('page') || '1', 10)
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10)
+    const start = (page - 1) * limit
+    const end = start + limit
+    const slice = posts.slice(start, end)
+    const hasMore = end < posts.length
+    const nextPage = hasMore ? page + 1 : undefined
+    return HttpResponse.json({ posts: slice, hasMore, nextPage })
+  }),
+  http.get('/api/posts/:id', ({ params }: any) => {
+    const { id } = params as { id: string }
+  const found = posts.find((p: Post) => String(p.id) === String(id))
+    if (!found) return HttpResponse.json({ message: 'Post not found' }, { status: 404 })
+    return HttpResponse.json(found)
+  }),
+  http.post('/api/posts', async ({ request }: any) => {
+    // simulate latency to expose optimistic updates in tests
+    await new Promise((r) => setTimeout(r, 80))
+    const body = (await request.json().catch(() => ({}))) as Partial<Post>
+  const nextId = posts.length ? Math.max(...posts.map((p: Post) => Number(p.id))) + 1 : 1
+    const now = new Date()
+    const created: Post = {
+      id: nextId,
+      title: body.title ?? `Post ${nextId}`,
+      description: body.description ?? '',
+      content: body.content ?? '',
+      categoryId: body.categoryId ?? 'misc',
+      categoryName: body.categoryName ?? 'Misceláneo',
+      author: (body as any).author ?? 'Usuario Demo',
+      avatar: (body as any).avatar ?? 'https://via.placeholder.com/40',
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      timeAgo: 'ahora',
+      price: (body as any).price,
+      createdAt: now,
+      updatedAt: now,
+    }
+    posts.unshift(created)
+    return HttpResponse.json(created, { status: 201 })
+  }),
+  http.put('/api/posts/:id', async ({ params, request }: any) => {
+    const { id } = params as { id: string }
+  const idx = posts.findIndex((p: Post) => String(p.id) === String(id))
+    if (idx === -1) return HttpResponse.json({ message: 'Post not found' }, { status: 404 })
+    const body = (await request.json().catch(() => ({}))) as Partial<Post>
+    posts[idx] = { ...posts[idx], ...body, updatedAt: new Date() }
+    return HttpResponse.json(posts[idx])
+  }),
+  http.delete('/api/posts/:id', ({ params }: any) => {
+    const { id } = params as { id: string }
+  const idx = posts.findIndex((p: Post) => String(p.id) === String(id))
+    if (idx === -1) return HttpResponse.json({ message: 'Post not found' }, { status: 404 })
+    const [deleted] = posts.splice(idx, 1)
+    return HttpResponse.json({ id: deleted.id })
   }),
   // Usuario autenticado (compat: exponemos ambos esquemas de nombres)
   http.get('/api/me', () => {
