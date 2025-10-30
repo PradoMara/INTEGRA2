@@ -1,0 +1,407 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+\geometry{margin=1in}
+
+\begin{document}
+
+\title{Backlog del Proyecto: Marketplace Universitario}
+\author{}
+\date{}
+\maketitle
+
+\section*{Objetivo general}
+Desarrollar una plataforma web para la comunidad universitaria que permita a los estudiantes publicar, buscar y comprar productos y comunicarse mediante un chat en tiempo real, con una experiencia de usuario moderna y segura.
+
+\section*{\'{E}picas y Objetivos SMART}
+Las \'{e}picas son bloques de funcionalidad que agrupan historias de usuario. Cada \'{e}pica se asocia a un \textbf{objetivo SMART} (Specific, Measurable, Achievable, Relevant, Time--bound).
+
+\begin{longtable}{|p{0.05\textwidth}|p{0.25\textwidth}|p{0.70\textwidth}|}
+\hline
+\textbf{ID} & \textbf{\'{E}pica} & \textbf{Objetivo SMART} \\
+\hline
+EP01 & Configuraci\'on inicial y arquitectura & \textbf{Espec\'ifico:} configurar el entorno de desarrollo (Tailwind, PostgreSQL/Prisma, tokens de dise\~no, estructura de carpetas) y documentar la arquitectura inicial. \textbf{Medible:} repositorio funcional con migraciones aplicadas y documentaci\'on disponible. \textbf{Alcanzable:} el equipo tiene acceso a los recursos y gu\'ias. \textbf{Relevante:} es la base para cualquier desarrollo posterior. \textbf{Acotado en el tiempo:} debe completarse al finalizar el sprint~1. \\
+\hline
+EP02 & Autenticaci\'on y seguridad & Implementar un sistema de autenticaci\'on con inicio de sesi\'on institucional, generaci\'on y revocaci\'on de tokens JWT, middleware de protecci\'on y endpoints de refresco y cierre de sesi\'on. El objetivo se considera cumplido cuando el flujo de login/logout se realiza sin errores en pruebas funcionales al t\'ermino del sprint. \\
+\hline
+EP03 & Gesti\'on de publicaciones & Crear, obtener, editar y eliminar publicaciones a trav\'es de formularios validados con subida de im\'agenes. El m\'odulo se considera listo cuando los usuarios pueden realizar operaciones CRUD completas y el feed refleja los cambios en tiempo real dentro del sprint. \\
+\hline
+EP04 & Gesti\'on de chat en tiempo real & Construir un chat b\'asico con WebSockets, endpoints CRUD y componentes de interfaz que permitan enviar y recibir mensajes sin recargar la p\'agina. Debe estar operativo y probado con al menos dos usuarios antes de cerrar el sprint. \\
+\hline
+EP05 & Feed y navegaci\'on & Mostrar publicaciones en un feed con scroll infinito o paginaci\'on, filtros de b\'usqueda y categor\'ia, indicadores de carga, estados vac\'ios y manejo de errores. El feed debe ser responsivo y cargar nuevas p\'aginas en menos de 1~s para considerarse terminado al final del sprint. \\
+\hline
+EP06 & Interfaz de usuario y dise\~no & Definir y aplicar estilos globales usando Tailwind, establecer tokens de dise\~no y \emph{breakpoints} responsivos, maquetar \emph{header}/\emph{footer} y documentar los componentes. El objetivo es tener un dise\~no coherente y documentado que sirva de base para futuros sprints. \\
+\hline
+EP07 & Calidad y documentaci\'on & Planificar y ejecutar \emph{smoke tests} y checklists de regresi\'on, triage de bugs, validar y consolidar evidencias, y crear documentaci\'on b\'asica (manual de Node.js, actas de sprint, diagramas actualizados). Estas actividades deben finalizarse durante el sprint para asegurar la calidad del producto. \\
+\hline
+EP08 & Planificaci\'on y gesti\'on del proyecto & Crear, asignar y gestionar tareas en la herramienta de seguimiento, actualizar diagramas de casos de uso y de componentes, y reorganizar carpetas del repositorio. Se considera cumplido cuando todas las tareas del sprint est\'an creadas, asignadas y priorizadas, y la estructura del proyecto est\'a documentada. \\
+\hline
+EP09 & Sistematizaci\'on y actas & Revisar y corregir los objetivos generales y espec\'ificos, justificar el problema de la sistematizaci\'on, elaborar y revisar actas de cada sesi\'on. El objetivo es entregar la documentaci\'on de sistematizaci\'on validada al final del sprint. \\
+\hline
+\end{longtable}
+
+\section*{Historias de usuario}
+Las historias de usuario se describen desde la perspectiva de las personas que usar\'an el sistema. Cada historia incluye criterios de aceptaci\'on que servir\'an como referencia para las pruebas.
+
+\begin{longtable}{|p{0.08\textwidth}|p{0.18\textwidth}|p{0.18\textwidth}|p{0.18\textwidth}|p{0.38\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Como...} & \textbf{Quiero...} & \textbf{Para...} & \textbf{Criterios de aceptaci\'on} \\
+\hline
+US01 & Usuario invitado & Navegar por el feed sin iniciar sesi\'on & Explorar publicaciones de otros estudiantes & El sistema muestra el listado de publicaciones p\'ublicas en la p\'agina principal con scroll infinito o paginaci\'on y permite filtrar por categor\'ia/texto sin necesidad de autenticarse. \\
+\hline
+US02 & Usuario autenticado & Iniciar sesi\'on con mi correo institucional & Acceder a mi perfil y funcionalidades avanzadas & Debe validarse el dominio permitido, mostrar formulario de login y generar un token JWT; si las credenciales son incorrectas se notifica; el token se guarda y protege rutas internas. \\
+\hline
+US03 & Usuario autenticado & Cerrar sesi\'on de forma segura & Proteger mi cuenta y datos & El backend ofrece un endpoint de logout que invalida el token; el frontend elimina el token de almacenamiento y redirige al inicio; se comprueba que el token no sea aceptado despu\'es de cerrar sesi\'on. \\
+\hline
+US04 & Usuario autenticado & Crear una publicaci\'on & Vender o anunciar un producto & Se ofrece un formulario con campos obligatorios (t\'itulo, descripci\'on, precio, categor\'ia), subida de im\'agenes y previsualizaci\'on; el formulario valida informaci\'on y muestra errores; al enviar se muestra un mensaje de \'exito y redirige. \\
+\hline
+US05 & Usuario autenticado & Editar o eliminar mis publicaciones & Mantener actualizada mi oferta & Solo el autor puede editar o eliminar mediante un endpoint de edici\'on/\emph{soft delete}; el formulario se rellena con datos existentes; cambios se reflejan en el feed sin recargar la p\'agina. \\
+\hline
+US06 & Usuario & Enviar y recibir mensajes en tiempo real & Preguntar detalles de un producto a otro estudiante & La interfaz de chat muestra los mensajes enviados y recibidos en tiempo real usando WebSocket; el usuario puede escribir mensajes, enviarlos con Enter, verlos en el hilo y notar su estado (enviado/le\'ido). \\
+\hline
+US07 & Usuario & Filtrar publicaciones por categor\'ia o texto & Encontrar productos relevantes f\'acilmente & Se presenta una barra de b\'usqueda y un selector de categor\'ias; al aplicar filtros el feed se actualiza sin recargar y se indica si no hay resultados; existe un bot\'on para limpiar filtros. \\
+\hline
+US08 & Desarrollador & Configurar la base de datos y ORM & Persistir de forma consistente publicaciones, usuarios y chats & El repositorio contiene un esquema SQL/Prisma definido, migraciones aplicadas, \emph{seeds} b\'asicos y relaciones con integridad; se puede iniciar la base de datos desde cero en cualquier entorno. \\
+\hline
+US09 & Equipo de QA & Realizar \emph{smoke tests} y revisar regresiones & Asegurar que las funcionalidades del sprint funcionan correctamente & Existe una lista de pruebas para login, CRUD de publicaciones, feed y chat; se documentan los resultados de las pruebas, los bugs se registran y se priorizan; al final del sprint no quedan errores cr\'iticos abiertos. \\
+\hline
+US10 & Equipo de proyecto & Gestionar y priorizar tareas & Mantener el proyecto ordenado y cumplir los tiempos & Las tareas est\'an registradas con estimaciones, responsable y prioridad; se revisan diariamente, se reorganizan carpetas del repositorio cuando es necesario y se actualizan diagramas y documentaci\'on del sprint. \\
+\hline
+\end{longtable}
+
+\section*{Tareas t\'ecnicas}
+Cada historia se descompone en tareas t\'ecnicas concretas y estimables. La siguiente tabla muestra las tareas m\'as relevantes del sprint~1, derivadas de las capturas proporcionadas y agrupadas por \'{e}pica. Los identificadores corresponden a un orden interno del backlog, no necesariamente a los c\'odigos de YouTrack.
+
+\begin{longtable}{|p{0.07\textwidth}|p{0.30\textwidth}|p{0.38\textwidth}|p{0.15\textwidth}|p{0.10\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Tarea} & \textbf{Descripci\'on resumida} & \textbf{\'{E}pica asociada} & \textbf{Estimaci\'on} \\
+\hline
+T01 & Configurar Tailwind y tokens de dise\~no & Instalar Tailwind, definir estilos globales, variables y utilidades, documentar tokens y \emph{breakpoints} responsivos. & EP01, EP06 & 3~h \\
+\hline
+T02 & Crear estructura de carpetas y reorganizar m\'odulos & Definir la estructura base del proyecto (carpetas de frontend, backend, base de datos, pruebas) y refactorizar archivos existentes. & EP01, EP08 & 2~h \\
+\hline
+T03 & Configurar conexi\'on inicial de Prisma ORM con PostgreSQL & Decidir el ORM (Prisma), crear el esquema, migraciones iniciales y \emph{seeds} b\'asicos, y probar integridad referencial. & EP01, EP06 & 4~h \\
+\hline
+T04 & Maquetar formulario de publicaciones (markup simple, sin estilos) & Generar el componente de formulario con campos b\'asicos y prepararlo para validaciones e im\'agenes. & EP03 & 2~h \\
+\hline
+T05 & Implementar subida de im\'agenes con previsualizaci\'on & Permitir seleccionar im\'agenes desde el equipo, mostrar una vista previa y asociarlas a la publicaci\'on antes de enviarla al backend. & EP03 & 3~h \\
+\hline
+T06 & A\~nadir validaciones al formulario de publicaci\'on & Validar campos obligatorios, l\'imites de caracteres, formato de precios y tama\~no/formato de im\'agenes; mostrar mensajes de error claros. & EP03 & 2~h \\
+\hline
+T07 & Crear endpoint para crear, obtener, editar y eliminar publicaciones & Desarrollar los controladores y rutas REST para CRUD de publicaciones, incluyendo edici\'on y \emph{soft delete}; limitar las acciones a los autores. & EP03 & 4~h \\
+\hline
+T08 & Implementar componente de feed con listados y scroll infinito o paginaci\'on & Construir la pantalla principal del feed mostrando publicaciones ordenadas por fecha; implementar scroll infinito o paginaci\'on y control de estados (cargando, vac\'io, error). & EP05 & 4~h \\
+\hline
+T09 & A\~nadir filtros de b\'usqueda y categor\'ia al feed & Crear barra de b\'usqueda y selector de categor\'ias; aplicar filtros al feed y permitir limpiar la b\'usqueda; mostrar estado sin resultados. & EP05 & 3~h \\
+\hline
+T10 & Mostrar indicador de carga y estados vac\'ios en el feed & Incluir \emph{spinner}/\emph{skeleton} mientras se cargan datos, mostrar mensajes para listas vac\'ias y bot\'on de reintento en caso de error. & EP05 & 2~h \\
+\hline
+T11 & Implementar frontend del login & Dise\~nar la pantalla de inicio de sesi\'on con validaci\'on de dominios permitidos; integrar con backend para autenticaci\'on y mostrar errores cuando corresponda. & EP02 & 3~h \\
+\hline
+T12 & Implementar endpoints de autenticaci\'on: login, refresh, logout & Crear endpoints en el backend para autenticaci\'on, generaci\'on de tokens JWT, revocaci\'on y renovaci\'on segura; integrar middleware para proteger rutas privadas. & EP02 & 4~h \\
+\hline
+T13 & Middleware de validaci\'on de tokens & Desarrollar un middleware que valide tokens antes de ejecutar acciones cr\'iticas; en caso de expiraci\'on, utilizar endpoint de refresh y emitir errores descriptivos. & EP02 & 2~h \\
+\hline
+T14 & Configurar credenciales y dominios permitidos para login institucional & Crear variables de entorno y l\'ogica de validaci\'on que acepte solo correos institucionales, por ejemplo \texttt{@alu.uct.cl}, y documentar la configuraci\'on. & EP02 & 1~h \\
+\hline
+T15 & Backend: endpoints CRUD de chat & Dise\~nar el esquema de conversaci\'on/mensajes, implementar endpoints para crear conversaciones, enviar y recibir mensajes, y consultarlos. & EP04 & 4~h \\
+\hline
+T16 & Implementar WebSocket para chat en tiempo real & Configurar WebSocket en backend y frontend; desarrollar l\'ogica de suscripci\'on y transmisi\'on de mensajes; asegurar desconexi\'on y reconexi\'on. & EP04 & 4~h \\
+\hline
+T17 & Maquetar vista base del chat (contenedor, lista de mensajes, input de texto) & Crear el componente del chat en frontend con contenedor principal, lista de mensajes y un campo de entrada; aplicar estilos b\'asicos. & EP04, EP06 & 3~h \\
+\hline
+T18 & Crear componente de mensaje (propio y ajeno) & Diferenciar mensajes enviados y recibidos (alineaci\'on y estilos), mostrar nombre y hora, e implementar estados de entrega/lectura. & EP04, EP06 & 3~h \\
+\hline
+T19 & L\'ogica de env\'io y limpieza del input en el chat & A\~nadir l\'ogica para enviar mensajes al presionar Enter, limpiar el campo y manejar errores; mostrar \emph{feedback} si el mensaje no se puede enviar. & EP04 & 2~h \\
+\hline
+T20 & Implementar esquema y migraciones para conversaciones/mensajes & Definir modelos en Prisma para conversaciones y mensajes, generar migraciones y \emph{seeds} necesarios. & EP04, EP01 & 2~h \\
+\hline
+T21 & A\~nadir header y footer b\'asicos & Crear componentes reutilizables para el \emph{header} (navegaci\'on, logo, enlaces a perfil, feed y chat) y el \emph{footer} (informaci\'on legal, enlaces) con dise\~no responsivo. & EP05, EP06 & 3~h \\
+\hline
+T22 & Preparar documentaci\'on b\'asica (actas, manual Node.js, diagramas) & Redactar actas de reuniones, preparar manual de instalaci\'on y uso de Node.js, actualizar diagramas de casos de uso y de componentes conforme avanza el desarrollo. & EP07, EP08, EP09 & 3~h \\
+\hline
+T23 & Planificar y asignar tareas en la herramienta de gesti\'on & Crear tareas del sprint en el sistema de seguimiento, asignar responsables, estimar tiempos y priorizar; reorganizar carpetas y revisar tareas completadas. & EP08 & 2~h \\
+\hline
+T24 & Ejecutar \emph{smoke test}, checklist de regresi\'on y triage de bugs & Dise\~nar y ejecutar pruebas b\'asicas de login, publicaciones, feed y chat; documentar resultados, registrar bugs y priorizar su resoluci\'on. & EP07 & 3~h \\
+\hline
+T25 & Corregir objetivos generales y espec\'ificos de la sistematizaci\'on & Revisar y actualizar los objetivos y la justificaci\'on del problema; asegurarse de que la documentaci\'on refleja las decisiones actuales del proyecto. & EP09 & 2~h \\
+\hline
+T26 & Redactar y consolidar actas de sprint & Crear un documento de conclusiones y evidencias del sprint, incluyendo avances y problemas encontrados; consolidar la informaci\'on para presentaciones internas. & EP09 & 2~h \\
+\hline
+\end{longtable}
+
+\textbf{Nota:} Las estimaciones son aproximadas y se expresan en horas de trabajo por persona. Cada tarea debe asignarse a un responsable y revisarse al finalizar.
+
+\section*{Estado del backlog}
+El backlog se gestiona con las siguientes columnas de estado:
+
+\begin{tabular}{|p{0.25\textwidth}|p{0.70\textwidth}|}
+\hline
+\textbf{Estado} & \textbf{Descripci\'on} \\
+\hline
+\textbf{To Do} & Pendiente de iniciar; priorizada para el sprint actual. \\
+\hline
+\textbf{In Progress} & En desarrollo activo; se actualiza diariamente. \\
+\hline
+\textbf{Review} & En revisi\'on t\'ecnica o en espera de \emph{merge}/\emph{pull request}. \\
+\hline
+\textbf{Done} & Validada, mergeada en la rama principal y cerrada. \\
+\hline
+\end{tabular}
+
+Todas las tareas del sprint~1 deben moverse a \textbf{Done} antes de la revisi\'on de sprint.
+
+\section*{Sprint 1 – Plan de trabajo}
+\textbf{Objetivo del Sprint 1:} configurar el entorno de desarrollo, construir la base de autenticaci\'on y publicaciones, establecer la arquitectura del chat y lanzar un feed funcional de publicaciones. \\
+Duraci\'on: 2 semanas.
+
+\begin{longtable}{|p{0.07\textwidth}|p{0.53\textwidth}|p{0.20\textwidth}|p{0.20\textwidth}|}
+\hline
+\textbf{ID} & \textbf{Elemento} & \textbf{Estado inicial} & \textbf{Responsable} \\
+\hline
+EP01 & Configuraci\'on inicial y arquitectura               & Hecho        & Equipo Dev        \\
+\hline
+T01 & Configurar Tailwind y tokens de dise\~no             & Hecho        & Frontend Lead     \\
+\hline
+T02 & Crear estructura de carpetas y reorganizar m\'odulos & Hecho        & DevOps            \\
+\hline
+T03 & Configurar Prisma y PostgreSQL                     & En progreso & Backend Lead      \\
+\hline
+EP02 & Autenticaci\'on y seguridad                          & En progreso & Backend/Frontend  \\
+\hline
+T11 & Implementar frontend del login                     & En progreso & Frontend Dev      \\
+\hline
+T12 & Endpoints de login, refresh y logout               & En progreso & Backend Dev       \\
+\hline
+T13 & Middleware de validaci\'on de tokens                 & Hecho        & Backend Dev       \\
+\hline
+EP03 & Gesti\'on de publicaciones                           & En progreso & Equipo Fullstack    \\
+\hline
+T04 & Maquetar formulario de publicaciones               & Hecho        & Frontend Dev      \\
+\hline
+T05 & Subida de im\'agenes + preview                       & En progreso & Frontend Dev      \\
+\hline
+T06 & Validaciones en el formulario                      & Por hacer      & Frontend Dev      \\
+\hline
+T07 & Endpoints CRUD publicaciones                       & Por hacer      & Backend Dev       \\
+\hline
+EP04 & Gesti\'on de chat en tiempo real                     & Por hacer      & Subequipo de chat      \\
+\hline
+T15 & Endpoints CRUD chat                                & Por hacer      & Backend Dev       \\
+\hline
+T16 & Implementar WebSocket                              & Por hacer      & Backend/Frontend  \\
+\hline
+T17 & Maquetar vista base del chat                       & Por hacer      & Frontend Dev      \\
+\hline
+T18 & Componente de mensaje (propio/ajeno)               & Por hacer      & Frontend Dev      \\
+\hline
+T19 & L\'ogica de env\'io y limpieza del input               & Por hacer      & Frontend Dev      \\
+\hline
+T20 & Esquema y migraciones de conversaciones/mensajes   & Por hacer      & Backend Dev       \\
+\hline
+EP05 & Feed y navegaci\'on                                  & En progreso & Equipo Frontend     \\
+\hline
+T08 & Componente de feed con scroll infinito             & En progreso & Frontend Dev      \\
+\hline
+T09 & Filtros de b\'usqueda y categor\'ia                    & Por hacer      & Frontend Dev      \\
+\hline
+T10 & Indicador de carga y estados vac\'ios                & Por hacer      & Frontend Dev      \\
+\hline
+T21 & A\~nadir header y footer                             & Por hacer      & Frontend Dev      \\
+\hline
+EP06 & Interfaz de usuario y dise\~no                       & En progreso & Equipo UX/UI        \\
+\hline
+EP07 & Calidad y documentaci\'on                            & En progreso & Equipo de QA           \\
+\hline
+T24 & \emph{Smoke tests} y triage de bugs                       & Por hacer      & Equipo de QA           \\
+\hline
+EP08 & Planificaci\'on y gesti\'on                            & En progreso & Director de proyecto   \\
+\hline
+T23 & Crear y gestionar tareas en la herramienta         & Hecho        & Director de proyecto   \\
+\hline
+EP09 & Sistematizaci\'on y actas                            & En progreso & Equipo de documentaci\'on \\
+\hline
+T25 & Corregir objetivos generales y espec\'ificos         & En progreso & Equipo de documentaci\'on \\
+\hline
+T26 & Redactar y consolidar actas del sprint             & Por hacer      & Equipo de documentaci\'on \\
+\hline
+\end{longtable}
+
+\section*{Objetivo del Sprint 2}
+El objetivo de este sprint es \textbf{integrar los componentes de la interfaz con servicios de datos}, \textbf{implementar la base para la moderación del chat}, \textbf{definir tipos y hooks de acceso a datos en el frontend}, y \textbf{actualizar la documentación y el backlog} del proyecto.  Al finalizar la semana 1 del sprint 2 se espera contar con las páginas principales listas para la configuracion de endpoints \emph{mock}, la moderación preparada y la documentación ajustada.
+
+\section*{Historias de usuario (Sprint 2)}
+
+\begin{longtable}{|l|p{3cm}|p{5cm}|p{4cm}|p{7cm}|}
+\hline
+\textbf{ID} & \textbf{Como…} & \textbf{Quiero…} & \textbf{Para…} & \textbf{Criterios de aceptación} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Como…} & \textbf{Quiero…} & \textbf{Para…} & \textbf{Criterios de aceptación} \\
+\hline
+\endhead
+\hline
+\textbf{US11} & Desarrollador & Integrar los componentes de chat con un WebSocket de prueba & Probar el comportamiento del chat sin depender del backend real & Se integran \texttt{FloatingChat} y \texttt{ChatPage} con un WebSocket simulado usando MSW; los mensajes enviados se reciben de vuelta desde el servicio \emph{mock} y se muestran en la interfaz. \\
+\hline
+\textbf{US12} & Moderador & Filtrar palabras ofensivas en el chat & Mantener un ambiente respetuoso & Se investiga la biblioteca \texttt{better‑profanity} y se genera un archivo \texttt{.txt} con palabras ofensivas.  La documentación explica cómo integrar la librería en el backend para realizar el filtrado. \\
+\hline
+\textbf{US13} & Usuario & Visualizar mis publicaciones, mi perfil y el inicio con datos \emph{mock} & Explorar la aplicación mientras se desarrolla el backend real & Las páginas \texttt{MisPublicacionesPage}, \texttt{PerfilPage} y \texttt{HomePage} consumen servicios \emph{mock} a través de MSW; al navegar muestran información simulada consistente con el modelo de datos. \\
+\hline
+\textbf{US14} & Desarrollador & Diseñar tipos TypeScript y hooks de React Query para publicaciones y usuarios & Facilitar el consumo y la gestión de datos en el frontend & Se definen interfaces y alias de tipo para las entidades principales (publicación, usuario) y se crean hooks usando React Query (por ejemplo, \texttt{usePosts}, \texttt{useUsers}, etc.) con ejemplos de consulta y mutación. \\
+\hline
+\textbf{US15} & Equipo de proyecto & Actualizar la documentación de análisis (diagrama de secuencia y casos de uso) & Mantener la documentación alineada con el desarrollo & Se actualiza el diagrama de secuencia y los casos de uso de Administrador y Usuario; los documentos se almacenan en el repositorio y reflejan los flujos actuales de la aplicación. \\
+\hline
+\textbf{US16} & Equipo de proyecto & Preparar la base de datos y el despliegue & Asegurar que el proyecto tenga infraestructura para persistencia y \emph{hosting} & Se crea un repositorio base para la base de datos (incluyendo scripts iniciales), se investiga una solución de \emph{hosting} adecuada y se documenta la configuración recomendada. \\
+\hline
+\end{longtable}
+
+\section*{Tareas del Sprint 2}
+Cada historia de usuario se descompone en tareas técnicas concretas y estimables. La siguiente tabla muestra las tareas del sprint 2, asociadas a sus respectivas épicas, con una estimación preliminar y el estado actual.
+
+\begin{longtable}{|l|p{5cm}|p{7cm}|p{3cm}|p{2cm}|p{2cm}|}
+\hline
+\textbf{ID} & \textbf{Tarea} & \textbf{Descripción resumida} & \textbf{Épica asociada} & \textbf{Estimación} & \textbf{Estado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Tarea} & \textbf{Descripción resumida} & \textbf{Épica asociada} & \textbf{Estimación} & \textbf{Estado} \\
+\hline
+\endhead
+\hline
+\textbf{T27} & Investigar biblioteca \texttt{better‑profanity} & Analizar cómo funciona la librería \texttt{better‑profanity}, evaluar su integración en el backend para filtrar palabras ofensivas y documentar las conclusiones. & EP04 (Chat) & 2 h & To Do \\
+\hline
+\textbf{T28} & Crear archivo de palabras ofensivas (\texttt{offensive\_words.txt}) & Compilar una lista de palabras ofensivas para el chat y guardarla en un archivo \texttt{.txt} en la carpeta de moderación; documentar cómo utilizarla. & EP04 (Chat) & 2 h & To Do \\
+\hline
+\textbf{T29} & Borrar datos de prueba del chat/widget & Eliminar datos de prueba utilizados en los componentes de chat y dejar el entorno listo para pruebas con datos simulados mediante MSW. & EP04 (Chat) & 1 h & To Do \\
+\hline
+\textbf{T30} & Configurar MSW y \emph{handlers} base & Instalar y configurar Mock Service Worker y crear \emph{handlers} base que simulen las respuestas de la API para chat, publicaciones y usuarios. & EP04/EP05 & 2 h & En progreso \\
+\hline
+\textbf{T31} & Integrar \texttt{FloatingChat} con WebSocket simulado & Conectar el componente de chat flotante (\texttt{FloatingChat}) con un servicio de WebSocket simulado para permitir el envío y recepción de mensajes. & EP04 (Chat) & 3 h & En progreso \\
+\hline
+\textbf{T32} & Integrar \texttt{ChatPage} con WebSocket simulado & Conectar la página de chat principal (\texttt{ChatPage}) al WebSocket simulado usando MSW y gestionar eventos de conexión y mensajes. & EP04 (Chat) & 3 h & To Do \\
+\hline
+\textbf{T33} & Integrar \texttt{MisPublicacionesPage} con servicios \emph{mock} & Adaptar la página de “Mis publicaciones” para que consuma los servicios \emph{mock} y muestre las publicaciones del usuario de prueba. & EP03 (Publicaciones) & 2 h & To Do \\
+\hline
+\textbf{T34} & Integrar \texttt{PerfilPage} con servicios \emph{mock} & Adaptar la página de perfil para consumir datos simulados de usuario desde MSW y presentarlos en la interfaz. & EP05 (Feed) & 2 h & To Do \\
+\hline
+\textbf{T35} & Integrar \texttt{HomePage} con servicios \emph{mock} & Ajustar la página de inicio para utilizar servicios \emph{mock} y mostrar un feed simulado (esta tarea se marca como hecha si ya se completó en el sprint anterior). & EP05 (Feed) & 2 h & Done \\
+\hline
+\textbf{T36} & Crear diagrama de secuencia & Elaborar un diagrama de secuencia que represente el flujo de mensajes entre el frontend y los servicios (\emph{mock} y reales) para las principales funcionalidades. & EP09 (Documentación) & 2 h & To Do \\
+\hline
+\textbf{T37} & Actualizar caso de uso --- Administrador & Revisar y actualizar el documento del caso de uso para el rol de administrador, incorporando nuevas acciones y flujos detectados durante el sprint. & EP09 (Documentación) & 2 h & To Do \\
+\hline
+\textbf{T38} & Actualizar caso de uso --- Usuario & Revisar y actualizar el caso de uso del usuario común para reflejar las funcionalidades implementadas y planificadas. & EP09 (Documentación) & 2 h & To Do \\
+\hline
+\textbf{T39} & Repositorio base de base de datos & Crear el repositorio base que contendrá la estructura inicial de la base de datos, scripts de creación de tablas y archivos de migración (si aplica). & EP01 (Infraestructura) & 3 h & To Do \\
+\hline
+\textbf{T40} & Crear hooks de publicaciones (React Query) & Desarrollar hooks como \texttt{usePosts} y \texttt{useMutatePost} usando React Query para obtener y modificar publicaciones desde servicios \emph{mock} (y luego reales). & EP03 (Publicaciones) & 3 h & To Do \\
+\hline
+\textbf{T41} & Crear hooks de usuario (React Query) & Desarrollar hooks como \texttt{useUser} y \texttt{useUpdateUser} para gestionar datos de usuarios; emplear React Query y tipado con las interfaces definidas. & EP05 (Feed) & 3 h & To Do \\
+\hline
+\textbf{T42} & Investigación de endpoints de API & Investigar y documentar los endpoints disponibles en el backend (o planificados) para publicaciones, usuarios y chat; elaborar un listado con métodos, rutas y parámetros. & EP01/EP03/EP04 & 3 h & En progreso \\
+\hline
+\textbf{T43} & Diseñar tipos TypeScript para objetos & Definir interfaces y tipos en TypeScript que representen las entidades principales (usuario, publicación, mensaje) y exportarlos para su uso en hooks y componentes. & EP06 (UI) & 4 h & To Do \\
+\hline
+\textbf{T44} & Actualizar backlog del proyecto & Revisar el backlog existente, agregar las nuevas historias y tareas del sprint 2, priorizarlas y ajustar las estimaciones. & EP08 (Gestión) & 2 h & En progreso \\
+\hline
+\textbf{T45} & Buscar \emph{hosting} para la web & Evaluar diferentes opciones de \emph{hosting} (PaaS o IaaS) para desplegar la aplicación web cuando esté lista; documentar ventajas y desventajas de cada alternativa. & EP01 (Infraestructura) & 3 h & Done \\
+\hline
+\textbf{T46} & Agregar tareas a YouTrack & Cargar las tareas definidas en el backlog en la herramienta de gestión (YouTrack) para su seguimiento durante el sprint. & EP08 (Gestión) & 1 h & To Do \\
+\hline
+\end{longtable}
+
+\section*{Plan de Sprint 2 – Semana 1}
+El siguiente plan sintetiza el estado actual de cada épica y tarea para la primera semana del segundo sprint.  Se indica el responsable previsto para cada actividad.
+
+\begin{longtable}{|l|p{8cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{ID} & \textbf{Elemento} & \textbf{Estado actual} & \textbf{Responsable} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Elemento} & \textbf{Estado actual} & \textbf{Responsable} \\
+\hline
+\endhead
+\hline
+\textbf{EP04} & Moderación y chat & En progreso & Equipo de chat \\
+\hline
+T27 & Investigación better‑profanity & To Do & Desarrollador de backend \\
+\hline
+T28 & Archivo de palabras ofensivas & To Do & Desarrollador de backend \\
+\hline
+T29 & Borrar datos de prueba (chat/widget) & To Do & Desarrollador frontend \\
+\hline
+T30 & Configurar MSW + \emph{handlers} base & En progreso & Equipo frontend y QA \\
+\hline
+T31 & Integrar \texttt{FloatingChat} con WebSocket simulado & En progreso & Frontend \\
+\hline
+T32 & Integrar \texttt{ChatPage} con WebSocket simulado & To Do & Frontend \\
+\hline
+\textbf{EP03/EP05} & Integración de páginas con servicios \emph{mock} & En progreso & Equipo frontend \\
+\hline
+T33 & Integrar \texttt{MisPublicacionesPage} con servicios \emph{mock} & To Do & Frontend \\
+\hline
+T34 & Integrar \texttt{PerfilPage} con servicios \emph{mock} & To Do & Frontend \\
+\hline
+T35 & Integrar \texttt{HomePage} con servicios \emph{mock} & Done & Frontend \\
+\hline
+\textbf{EP03} & Hooks y tipos para publicaciones & Planificado & Equipo frontend \\
+\hline
+T40 & Crear hooks de publicaciones & To Do & Frontend \\
+\hline
+\textbf{EP05} & Hooks y tipos para usuarios & Planificado & Equipo frontend \\
+\hline
+T41 & Crear hooks de usuario & To Do & Frontend \\
+\hline
+\textbf{EP09} & Documentación y análisis & Planificado & Equipo de documentación \\
+\hline
+T36 & Diagrama de secuencia & To Do & Analista \\
+\hline
+T37 & Actualizar caso de uso --- Administrador & To Do & Analista \\
+\hline
+T38 & Actualizar caso de uso --- Usuario & To Do & Analista \\
+\hline
+\textbf{EP01} & Infraestructura y base de datos & Planificado & DevOps \\
+\hline
+T39 & Repositorio base de base de datos & To Do & DevOps \\
+\hline
+T45 & Buscar \emph{hosting} para la web & Done & DevOps \\
+\hline
+\textbf{EP01/EP03/EP04} & Investigación de endpoints & En progreso & Backend lead \\
+\hline
+T42 & Investigación de endpoints (API) & En progreso & Backend lead \\
+\hline
+\textbf{EP06} & Diseño y tipado & Planificado & Equipo frontend \\
+\hline
+T43 & Diseñar tipos TS para objetos & To Do & Frontend \\
+\hline
+\textbf{EP08} & Gestión y backlog & En progreso & Project manager \\
+\hline
+T44 & Actualizar backlog & En progreso & Project manager \\
+\hline
+T46 & Agregar tareas a YouTrack & To Do & Project manager \\
+\hline
+\end{longtable}
+
+\section*{M\'etricas y control}
+\begin{itemize}
+
+    \item \textbf{Definici\'on de hecho (DoD):}
+    \begin{itemize}
+        \item C\'odigo versionado y revisado.
+        \item Pruebas unitarias y/o pruebas manuales b\'asicas ejecutadas.
+        \item Documentaci\'on actualizada (diagramas, actas, manuales).
+        \item No se detectan errores cr\'iticos.
+    \end{itemize}
+\end{itemize}
+
+
+\end{document}
