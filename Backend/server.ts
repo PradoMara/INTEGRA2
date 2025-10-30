@@ -3,11 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import http from 'http';
-import { PrismaClient } from '@prisma/client';
 
 // Datos en memoria solo para demo
-const prisma = new PrismaClient();
-
 type Estado = 'enviando'|'enviado'|'recibido'|'leido';
 type Mensaje = { id: string; texto: string; autor: 'yo'|'otro'|string; hora: string; estado?: Estado };
 type Chat = { id: number; nombre: string; mensajes: Mensaje[] };
