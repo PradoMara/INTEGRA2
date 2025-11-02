@@ -10,6 +10,7 @@ import ChatPage from '@/features/DM/DM.UI/ChatPage'
 import AyudaPage from '@/features/About.Terms.Help/Help.UI/AyudaPage'
 import TermsPage from '@/features/About.Terms.Help/Terms.UI/TermsPage'
 import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage'
+import UsersPage from '../features/admin/pages/UsersPage'
 
 export function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ export function AppRoutes() {
         <Route path="/terminos" element={<TermsPage />} />
         <Route path="/chats" element={<ChatPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/admin/usuarios" element={<UsersPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
