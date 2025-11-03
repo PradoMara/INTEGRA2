@@ -1,0 +1,32 @@
+.card {
+  padding: 16px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.title {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-top: 6px;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.positive {
+  border-left: 4px solid #16a34a;
+}
+
+.negative {
+  border-left: 4px solid #dc2626;
+}
