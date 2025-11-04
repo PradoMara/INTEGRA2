@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
-import InfiniteFeed from './features/marketplace/Marketplace.UI/Marketplace.Components/InfiniteFeed'
-import SearchAndFilter from './features/marketplace/Marketplace.UI/Marketplace.Components/SearchAndFilter'
-import { useDebounce } from '@/hooks/usePostsWithFilters'
+import InfiniteFeed from './features/Marketplace/Marketplace.UI/Marketplace.Components/InfiniteFeed'
+import SearchAndFilter from './features/Marketplace/Marketplace.UI/Marketplace.Components/SearchAndFilter'
+import { useDebounce } from './features/Marketplace/Marketplace.Hooks/useProductsWithFilters'
 import Header from './features/shared/ui/Header'
 import FloatingChat from './features/shared/ui/FloatingChat'
 

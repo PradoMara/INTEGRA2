@@ -46,13 +46,13 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               onChange={handleSearchChange}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
-              className="search-input bg-white bg-opacity-70 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+              className="search-input"
             />
 
             {searchTerm && (
               <button
                 onClick={() => onSearchChange('')}
-                className="search-clear-btn text-gray-500 hover:text-gray-700 bg-transparent"
+                className="search-clear-btn"
                 type="button"
                 title="Limpiar búsqueda"
               >
@@ -67,7 +67,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             <select
               value={selectedCategory}
               onChange={handleCategoryChange}
-              className="category-select bg-white bg-opacity-70 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+              className="category-select"
             >
               <option value="">Todas las categorías</option>
               {categories.map((category) => (
@@ -82,7 +82,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         {(searchTerm || selectedCategory) && onClearFilters && (
           <button
             onClick={onClearFilters}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-white bg-opacity-60 hover:bg-opacity-80 rounded-md transition-colors duration-200 border border-gray-300"
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200 border border-gray-300"
             type="button"
           >
             Limpiar filtros
@@ -119,7 +119,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
       </div>
 
       {(searchTerm || selectedCategory) && !hasResults && (
-        <div className="no-results-container bg-transparent">
+        <div className="no-results-container">
           <div className="no-results-message">
             <div className="text-4xl mb-3">🔍</div>
             <h3>No se encontraron resultados</h3>
