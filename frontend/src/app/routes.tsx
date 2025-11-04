@@ -13,6 +13,10 @@ import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage'
 import { PublicationDetailPage } from '@/features/marketplace/ui/PublicationDetailPage'
 import PostsSandboxPage from '@/features/posts/PostsSandboxPage'
 import UsersPage from '../features/admin/pages/UsersPage'
+import AdminDashboardPage from '../features/admin/pages/DashboardPage'
+import AdminPostsPage from '../features/admin/pages/PostsPage'
+import AdminSettingsPage from '../features/admin/pages/SettingsPage'
+import AdminMarketplacePage from '../features/admin/pages/MarketplacePage'
 import PublicationsPage from '../features/admin/pages/PublicationsPage'
 
 export function AppRoutes() {
@@ -33,8 +37,12 @@ export function AppRoutes() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/publications/:id" element={<PublicationDetailPage />} />
         <Route path="/sandbox/posts" element={<PostsSandboxPage />} />
-  <Route path="/admin/usuarios" element={<UsersPage />} />
-  <Route path="/admin/publicaciones" element={<PublicationsPage />} />
+        {/* Admin */}
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/usuarios" element={<UsersPage />} />
+        <Route path="/admin/publicaciones" element={<AdminPostsPage />} />
+        <Route path="/admin/ajustes" element={<AdminSettingsPage />} />
+        <Route path="/admin/marketplace" element={<AdminMarketplacePage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

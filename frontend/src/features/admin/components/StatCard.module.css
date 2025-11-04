@@ -1,27 +1,30 @@
 .card {
   padding: 16px;
   border-radius: 10px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.04);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border-strong);
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .title {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--admin-muted);
 }
 
 .value {
   font-size: 1.6rem;
   font-weight: 700;
   margin-top: 6px;
-  color: #0f172a;
+  color: var(--admin-text);
 }
 
 .subtitle {
   margin-top: 8px;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--admin-muted);
 }
+
+.card:hover { box-shadow: var(--admin-shadow-md); }
 
 .positive {
   border-left: 4px solid #16a34a;
