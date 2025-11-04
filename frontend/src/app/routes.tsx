@@ -17,7 +17,6 @@ import AdminDashboardPage from '../features/admin/pages/DashboardPage'
 import AdminPostsPage from '../features/admin/pages/PostsPage'
 import AdminSettingsPage from '../features/admin/pages/SettingsPage'
 import AdminMarketplacePage from '../features/admin/pages/MarketplacePage'
-import PublicationsPage from '../features/admin/pages/PublicationsPage'
 
 export function AppRoutes() {
   return (
