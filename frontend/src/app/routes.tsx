@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from '@/features/Login/Login.UI/LoginPage'
-import HomePage from '@/features/Marketplace/Marketplace.UI/HomePage'
+import HomePage from '@/features/marketplace/Marketplace.UI/HomePage'
 import CrearPublicacionPage from '@/features/CrearPublicacion/CrearPublicacion.UI/CrearPublicacionPage'
 import EditarPublicacionPage from '@/features/EditarPublicacion/EditarPublicacion.UI/EditarPublicacionPage'
 import MisPublicacionesPage from '@/features/MyPublications/MyPublications.UI/MisPublicacionesPage'
@@ -11,6 +11,10 @@ import AyudaPage from '@/features/About.Terms.Help/Help.UI/AyudaPage'
 import TermsPage from '@/features/About.Terms.Help/Terms.UI/TermsPage'
 import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage'
 import UsersPage from '../features/admin/pages/UsersPage'
+import AdminDashboardPage from '../features/admin/pages/DashboardPage'
+import AdminPostsPage from '../features/admin/pages/PostsPage'
+import AdminSettingsPage from '../features/admin/pages/SettingsPage'
+import AdminMarketplacePage from '../features/admin/pages/MarketplacePage'
 
 export function AppRoutes() {
   return (
@@ -28,7 +32,12 @@ export function AppRoutes() {
         <Route path="/terminos" element={<TermsPage />} />
         <Route path="/chats" element={<ChatPage />} />
         <Route path="/about" element={<AboutPage />} />
+        {/* Admin */}
+        <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/admin/usuarios" element={<UsersPage />} />
+        <Route path="/admin/publicaciones" element={<AdminPostsPage />} />
+        <Route path="/admin/ajustes" element={<AdminSettingsPage />} />
+        <Route path="/admin/marketplace" element={<AdminMarketplacePage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
