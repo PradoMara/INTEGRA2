@@ -13,6 +13,7 @@ import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage'
 import { PublicationDetailPage } from '@/features/marketplace/ui/PublicationDetailPage'
 import PostsSandboxPage from '@/features/posts/PostsSandboxPage'
 import UsersPage from '../features/admin/pages/UsersPage'
+import PublicationsPage from '../features/admin/pages/PublicationsPage'
 
 export function AppRoutes() {
   return (
@@ -32,7 +33,8 @@ export function AppRoutes() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/publications/:id" element={<PublicationDetailPage />} />
         <Route path="/sandbox/posts" element={<PostsSandboxPage />} />
-        <Route path="/admin/usuarios" element={<UsersPage />} />
+  <Route path="/admin/usuarios" element={<UsersPage />} />
+  <Route path="/admin/publicaciones" element={<PublicationsPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
