@@ -5,6 +5,8 @@ import MyPublicationsFeed from "./Perfil.Components/PublicationsFeed";
 import UserDefault from "@/assets/img/user_default.png";
 // CAMBIO: Añadido el import para el logo (ajusta la ruta si es necesario)
 import logo from "@/assets/img/logouct.png"; 
+import { useMe } from "@/features/users/hooks/useMe";
+import { useUpdateUser } from "@/features/users/hooks/useUpdateUser";
 
 const MyPublicationsFeedAny = MyPublicationsFeed as any;
 
@@ -50,12 +52,17 @@ function StarRating({ value = 0, size = 18 }: { value?: number; size?: number })
 
 // --- Componente Principal PerfilPage ---
 export default function PerfilPage() {
+  // Demo: datos mock desde MSW usando hooks de usuario
+  const { data: me, isLoading: loadingMe } = useMe()
+  const updateUser = useUpdateUser()
+
   const user = {
-    name: "Nombre",
-    email: "nombre@alu.uct.cl",
-    campus: "Campus San Juan Pablo II",
-    rating: 4.5,
-  };
+    name: me?.nombre ?? "Nombre",
+    email: me?.email ?? "nombre@alu.uct.cl",
+    campus: me?.campus ?? "Campus San Juan Pablo II",
+    rating: me?.reputacion ?? 4.5,
+    id: me?.id ?? 'u-0',
+  }
 
   const reviews: Review[] = [
     { id: "r1", author: "Usuario", rating: 4.5 },
@@ -100,6 +107,25 @@ export default function PerfilPage() {
               </div>
               <p className="text-base text-gray-600 mt-2">{user.email}</p>
               <p className="text-base text-gray-600">{user.campus}</p>
+              {/* Botón de demo para actualizar mock (no red real) */}
+              <div className="mt-3">
+                <button
+                  className="px-3 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                  disabled={loadingMe || updateUser.isPending || !user.id}
+                  onClick={() => {
+                    if (!user.id) return
+                    updateUser.mutate({ id: user.id, data: { about: 'Actualizado desde demo ' + new Date().toLocaleTimeString() } })
+                  }}
+                >
+                  {updateUser.isPending ? 'Guardando…' : 'Actualizar perfil (mock)'}
+                </button>
+                {updateUser.isError && (
+                  <p className="mt-2 text-sm text-rose-600">Error al actualizar (mock).</p>
+                )}
+                {updateUser.isSuccess && (
+                  <p className="mt-2 text-sm text-emerald-700">Perfil actualizado (mock).</p>
+                )}
+              </div>
             </div>
           </section>
 

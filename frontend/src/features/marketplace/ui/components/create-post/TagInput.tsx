@@ -96,7 +96,7 @@ export function TagInput({
           onPaste={onPaste}
           placeholder={tags.length === 0 ? placeholder : ""}
           className="flex-1 min-w-[80px] border-none outline-none bg-transparent text-sm py-1"
-          disabled={disabled || (maxTags && tags.length >= maxTags)}
+          disabled={disabled || (!!maxTags && tags.length >= maxTags)}
           maxLength={32}
         />
       </div>

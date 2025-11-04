@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { ImageCarousel } from "./ImageCarousel";
+import { ImageCarousel } from "../media/ImageCarousel";
 import { RatingStars } from "../RatingStars";
 
 export type PostDetailData = {
@@ -141,7 +141,7 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
               <h3 className="text-sm font-semibold text-slate-700">Descripción</h3>
               <p
                 id="post-detail-desc"
-                className="text-sm leading-6 text-slate-700 whitespace-pre-wrap break-words [overflow-wrap:anywhere] hyphens-auto"
+                className="text-sm leading-6 text-slate-700 whitespace-pre-wrap [overflow-wrap:anywhere] hyphens-auto"
               >
                 {post.descripcion}
               </p>
