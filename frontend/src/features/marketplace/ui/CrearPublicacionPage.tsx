@@ -1,8 +1,7 @@
 // Se importa 'useEffect' y 'useState' para la animación
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { CreatePostForm } from './components/create-post/CreatePostForm';
-import logo from "../../../assets/img/logouct.png"; 
+import { CreatePostForm } from '@/features/CrearPublicacion/CrearPublicacion.UI/CrearPublicacion.Components/CreatePostForm';
 
 // --- Icono de Libro (para decoración) ---
 function IconBook() {
@@ -39,7 +38,7 @@ export default function CrearPublicacionPage() {
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
       
       <aside>
-        <Sidebar active="crear" />
+  <Sidebar active="marketplace" />
       </aside>
 
       <div className="min-w-0 flex flex-col h-screen">

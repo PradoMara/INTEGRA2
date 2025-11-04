@@ -1,5 +1,3 @@
-import type { Post as PostType } from "@/features/marketplace/Marketplace.Types/Post";
-import React from "react";
 import Card from "../../../../../public/components/Card";
 import Button from "../../../../../public/components/Button";
 import { formatCLP } from "@/features/marketplace/Marketplace.Utils/format";
