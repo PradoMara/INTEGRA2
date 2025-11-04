@@ -7,7 +7,7 @@ export default function Sidebar() {
       <nav className={styles.nav}>
         <a className={styles.link} href="#dashboard">Dashboard</a>
         <a className={styles.link} href="#users">Usuarios</a>
-        <a className={styles.link} href="#posts">Publicaciones</a>
+           <a className={styles.link} href="/admin/publicaciones">Publicaciones</a>
         <a className={styles.link} href="#market">Marketplace</a>
         <a className={styles.link} href="#settings">Ajustes</a>
       </nav>
