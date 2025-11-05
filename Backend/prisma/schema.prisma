@@ -1,0 +1,218 @@
+// prisma/schema.prisma — PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/* =========================
+   Catálogos / Estados
+   ========================= */
+enum NombreRol {
+  ADMIN
+  USER
+  MODERADOR
+}
+
+model Rol {
+  id      Int       @id @default(autoincrement())
+  nombre  NombreRol @unique
+  cuentas Cuenta[]
+  @@map("roles")
+}
+
+model EstadoUsuario {
+  id      Int     @id @default(autoincrement())
+  nombre  String  @db.VarChar(50)
+  cuentas Cuenta[]
+  @@map("estados_usuario")
+}
+
+// SIMPLIFICADO: Los estados ahora reflejan el ciclo de vida de un producto en un marketplace de contacto directo.
+model EstadoProducto {
+  id        Int        @id @default(autoincrement())
+  nombre    String     @db.VarChar(50) // Ej: "Disponible", "Reservado", "Vendido"
+  productos Producto[]
+  @@map("estados_producto")
+}
+
+/* =========================
+   Usuarios / Cuentas
+   ========================= */
+model Cuenta {
+  id            Int      @id @default(autoincrement())
+  nombre        String   @db.VarChar(50)
+  apellido      String?  @db.VarChar(50)
+  correo        String   @unique @db.VarChar(255)
+  usuario       String   @unique @db.VarChar(255)
+  contrasena    String?  @db.VarChar(255)
+  rolId         Int      @map("rol_id")
+  estadoId      Int      @map("estado_id")
+  fechaRegistro DateTime @default(now()) @map("fecha_registro")
+  campus        String?  @db.VarChar(100)
+  reputacion    Decimal  @default(0) @db.Decimal(5, 2)
+
+  rol    Rol           @relation(fields: [rolId], references: [id], onDelete: Restrict)
+  estado EstadoUsuario @relation(fields: [estadoId], references: [id], onDelete: Restrict)
+
+  // RELACIONES SIMPLIFICADAS
+  productos         Producto[]
+  favoritos         Favorito[]
+  conversacionesIniciadas Conversacion[] @relation("CompradorConversaciones")
+  conversacionesRecibidas Conversacion[] @relation("VendedorConversaciones")
+  mensajesEnviados  Mensaje[]
+  reportesHechos    Reporte[]      @relation("ReportanteReportes")
+  reportesRecibidos Reporte[]      @relation("UsuarioReportadoReportes")
+  reputacionesDadas ReputacionUsuario[] @relation("EvaluadorReputaciones")
+  reputacionesRecibidas ReputacionUsuario[] @relation("EvaluadoReputaciones")
+
+  // Se mantienen otras relaciones sociales y de utilidad
+  notificaciones    Notificacion[]
+  ubicaciones       Ubicacion[]
+  siguiendo         Seguidor[]     @relation("UsuarioSigue")
+  seguidores        Seguidor[]     @relation("UsuarioSeguido")
+
+  @@map("cuentas")
+}
+
+// NUEVO: Modelo de reputación simplificado. Un usuario puede calificar a otro.
+model ReputacionUsuario {
+  evaluadorId Int @map("evaluador_id")
+  evaluadoId  Int @map("evaluado_id")
+  puntuacion  Int // De 1 a 5
+  comentario  String?  @db.Text
+  fecha       DateTime @default(now())
+
+  evaluador Cuenta @relation("EvaluadorReputaciones", fields: [evaluadorId], references: [id], onDelete: Cascade)
+  evaluado  Cuenta @relation("EvaluadoReputaciones", fields: [evaluadoId], references: [id], onDelete: Cascade)
+
+  @@id([evaluadorId, evaluadoId]) // Un usuario solo puede evaluar a otro una vez
+  @@map("reputacion_usuario")
+}
+
+/* =========================
+   Categorías / Productos
+   ========================= */
+model Categoria {
+  id               Int         @id @default(autoincrement())
+  nombre           String      @db.VarChar(255)
+  categoriaPadreId Int?        @map("categoria_padre_id")
+  categoriaPadre   Categoria?  @relation("CategoriaHijos", fields: [categoriaPadreId], references: [id], onDelete: SetNull)
+  subcategorias    Categoria[] @relation("CategoriaHijos")
+  productos        Producto[]
+  @@map("categorias")
+}
+
+model Producto {
+  id           Int      @id @default(autoincrement())
+  nombre       String   @db.VarChar(100)
+  vendedorId   Int      @map("vendedor_id")
+  precioActual Decimal  @db.Decimal(10, 2) @map("precio_actual")
+  descripcion  String?  @db.Text
+  fechaAgregado DateTime @default(now()) @map("fecha_agregado")
+  estadoId     Int      @map("estado_id")
+  visible      Boolean  @default(true)
+  categoriaId  Int?     @map("categoria_id")
+
+  vendedor     Cuenta         @relation(fields: [vendedorId], references: [id], onDelete: Cascade)
+  estado       EstadoProducto @relation(fields: [estadoId], references: [id], onDelete: Restrict)
+  categoria    Categoria?     @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  imagenes     ImagenProducto[]
+  favoritos    Favorito[]
+  reportes     Reporte[]      @relation("ProductoReportado")
+  
+  // AHORA UN PRODUCTO TIENE CONVERSACIONES ASOCIADAS
+  conversaciones Conversacion[]
+
+  @@index([vendedorId, estadoId])
+  @@map("productos")
+}
+
+model ImagenProducto {
+  id         Int      @id @default(autoincrement())
+  productoId Int      @map("producto_id")
+  urlImagen  String   @map("url_imagen")
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  @@map("imagenes_producto")
+}
+
+model Favorito {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  productoId Int      @map("producto_id")
+  fecha      DateTime @default(now())
+
+  usuario  Cuenta   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  @@unique([usuarioId, productoId])
+  @@map("favoritos")
+}
+
+/* =========================
+   Mensajería (Flujo Principal)
+   ========================= */
+// NUEVO: Modela una conversación entre dos usuarios sobre un producto específico.
+model Conversacion {
+  id          Int      @id @default(autoincrement())
+  productoId  Int      @map("producto_id")
+  compradorId Int      @map("comprador_id") // Quién inicia la conversación
+  vendedorId  Int      @map("vendedor_id")  // El dueño del producto
+  fechaInicio DateTime @default(now()) @map("fecha_inicio")
+  
+  producto  Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  comprador Cuenta    @relation("CompradorConversaciones", fields: [compradorId], references: [id], onDelete: Cascade)
+  vendedor  Cuenta    @relation("VendedorConversaciones", fields: [vendedorId], references: [id], onDelete: Cascade)
+  mensajes  Mensaje[]
+
+  @@map("conversaciones")
+}
+
+// MODIFICADO: Un mensaje ahora pertenece a una conversación.
+model Mensaje {
+  id             Int      @id @default(autoincrement())
+  conversacionId Int      @map("conversacion_id")
+  autorId        Int      @map("autor_id") // Quién envió este mensaje
+  contenido      String   @db.Text
+  fechaEnvio     DateTime @default(now()) @map("fecha_envio")
+  leido          Boolean  @default(false)
+
+  conversacion Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
+  autor        Cuenta       @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([conversacionId])
+  @@map("mensajes")
+}
+
+
+/* =========================
+   Reportes / Moderación (Sin cambios, sigue siendo crucial)
+   ========================= */
+model EstadoReporte {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @db.VarChar(50)
+  reportes Reporte[]
+  @@map("estados_reporte")
+}
+
+model Reporte {
+  id                 Int           @id @default(autoincrement())
+  reportanteId       Int           @map("reportante_id")
+  usuarioReportadoId Int?          @map("usuario_reportado_id")
+  productoId         Int?          @map("producto_id")
+  motivo             String        @db.Text
+  fecha              DateTime      @default(now())
+  estadoId           Int           @map("estado_id")
+
+  reportante       Cuenta        @relation("ReportanteReportes", fields: [reportanteId], references: [id], onDelete: Cascade)
+  usuarioReportado Cuenta?       @relation("UsuarioReportadoReportes", fields: [usuarioReportadoId], references: [id], onDelete: SetNull)
+  producto         Producto?     @relation("ProductoReportado", fields: [productoId], references: [id], onDelete: SetNull)
+  estado           EstadoReporte @relation(fields: [estadoId], references: [id], onDelete: Restrict)
+  @@map("reportes")
+}
+
+// Otros modelos como Notificaciones, Seguidores, Ubicaciones, Foros, etc., se pueden mantener
+// ya que no están directamente ligados al flujo de compra y aportan valor social a la app.
