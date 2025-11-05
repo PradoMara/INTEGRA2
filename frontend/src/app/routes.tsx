@@ -5,6 +5,8 @@ import CrearPublicacionPage from '@/features/CrearPublicacion/CrearPublicacion.U
 import EditarPublicacionPage from '@/features/EditarPublicacion/EditarPublicacion.UI/EditarPublicacionPage'
 import MisPublicacionesPage from '@/features/MyPublications/MyPublications.UI/MisPublicacionesPage'
 import PerfilPage from '@/features/Perfil/Perfil.UI/PerfilPage'
+import OnboardingPage from '@/features/onboarding/Onboarding'
+import EditProfilePage from '@/features/Perfil/EditProfile'
 import PageLayout from '@/features/shared/ui/PageLayout'
 import ChatPage from '@/features/DM/DM.UI/ChatPage'
 import AyudaPage from '@/features/About.Terms.Help/Help.UI/AyudaPage'
@@ -27,11 +29,13 @@ export function AppRoutes() {
 
       <Route element={<PageLayout />}>
         <Route path="/home" element={<HomePage />} />
+  <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/crear" element={<CrearPublicacionPage />} />
         <Route path="/editar" element={<EditarPublicacionPage />} />
         <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
         <Route path="/ayuda" element={<AyudaPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
+  <Route path="/perfil/editar" element={<EditProfilePage />} />
         <Route path="/terminos" element={<TermsPage />} />
         <Route path="/chats" element={<ChatPage />} />
         <Route path="/about" element={<AboutPage />} />
