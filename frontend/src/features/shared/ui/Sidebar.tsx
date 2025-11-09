@@ -6,7 +6,7 @@ export function Sidebar({
   active = "marketplace",
   className = "",
 }: {
-  active?: "marketplace" | "chats" | "terminos" | "ayuda" | "crear";
+  active?: "marketplace" | "chats" | "terminos" | "ayuda" | "crear" | "foro";
   className?: string;
 }) {
   return (
@@ -66,6 +66,18 @@ export function Sidebar({
             ].join(" ")}
           >
             Terminos y Condiciones
+          </Link>
+
+          <Link
+            to="/foro"
+            className={[
+              "px-3 py-2 rounded-xl no-underline text-white",
+              active === "foro"
+                ? "font-extrabold"
+                : "font-medium hover:bg-yellow-500",
+            ].join(" ")}
+          >
+            Foro
           </Link>
         </nav>
 
