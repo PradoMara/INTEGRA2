@@ -1,22 +1,5 @@
-// Entidad Post del dominio del marketplace
-export interface Post {
-  id: number
-  title: string
-  description: string
-  content: string
-  categoryId: string
-  categoryName: string
-  author: string
-  avatar: string
-  image?: string
-  likes: number
-  comments: number
-  shares: number
-  timeAgo: string
-  price?: string
-  createdAt?: Date
-  updatedAt?: Date
-}
+// Re-exportar Publication como Post desde el archivo central de tipos
+export type { Publication as Post } from '../../../types/entities';
 
 // Value Objects relacionados con Post
 export interface PostMetrics {
@@ -57,13 +40,6 @@ export interface PostFilters {
   }
 }
 
-export const CATEGORIES = [
-"Todo",
-"Electonica",
-"Musica",
-"Deportes",
-"Entretenimiento",
-"Servicios",
-] as const;
-export type Category = (typeof CATEGORIES)[number];
+// Nota: Las categorías ahora se obtienen dinámicamente desde la API
+// No usar constantes hardcodeadas
 
