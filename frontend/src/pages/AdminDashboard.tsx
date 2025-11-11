@@ -2,8 +2,8 @@ import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
-  // Obtenemos los datos del usuario y la función de logout
-  const { user, logout } = useAuthStore((state) => ({
+  // CORREGIDO: Agregar tipo explícito al selector
+  const { user, logout } = useAuthStore((state: any) => ({
     user: state.user,
     logout: state.logout,
   }));
@@ -11,7 +11,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login'); // Redirigir al login después de cerrar sesión
+    navigate('/login');
   };
 
   return (
