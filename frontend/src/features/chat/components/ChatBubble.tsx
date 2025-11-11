@@ -1,4 +1,5 @@
 // ChatBubble.tsx
+import { motion } from 'framer-motion';
 import type { Mensaje } from "@/types/chat";
 
 interface ChatBubbleProps {
@@ -7,10 +8,9 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ mensaje }: ChatBubbleProps) {
   const esPropio = mensaje.autor === "yo";
-  // ... (estado e imagen sin cambios) ...
   const estado = (mensaje as any).estado as string | undefined;
   const imagen = (mensaje as any).imagenUrl ?? (mensaje as any).imgUrl ?? null;
-  // ... (wrapText sin cambios) ...
+  
   const wrapText = (text: string, max = 30) => {
     if (!text) return "";
     return text
@@ -26,71 +26,81 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
       .join("\n");
   };
   const displayText = wrapText(String(mensaje.texto ?? ""), 30);
+  
   const renderEstado = () => {
-    // ... (lógica de estado sin cambios, pero ajustando color para fondo oscuro) ...
     if (!estado) return null;
     let texto = "";
     let color = "";
     switch (estado) {
       case "enviando":
-        texto = "⏳ Enviando...";
-        color = "text-gray-400"; // CAMBIO: Más claro
+        texto = "⏳";
+        color = "text-gray-400";
         break;
       case "enviado":
-        texto = "✔ Enviado";
-        color = "text-gray-400"; // CAMBIO: Más claro
+        texto = "✔";
+        color = "text-gray-400";
         break;
       case "recibido":
-        texto = "✔✔ Recibido";
-        color = "text-gray-400"; // CAMBIO: Más claro
+        texto = "✔✔";
+        color = "text-gray-400";
         break;
       case "leido":
-        texto = "✔✔ Leído";
-        color = "text-blue-400 font-semibold"; // CAMBIO: Azul más claro
+        texto = "✔✔";
+        color = "text-blue-500 font-semibold";
         break;
       case "error":
-        texto = "⚠ Error";
-        color = "text-red-400"; // CAMBIO: Más claro
+        texto = "⚠";
+        color = "text-red-500";
         break;
       default:
         texto = estado;
-        color = "text-gray-400"; // CAMBIO: Más claro
+        color = "text-gray-400";
     }
-    return <span className={`ml-2 text-xs ${color}`}>{texto}</span>;
+    return <span className={`ml-1 text-xs ${color}`}>{texto}</span>;
   };
 
   return (
-    <div className={`flex mb-3 ${esPropio ? "justify-end" : "justify-start"}`}>
+    <motion.div 
+      className={`flex mb-3 ${esPropio ? "justify-end" : "justify-start"}`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
       <div>
-        <div
-          // CAMBIO CLAVE: AMBAS burbujas son blancas con texto negro
-          className={`max-w-lg px-4 py-2 rounded-2xl text-sm transform transition-all duration-200 ease-out flex items-center
+        <motion.div
+          className={`max-w-lg px-4 py-3 rounded-2xl text-sm shadow-md
             ${esPropio
-              ? "bg-white text-black rounded-br-none hover:shadow-lg hover:-translate-y-0.5" // CAMBIADO DE 'bg-blue-600'
-              : "bg-white text-black rounded-bl-none hover:shadow-lg hover:-translate-y-0.5" // CAMBIADO DE 'bg-[#F2A900]'
+              ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm" 
+              : "bg-white text-gray-900 rounded-bl-sm border border-gray-200"
             }`}
-          style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.06)", whiteSpace: "pre-wrap" as const }}
+          whileHover={{ scale: 1.02, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
+          transition={{ type: 'spring', stiffness: 300 }}
+          style={{ whiteSpace: "pre-wrap" as const }}
         >
           <div className="w-full flex items-center gap-3">
             {imagen ? (
               <img
                 src={imagen}
                 alt="miniatura"
-                className="h-12 w-12 object-cover rounded-md flex-shrink-0"
-                style={{ width: 48, height: 48 }}
+                className="h-16 w-16 object-cover rounded-lg flex-shrink-0 shadow-sm"
+                style={{ width: 64, height: 64 }}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
               />
             ) : null}
-            <div className={`flex-1 ${imagen ? "" : "text-center"}`} style={{ lineHeight: 1.25 }}>
+            <div className={`flex-1 ${imagen ? "" : "text-left"}`} style={{ lineHeight: 1.4 }}>
               {displayText}
             </div>
           </div>
-        </div>
+        </motion.div>
         {esPropio && (
-          // CAMBIO: Texto de estado visible en fondo oscuro
-          <div className="flex justify-end mt-1 text-gray-400">{renderEstado()}</div>
+          <div className="flex justify-end mt-1 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              {mensaje.hora && <span>{mensaje.hora}</span>}
+              {renderEstado()}
+            </span>
+          </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

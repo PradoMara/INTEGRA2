@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { usePostsWithFilters } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
 import { RatingStars } from './RatingStars'
 import { formatInt, formatCLP } from '@/features/marketplace/Marketplace.Utils/format'
@@ -96,15 +97,56 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   }
 
   const EmptyState = () => (
-    <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
-      <div className="text-8xl mb-6">🛒</div>
-      <h3 className="text-2xl font-semibold mb-3 text-gray-700">No se encontraron productos</h3>
-      <p className="text-center max-w-md text-gray-600 leading-relaxed">
-        {searchTerm || selectedCategoryId
-          ? 'Intenta ajustar tus filtros de búsqueda o explora otras categorías.'
-          : 'No hay publicaciones disponibles en este momento.'}
-      </p>
-    </div>
+    <motion.div 
+      className="col-span-full"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </motion.div>
+        
+        <h3 className="text-xl font-bold mb-2 text-gray-900">No se encontraron resultados</h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          {searchTerm && selectedCategoryId
+            ? `No hay publicaciones que coincidan con "${searchTerm}" en ${categoryNames[selectedCategoryId]}`
+            : searchTerm
+            ? `No encontramos publicaciones con "${searchTerm}"`
+            : selectedCategoryId
+            ? `No hay publicaciones en ${categoryNames[selectedCategoryId]}`
+            : 'No hay publicaciones disponibles en este momento'}
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <motion.div 
+            className="bg-white rounded-lg px-4 py-2 border border-gray-200 text-sm text-gray-700"
+            whileHover={{ scale: 1.02, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+          >
+            💡 Prueba con otros términos de búsqueda
+          </motion.div>
+          {(searchTerm || selectedCategoryId) && (
+            <motion.button
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Ver todas las publicaciones
+            </motion.button>
+          )}
+        </div>
+      </div>
+    </motion.div>
   )
 
   const InitialLoadingState = () => (
@@ -164,34 +206,39 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {!isLoading && (
-        <div className="mb-6 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            {posts.length > 0 ? (
-              <>
-                Mostrando {posts.length} publicación{posts.length !== 1 ? 'es' : ''}
-                {(searchTerm || selectedCategoryId) && (
-                  <span className="ml-2">
-                    {searchTerm && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 mr-2 font-medium">
-                        🔍 "{searchTerm}"
-                      </span>
-                    )}
-                    {selectedCategoryId && (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">
-                        📁 {categoryNames[selectedCategoryId]}
-                      </span>
-                    )}
-                  </span>
-                )}
-              </>
-            ) : hasResults ? (
-              'Cargando resultados...'
-            ) : (
-              'No hay resultados para mostrar'
-            )}
+      {!isLoading && posts.length > 0 && (
+        <motion.div 
+          className="mb-5 inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-md border border-gray-200"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+              <span className="text-white text-xs font-bold">{posts.length}</span>
+            </div>
+            <span className="text-sm font-medium text-gray-900">
+              {posts.length === 1 ? 'publicación' : 'publicaciones'}
+            </span>
           </div>
-        </div>
+          
+          {(searchTerm || selectedCategoryId) && (
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+              {searchTerm && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200 font-medium">
+                  <span>🔍</span>
+                  <span className="max-w-[150px] truncate">"{searchTerm}"</span>
+                </span>
+              )}
+              {selectedCategoryId && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                  <span>📁</span>
+                  <span>{categoryNames[selectedCategoryId]}</span>
+                </span>
+              )}
+            </div>
+          )}
+        </motion.div>
       )}
 
       {isError && <ErrorState />}

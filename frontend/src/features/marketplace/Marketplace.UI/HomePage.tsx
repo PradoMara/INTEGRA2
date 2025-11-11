@@ -31,7 +31,7 @@ export default function HomePage() {
   const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => setFeedStats({ hasResults, totalResults }), [])
 
   return (
-    <div className="min-h-screen bg-gray-50 grid grid-cols-1 lg:grid-cols-[260px_1fr]">
+    <div className="min-h-screen bg-gray-50 grid grid-cols-1 lg:grid-cols-[200px_1fr]">
       <Sidebar active="marketplace" />
 
       <div className="min-w-0">
