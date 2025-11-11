@@ -1,9 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePostsWithFilters } from '@/features/Marketplace/Marketplace.Hooks/usePostsWithFilters'
+import { usePostsWithFilters } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
 import { RatingStars } from './RatingStars'
-import { formatInt, formatCLP } from '@/features/Marketplace/Marketplace.Utils/format'
-import { PostDetailModal, PostDetailData } from './PostDetailModal'
+import { formatInt, formatCLP } from '@/features/marketplace/Marketplace.Utils/format'
+// Modal eliminado: ahora navegamos a la página de detalle
 
 interface InfiniteFeedProps {
   searchTerm: string
@@ -11,9 +11,7 @@ interface InfiniteFeedProps {
   onStatsChange?: (hasResults: boolean, totalResults: number) => void
 }
 
-// Agrega placeholders para probar carrusel (puedes desactivar luego)
-const AUGMENT_IMAGES_FOR_DEV = true
-const DEV_STRESS_LONG_DESC = false
+// Modal eliminado: ya no se requiere lógica extra para imágenes o descripciones
 
 const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   searchTerm = '',
@@ -39,84 +37,34 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     categoryId: selectedCategoryId
   })
 
-  // Modal state
-  const [openModal, setOpenModal] = useState(false)
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null)
-
-  const parsePrice = (v: unknown): number => {
-    const n = parseInt(String(v ?? '').replace(/\D/g, ''), 10)
-    return Number.isFinite(n) ? n : 0
-  }
-
-  const buildDevImages = (seedBase: string, existing: string[]) => {
-  if (!AUGMENT_IMAGES_FOR_DEV) return existing
-  if ((existing?.length ?? 0) > 1) return existing
-  const seed = encodeURIComponent(String(seedBase || 'seed').replace(/\s+/g, '-'))
-  const variants = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/675`)
-  if (existing?.length === 1) return [existing[0], ...variants]
-  return variants
-}
-
-  const mapPostToDetail = (post: any): PostDetailData => {
-    const baseImages: string[] = post.images ?? (post.image ? [post.image] : [])
-    const images = buildDevImages(String(post.id ?? post.title ?? 'post'), baseImages)
-
-    const baseDesc = post.description ?? 'Sin descripción'
-    const longAddon =
-      DEV_STRESS_LONG_DESC
-        ? '\n\n' +
-          'Características destacadas:\n' +
-          '- Pantalla 15.6" 144Hz\n- GPU RTX 4060\n- 16GB RAM\n- SSD 1TB NVMe\n' +
-          '\n'.repeat(2) +
-          'Descripción extendida: '.concat(baseDesc, ' ').repeat(20)
-        : ''
-
-    return {
-      id: String(post.id),
-      titulo: post.title ?? 'Sin título',
-      descripcion: baseDesc + longAddon,
-      precio: parsePrice(post.price),
-      stock: post.stock ?? 1,
-      campus: post.campus ?? 'San Juan Pablo II',
-      categoria: post.categoryName ?? 'Sin categoría',
-      condicion: post.condition ?? 'Usado',
-      fechaPublicacion: post.publishedAt ?? new Date(),
-      imagenes: images,
-      vendedor: {
-        id: post.sellerId ?? post.authorId ?? undefined,
-        nombre: post.author ?? 'Usuario',
-        avatarUrl: post.avatar,
-        reputacion:
-          typeof post.sellerRating === 'number'
-            ? post.sellerRating
-            : typeof post.rating === 'number'
-            ? post.rating
-            : undefined
-      }
-    }
-  }
+  // Modal eliminado: sin estado de modal
 
   const onOpenDetail = (post: any) => {
-    setSelectedPost(mapPostToDetail(post))
-    setOpenModal(true)
+    // Redirección con estado inicial para que la DetailPage no dependa del fetch
+    const publicationState = {
+      publication: {
+        id: String(post.id),
+        title: post.title,
+        description: post.description,
+        price: typeof post.price === 'number' ? post.price : parseInt(String(post.price ?? '0').replace(/\D/g, ''), 10) || undefined,
+        images: post.images ?? (post.image ? [post.image] : undefined),
+        stock: post.stock,
+        seller: {
+          id: post.sellerId ?? post.authorId,
+          name: post.author,
+          avatarUrl: post.avatar,
+          reputation: typeof post.sellerRating === 'number' ? post.sellerRating : (typeof post.rating === 'number' ? post.rating : undefined)
+        },
+        categoryName: post.categoryName,
+        campus: post.campus,
+        createdAt: post.publishedAt ?? post.createdAt,
+        condition: post.condition,
+      }
+    }
+    navigate(`/publications/${post.id}`, { state: publicationState })
   }
 
-  // Punto 4: iniciar chat (ruta correcta: /chats)
-  const handleContact = (detail: PostDetailData) => {
-    const toId = detail.vendedor?.id ?? undefined
-    const toName = detail.vendedor?.nombre ?? ''
-    const toAvatar = detail.vendedor?.avatarUrl ?? ''
-    const qs = new URLSearchParams()
-    if (toId) qs.set('toId', String(toId))
-    if (toName) qs.set('toName', toName)
-    if (toAvatar) qs.set('toAvatar', toAvatar)
-
-    // IMPORTANTE: usar /chats (plural) tal como está en routes.tsx
-    navigate(`/chats${qs.toString() ? `?${qs}` : ''}`, {
-      state: { toUser: detail.vendedor }
-    })
-    setOpenModal(false)
-  }
+  // Chat se gestionará desde la detail page si es necesario.
 
   useEffect(() => {
     if (onStatsChange && !isLoading) onStatsChange(hasResults, totalResults)
@@ -360,13 +308,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
         </div>
       )}
 
-      {/* Modal de detalle con acción de contacto */}
-      <PostDetailModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        post={selectedPost}
-        onContact={handleContact}
-      />
+      {/* Modal eliminado: navegación directa a la página de detalle */}
     </div>
   )
 }

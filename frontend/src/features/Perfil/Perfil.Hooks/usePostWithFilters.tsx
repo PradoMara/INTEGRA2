@@ -195,7 +195,7 @@ export const usePostsWithFilters = (filters: PostFilters) => {
 }
 
 // Hook para debounce
-export const useDebounce = <T>(value: T, delay: number): T => {
+export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value)
 
   useEffect(() => {

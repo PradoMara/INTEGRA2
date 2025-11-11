@@ -79,7 +79,8 @@ export default function ItemCard({
             )}
           </div>
             <Link 
-             to={`/producto/${id}`} // <-- CORRECCIÓN: Usar /producto/ en lugar de /publicacion/
+             to={`/publications/${id}`}
+             state={{ publication: { id, title, description, price, images: image ? [image] : undefined, stock, seller: { name: author, avatarUrl: avatar }, categoryName } }}
              className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
           >
             Ver detalle

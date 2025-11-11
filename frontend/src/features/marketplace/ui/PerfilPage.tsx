@@ -1,10 +1,8 @@
-import React, { useState, useRef } from "react";
-import { useMemo } from "react";
+import { useMemo, useState, useRef } from "react";
 import { Sidebar } from "./components/Sidebar";
-import MyPublicationsFeed from "./components/MyPublicationsFeed";
-import UserDefault from "../../../assets/img/user_default.png";
-// CAMBIO: Añadido el import para el logo (ajusta la ruta si es necesario)
-import logo from "../../../assets/img/logouct.png"; 
+import MyPublicationsFeed from "@/features/MyPublications/MyPublications.UI/MyPublications.Components/MyPublicationsFeed";
+import UserDefault from "@/assets/img/user_default.png";
+import logo from "@/assets/img/logouct.png"; 
 
 const MyPublicationsFeedAny = MyPublicationsFeed as any;
 
