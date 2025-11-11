@@ -36,7 +36,7 @@ export default function CrearPublicacionPage() {
   }, []);
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[200px_1fr]">
       
       <aside>
         <Sidebar active="crear" />

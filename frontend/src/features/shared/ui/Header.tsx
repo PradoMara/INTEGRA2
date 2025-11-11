@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import styles from './Header.module.css'
 import LogoMUCT from '@/assets/img/logoMUCT.png'
 import UserDefault from '@/assets/img/user_default.png'
@@ -67,9 +68,14 @@ export const Header: React.FC = () => {
   }
 
   return (
-    <header className={styles.headerRoot}>
+    <motion.header 
+      className={styles.headerRoot}
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
       <div className={styles.headerInner}>
-        <button
+        <motion.button
           id="menu-toggle-btn"
           type="button"
           className={styles.menuToggle}
@@ -78,12 +84,24 @@ export const Header: React.FC = () => {
           aria-controls="mobile-menu-panel"
           data-open={open}
           onClick={() => setOpen(o => !o)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <span className={styles.burger} />
-        </button>
+        </motion.button>
 
-        <div className={styles.logoArea}>      
-          <div className={styles.logoPlaceholder} aria-hidden="true">
+        <motion.div 
+          className={styles.logoArea}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >      
+          <motion.div 
+            className={styles.logoPlaceholder} 
+            aria-hidden="true"
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.6, ease: 'easeInOut' }}
+          >
             <img
               src={LogoMUCT}
               alt="Marketplace UCT"
@@ -91,57 +109,103 @@ export const Header: React.FC = () => {
               decoding="async"
               fetchPriority="high"
             />
-          </div>
+          </motion.div>
           <span>Marketplace UCT</span>
-        </div>
+        </motion.div>
 
         <nav className={styles.nav} aria-label="Principal">
-          <ul className={styles.navList}>
-            <li><NavLink className={styles.navLink} to="/home">Inicio</NavLink></li>
-            <li><NavLink className={styles.navLink} to="/crear">Crear Publicación</NavLink></li>
-            <li><NavLink className={styles.navLink} to="/mis-publicaciones">Mis Publicaciones</NavLink></li>
-            <li><NavLink className={styles.navLink} to='/Ayuda'>Ayuda</NavLink></li>
-            <li><NavLink className={styles.navLink} to="/about">Acerca de</NavLink></li>
-          </ul>
+          <motion.ul 
+            className={styles.navList}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            {[
+              { to: '/home', label: 'Inicio' },
+              { to: '/crear', label: 'Crear Publicación' },
+              { to: '/mis-publicaciones', label: 'Mis Publicaciones' },
+              { to: '/Ayuda', label: 'Ayuda' },
+              { to: '/about', label: 'Acerca de' }
+            ].map((link, i) => (
+              <motion.li
+                key={link.to}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 + i * 0.1 }}
+              >
+                <NavLink className={styles.navLink} to={link.to}>
+                  {link.label}
+                </NavLink>
+              </motion.li>
+            ))}
+          </motion.ul>
         </nav>
 
-        <div className={styles.actions}>
-          <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario">
-            <img 
-              src={UserDefault} 
-              alt="Usuario" 
-              className={styles.profileAvatar}
-            />
-            <span>Perfil</span>
-          </NavLink>
+        <motion.div 
+          className={styles.actions}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario">
+              <img 
+                src={UserDefault} 
+                alt="Usuario" 
+                className={styles.profileAvatar}
+              />
+              <span>Perfil</span>
+            </NavLink>
+          </motion.div>
           
-          <button
+          <motion.button
             onClick={handleLogout}
             className={styles.logoutButton}
             aria-label="Cerrar sesión"
             title="Cerrar sesión"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <span className={styles.logoutAvatar} aria-hidden="true" />
-            <span>Salir</span>
-          </button>
-        </div>
+            <span>Cerrar sesión</span>
+          </motion.button>
+        </motion.div>
       </div>
 
-      <div
-        id="mobile-menu-panel"
-        ref={panelRef}
-        className={`${styles.mobilePanel} ${open ? styles.panelOpen : ''}`}
-      >
-        <div className={styles.mobilePanelInner}>
-          <nav aria-label="Menú móvil principal">
-            <ul className={styles.mobileNavList}>
-              <li><NavLink to="/home" onClick={() => setOpen(false)}>Inicio</NavLink></li>
-              <li><NavLink to="/crear" onClick={() => setOpen(false)}>Crear Publicación</NavLink></li>
-              <li><NavLink to="/mis-publicaciones" onClick={() => setOpen(false)}>Mis Publicaciones</NavLink></li>
-              <li><NavLink to="/ayuda" onClick={() => setOpen(false)}>Ayuda</NavLink></li>
-              <li><NavLink to="/about" onClick={() => setOpen(false)}>Acerca de</NavLink></li>
-            </ul>
-          </nav>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            id="mobile-menu-panel"
+            ref={panelRef}
+            className={styles.mobilePanel}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className={styles.mobilePanelInner}>
+              <nav aria-label="Menú móvil principal">
+                <ul className={styles.mobileNavList}>
+                  {[
+                    { to: '/home', label: 'Inicio' },
+                    { to: '/crear', label: 'Crear Publicación' },
+                    { to: '/mis-publicaciones', label: 'Mis Publicaciones' },
+                    { to: '/ayuda', label: 'Ayuda' },
+                    { to: '/about', label: 'Acerca de' }
+                  ].map((link, i) => (
+                    <motion.li
+                      key={link.to}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: i * 0.05 }}
+                    >
+                      <NavLink to={link.to} onClick={() => setOpen(false)}>
+                        {link.label}
+                      </NavLink>
+                    </motion.li>
+                  ))}
+                </ul>
+              </nav>
           <div className="mobileSearch">
             <form className={styles.searchBar} role="search" onSubmit={(e) => { e.preventDefault(); setOpen(false) }}>
               <span className={styles.searchIcon} aria-hidden="true">🔍</span>
@@ -156,28 +220,35 @@ export const Header: React.FC = () => {
               />
             </form>
           </div>
-          <div className={styles.mobilePanelFooter}>
-            <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario" onClick={() => setOpen(false)}>
-              <img 
-                src={UserDefault} 
-                alt="Usuario" 
-                className={styles.profileAvatar}
-              />
-              <span>Perfil</span>
-            </NavLink>
-            
-            <button
-              onClick={handleLogout}
-              className={styles.logoutButtonMobile}
-              aria-label="Cerrar sesión"
-            >
-              <span className={styles.logoutAvatar} aria-hidden="true" />
-              <span>Salir</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
+              <motion.div 
+                className={styles.mobilePanelFooter}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                <NavLink to="/perfil" className={styles.profileLink} aria-label="Perfil usuario" onClick={() => setOpen(false)}>
+                  <img 
+                    src={UserDefault} 
+                    alt="Usuario" 
+                    className={styles.profileAvatar}
+                  />
+                  <span>Perfil</span>
+                </NavLink>
+                
+                <button
+                  onClick={handleLogout}
+                  className={styles.logoutButtonMobile}
+                  aria-label="Cerrar sesión"
+                >
+                  <span className={styles.logoutAvatar} aria-hidden="true" />
+                  <span>Cerrar sesión</span>
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   )
 }
 
