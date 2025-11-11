@@ -1,40 +1,94 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-// Importa todas tus páginas
-import MarketplacePage from './pages/MarketplacePage'; // <-- Tu página principal
-import LoginPage from './pages/LoginPage';
-import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/AdminDashboard';
-
-// Importa los componentes de ruta
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminRoute from './components/auth/AdminRoute';
-
-import './App.css';
+import { useState, useCallback } from 'react'
+import InfiniteFeed from '@/features/marketplace/Marketplace.UI/Marketplace.Components/InfiniteFeed'
+import SearchAndFilter from '@/features/marketplace/Marketplace.UI/Marketplace.Components/SearchAndFilter'
+import { useDebounce } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
+import Header from '@/features/shared/ui/Header'
+import FloatingChat from '@/features/shared/ui/FloatingChat'
 
 function App() {
+  // Estado para la búsqueda y filtros
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [feedStats, setFeedStats] = useState({ hasResults: true, totalResults: 0 })
+
+  // Debounce del término de búsqueda para optimizar las consultas
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+
+  // Mapeo de categorías para compatibilidad
+  const categories = [
+    'Electrónicos',
+    'Libros y Materiales', 
+    'Ropa y Accesorios',
+    'Deportes',
+    'Hogar y Jardín',
+    'Vehículos',
+    'Servicios'
+  ]
+
+  // Mapear nombres de categorías a IDs
+  const categoryMap: Record<string, string> = {
+    'Electrónicos': 'electronics',
+    'Libros y Materiales': 'books',
+    'Ropa y Accesorios': 'clothing',
+    'Deportes': 'sports',
+    'Hogar y Jardín': 'home',
+    'Vehículos': 'vehicles',
+    'Servicios': 'services'
+  }
+
+  // Convertir categoría seleccionada a ID
+  const selectedCategoryId = selectedCategory ? categoryMap[selectedCategory] || '' : ''
+
+  // Manejadores de eventos con optimización
+  const handleSearchChange = useCallback((newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm)
+  }, [])
+
+  const handleCategoryChange = useCallback((newCategory: string) => {
+    setSelectedCategory(newCategory)
+  }, [])
+
+  // Manejador para limpiar filtros
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm('')
+    setSelectedCategory('')
+  }, [])
+
+  // Callback para recibir estadísticas del feed
+  const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => {
+    setFeedStats({ hasResults, totalResults })
+  }, [])
+
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* --- Rutas Públicas --- */}
-        <Route path="/" element={<MarketplacePage />} /> {/* <-- Tu marketplace es la página de inicio */}
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* --- Rutas Protegidas para Usuarios --- */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/perfil" element={<ProfilePage />} />
-        </Route>
-
-        {/* --- Rutas Protegidas para Administradores --- */}
-        <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Route>
-
-        {/* --- Ruta para Páginas no Encontradas --- */}
-        <Route path="*" element={<h1>404: Página No Encontrada</h1>} />
-      </Routes>
-    </BrowserRouter>
-  );
+    <div className="min-h-screen">
+      <header>
+        <Header/>
+      </header>
+      
+      {/* Componente de búsqueda y filtros */}
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        selectedCategory={selectedCategory}
+        categories={categories}
+        onSearchChange={handleSearchChange}
+        onCategoryChange={handleCategoryChange}
+        onClearFilters={handleClearFilters}
+        hasResults={feedStats.hasResults}
+        totalResults={feedStats.totalResults}
+      />
+      
+      <main className="py-6">
+        {/* Feed con filtros integrados */}
+        <InfiniteFeed
+          searchTerm={debouncedSearchTerm}
+          selectedCategoryId={selectedCategoryId}
+          onStatsChange={handleFeedStatsChange}
+        />
+      </main>
+      {/* Floating chat widget visible en todas las rutas excepto /chats */}
+      <FloatingChat />
+    </div>
+  )
 }
 
-export default App;
+export default App

@@ -1,15 +1,18 @@
-// src/features/marketplace/hooks/usePosts.ts
+// src/features/marketplace/hooks/usePost.ts
 import { useQuery } from '@tanstack/react-query'
-import { PostUseCases } from './PostUseCases'
-import { PostRepository } from '@/features/Marketplace/Marketplace.Repositories/MockPostRepository'
+import { PostUseCasesImpl } from './PostUseCases'
+import { MockPostRepository } from '@/features/marketplace/Marketplace.Repositories/MockPostRepository'
 
 const usePosts = () => {
-  const repo = new PostRepository()
-  const usecase = new PostUseCases(repo)
+  const repo = new MockPostRepository()
+  const usecase = new PostUseCasesImpl(repo)
 
   return useQuery({
     queryKey: ['posts'],
-    queryFn: () => usecase.getAllPosts(),
+    queryFn: async () => {
+      const res = await usecase.getPostsWithFilters({ searchTerm: '', categoryId: '' }, 1)
+      return res.posts as any
+    },
   })
 }
 

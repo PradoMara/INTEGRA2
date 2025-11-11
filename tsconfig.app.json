@@ -23,5 +23,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "frontend/src/features/chat", "frontend/public/components", "frontend/src/features/marketplace/ui/components/ChatBox.tsx", "frontend/src/features/marketplace/ui/components/FAQ.tsx"]
 }

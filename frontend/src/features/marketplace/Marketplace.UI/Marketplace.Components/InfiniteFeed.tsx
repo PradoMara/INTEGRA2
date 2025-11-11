@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePostsWithFilters } from '@/features/Marketplace/Marketplace.Hooks/usePostsWithFilters'
+import { motion } from 'framer-motion'
+import { usePostsWithFilters } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
 import { RatingStars } from './RatingStars'
-import { formatInt, formatCLP } from '@/features/Marketplace/Marketplace.Utils/format'
-import { PostDetailModal, PostDetailData } from './PostDetailModal'
+import { formatInt, formatCLP } from '@/features/marketplace/Marketplace.Utils/format'
+// Modal eliminado: ahora navegamos a la página de detalle
 
 interface InfiniteFeedProps {
   searchTerm: string
@@ -11,9 +12,7 @@ interface InfiniteFeedProps {
   onStatsChange?: (hasResults: boolean, totalResults: number) => void
 }
 
-// Agrega placeholders para probar carrusel (puedes desactivar luego)
-const AUGMENT_IMAGES_FOR_DEV = true
-const DEV_STRESS_LONG_DESC = false
+// Modal eliminado: ya no se requiere lógica extra para imágenes o descripciones
 
 const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   searchTerm = '',
@@ -39,84 +38,34 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     categoryId: selectedCategoryId
   })
 
-  // Modal state
-  const [openModal, setOpenModal] = useState(false)
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null)
-
-  const parsePrice = (v: unknown): number => {
-    const n = parseInt(String(v ?? '').replace(/\D/g, ''), 10)
-    return Number.isFinite(n) ? n : 0
-  }
-
-  const buildDevImages = (seedBase: string, existing: string[]) => {
-  if (!AUGMENT_IMAGES_FOR_DEV) return existing
-  if ((existing?.length ?? 0) > 1) return existing
-  const seed = encodeURIComponent(String(seedBase || 'seed').replace(/\s+/g, '-'))
-  const variants = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/675`)
-  if (existing?.length === 1) return [existing[0], ...variants]
-  return variants
-}
-
-  const mapPostToDetail = (post: any): PostDetailData => {
-    const baseImages: string[] = post.images ?? (post.image ? [post.image] : [])
-    const images = buildDevImages(String(post.id ?? post.title ?? 'post'), baseImages)
-
-    const baseDesc = post.description ?? 'Sin descripción'
-    const longAddon =
-      DEV_STRESS_LONG_DESC
-        ? '\n\n' +
-          'Características destacadas:\n' +
-          '- Pantalla 15.6" 144Hz\n- GPU RTX 4060\n- 16GB RAM\n- SSD 1TB NVMe\n' +
-          '\n'.repeat(2) +
-          'Descripción extendida: '.concat(baseDesc, ' ').repeat(20)
-        : ''
-
-    return {
-      id: String(post.id),
-      titulo: post.title ?? 'Sin título',
-      descripcion: baseDesc + longAddon,
-      precio: parsePrice(post.price),
-      stock: post.stock ?? 1,
-      campus: post.campus ?? 'San Juan Pablo II',
-      categoria: post.categoryName ?? 'Sin categoría',
-      condicion: post.condition ?? 'Usado',
-      fechaPublicacion: post.publishedAt ?? new Date(),
-      imagenes: images,
-      vendedor: {
-        id: post.sellerId ?? post.authorId ?? undefined,
-        nombre: post.author ?? 'Usuario',
-        avatarUrl: post.avatar,
-        reputacion:
-          typeof post.sellerRating === 'number'
-            ? post.sellerRating
-            : typeof post.rating === 'number'
-            ? post.rating
-            : undefined
-      }
-    }
-  }
+  // Modal eliminado: sin estado de modal
 
   const onOpenDetail = (post: any) => {
-    setSelectedPost(mapPostToDetail(post))
-    setOpenModal(true)
+    // Redirección con estado inicial para que la DetailPage no dependa del fetch
+    const publicationState = {
+      publication: {
+        id: String(post.id),
+        title: post.title,
+        description: post.description,
+        price: typeof post.price === 'number' ? post.price : parseInt(String(post.price ?? '0').replace(/\D/g, ''), 10) || undefined,
+        images: post.images ?? (post.image ? [post.image] : undefined),
+        stock: post.stock,
+        seller: {
+          id: post.sellerId ?? post.authorId,
+          name: post.author,
+          avatarUrl: post.avatar,
+          reputation: typeof post.sellerRating === 'number' ? post.sellerRating : (typeof post.rating === 'number' ? post.rating : undefined)
+        },
+        categoryName: post.categoryName,
+        campus: post.campus,
+        createdAt: post.publishedAt ?? post.createdAt,
+        condition: post.condition,
+      }
+    }
+    navigate(`/publications/${post.id}`, { state: publicationState })
   }
 
-  // Punto 4: iniciar chat (ruta correcta: /chats)
-  const handleContact = (detail: PostDetailData) => {
-    const toId = detail.vendedor?.id ?? undefined
-    const toName = detail.vendedor?.nombre ?? ''
-    const toAvatar = detail.vendedor?.avatarUrl ?? ''
-    const qs = new URLSearchParams()
-    if (toId) qs.set('toId', String(toId))
-    if (toName) qs.set('toName', toName)
-    if (toAvatar) qs.set('toAvatar', toAvatar)
-
-    // IMPORTANTE: usar /chats (plural) tal como está en routes.tsx
-    navigate(`/chats${qs.toString() ? `?${qs}` : ''}`, {
-      state: { toUser: detail.vendedor }
-    })
-    setOpenModal(false)
-  }
+  // Chat se gestionará desde la detail page si es necesario.
 
   useEffect(() => {
     if (onStatsChange && !isLoading) onStatsChange(hasResults, totalResults)
@@ -148,15 +97,56 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   }
 
   const EmptyState = () => (
-    <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
-      <div className="text-8xl mb-6">🛒</div>
-      <h3 className="text-2xl font-semibold mb-3 text-gray-700">No se encontraron productos</h3>
-      <p className="text-center max-w-md text-gray-600 leading-relaxed">
-        {searchTerm || selectedCategoryId
-          ? 'Intenta ajustar tus filtros de búsqueda o explora otras categorías.'
-          : 'No hay publicaciones disponibles en este momento.'}
-      </p>
-    </div>
+    <motion.div 
+      className="col-span-full"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </motion.div>
+        
+        <h3 className="text-xl font-bold mb-2 text-gray-900">No se encontraron resultados</h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          {searchTerm && selectedCategoryId
+            ? `No hay publicaciones que coincidan con "${searchTerm}" en ${categoryNames[selectedCategoryId]}`
+            : searchTerm
+            ? `No encontramos publicaciones con "${searchTerm}"`
+            : selectedCategoryId
+            ? `No hay publicaciones en ${categoryNames[selectedCategoryId]}`
+            : 'No hay publicaciones disponibles en este momento'}
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <motion.div 
+            className="bg-white rounded-lg px-4 py-2 border border-gray-200 text-sm text-gray-700"
+            whileHover={{ scale: 1.02, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+          >
+            💡 Prueba con otros términos de búsqueda
+          </motion.div>
+          {(searchTerm || selectedCategoryId) && (
+            <motion.button
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Ver todas las publicaciones
+            </motion.button>
+          )}
+        </div>
+      </div>
+    </motion.div>
   )
 
   const InitialLoadingState = () => (
@@ -216,34 +206,32 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {!isLoading && (
-        <div className="mb-6 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            {posts.length > 0 ? (
-              <>
-                Mostrando {posts.length} publicación{posts.length !== 1 ? 'es' : ''}
-                {(searchTerm || selectedCategoryId) && (
-                  <span className="ml-2">
-                    {searchTerm && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 mr-2 font-medium">
-                        🔍 "{searchTerm}"
-                      </span>
-                    )}
-                    {selectedCategoryId && (
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">
-                        📁 {categoryNames[selectedCategoryId]}
-                      </span>
-                    )}
+      {!isLoading && posts.length > 0 && (
+        <motion.div 
+          className="mb-4 flex items-center justify-between"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span className="font-medium text-gray-900">{posts.length}</span>
+            <span>publicación{posts.length !== 1 ? 'es' : ''}</span>
+            {(searchTerm || selectedCategoryId) && (
+              <span className="flex items-center gap-2 ml-2">
+                {searchTerm && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                    🔍 "{searchTerm}"
                   </span>
                 )}
-              </>
-            ) : hasResults ? (
-              'Cargando resultados...'
-            ) : (
-              'No hay resultados para mostrar'
+                {selectedCategoryId && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    📁 {categoryNames[selectedCategoryId]}
+                  </span>
+                )}
+              </span>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {isError && <ErrorState />}
@@ -360,13 +348,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
         </div>
       )}
 
-      {/* Modal de detalle con acción de contacto */}
-      <PostDetailModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        post={selectedPost}
-        onContact={handleContact}
-      />
+      {/* Modal eliminado: navegación directa a la página de detalle */}
     </div>
   )
 }
