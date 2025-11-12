@@ -1,29 +1,39 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore, AuthState } from '@/store/authStore';
+// ¡NO importamos 'shallow' esta vez!
+
+// --- MEJORA (Anti-Loop Infinito) ---
+// En lugar de 'shallow', usamos dos selectores simples.
+// Este es el mismo patrón que SÍ funciona en ProtectedRoute.tsx
+const useAdminAuthStatus = () => useAuthStore((state: AuthState) => state.authStatus);
+const useAdminUserRole = () => useAuthStore((state: AuthState) => state.user?.rol);
+// ----------------------------------
 
 const AdminRoute = () => {
-  // ✅ FORMA CORRECTA - Acceder a cada valor por separado
-  const isLoggedIn = useAuthStore((state: any) => state.isLoggedIn());
-  const user = useAuthStore((state: any) => state.user);
-
+  // Llamamos a los dos hooks simples por separado
+  const authStatus = useAdminAuthStatus();
+  const userRole = useAdminUserRole();
+  
+  // Tus logs de depuración
   console.log('🔐 AdminRoute - Estado actual:');
-  console.log('   isLoggedIn:', isLoggedIn);
-  console.log('   user:', user);
-  console.log('   user.rol:', user?.rol);
+  console.log('     authStatus:', authStatus);
+  console.log('     userRole:', userRole);
 
-  // Primera validación: ¿Está logueado?
-  if (!isLoggedIn) {
+  if (authStatus === 'loading') {
+    return <div>Cargando...</div>;
+  }
+
+  if (authStatus === 'unauthenticated') {
     console.log('❌ Redirigiendo a login: usuario no logueado');
     return <Navigate to="/login" replace />;
   }
 
-  // Segunda validación: ¿Tiene el rol de 'admin'?
-  if (user?.rol !== 'admin') {
-    console.log('❌ Redirigiendo a home: usuario no es admin, rol actual:', user?.rol);
-    return <Navigate to="/" replace />;
+  // El rol en la BD es 'ADMIN' (mayúsculas)
+  if (userRole !== 'ADMIN') { 
+    console.log('❌ Redirigiendo a home: usuario no es admin, rol actual:', userRole);
+    return <Navigate to="/home" replace />;
   }
 
-  // Si pasa ambas validaciones, puede acceder a la ruta de admin.
   console.log('✅ Acceso permitido: usuario es admin');
   return <Outlet />;
 };
