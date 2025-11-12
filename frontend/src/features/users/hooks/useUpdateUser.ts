@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { userService } from '../services/userService'
 import type { User } from '../types'
 import { userKeys } from './userKeys'
+import { notify } from '@/lib/toast'
 
 type Variables = { id: string; data: Partial<User> }
 
@@ -30,11 +31,13 @@ export function useUpdateUser() {
 		onError: (_err, { id }, ctx) => {
 			if (ctx?.prevMe) qc.setQueryData(userKeys.me(), ctx.prevMe)
 			if (ctx?.prevById) qc.setQueryData(userKeys.byId(id), ctx.prevById)
+			notify.error('Error al actualizar perfil')
 		},
 		onSuccess: (user, { id }) => {
 			// Fuente de la verdad: server/mock responde el usuario actualizado
 			qc.setQueryData(userKeys.byId(id), user)
 			if (user.id === id) qc.setQueryData(userKeys.me(), user)
+			notify.success('Perfil actualizado')
 		},
 		onSettled: (_data, _err, { id }) => {
 			qc.invalidateQueries({ queryKey: userKeys.byId(id) })
