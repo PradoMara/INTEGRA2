@@ -1,13 +1,65 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Product, PostFilters } from '../../../types/entities'
 
-// Hook personalizado para el manejo de posts con filtros
+// 🛑 Importar tipos canónicos desde el archivo de Marketplace.Types
+// Ajusta la ruta si es necesario (ej: si estás en ../Perfil/Perfil.Hooks)
+import type { Post, PostFilters, FetchResult, ProductApiResponse } from '../../marketplace/Marketplace.Types/ProductInterfaces'
+
+
+// ✅ FUNCIÓN REAL que llama al endpoint de productos del usuario autenticado (Método GET)
+const fetchPosts = async ({ 
+  pageParam = 1, 
+  filters 
+}: { 
+  pageParam?: number
+  filters: PostFilters 
+}): Promise<FetchResult> => { 
+  
+  const limit = 20; 
+  // 🛑 ENDPOINT CORREGIDO: Usamos la ruta protegida para obtener MIS productos.
+  const BASE_URL = '/api/products/my-products'; 
+  
+  // El backend para 'my-products' no usa 'category' en el ejemplo, pero sí 'search'.
+  const searchParam = filters.searchTerm ? `&search=${encodeURIComponent(filters.searchTerm)}` : '';
+  
+  // Incluimos page y limit en la URL
+  const url = `${BASE_URL}?page=${pageParam}&limit=${limit}${searchParam}`;
+  
+  // NOTA: Esta llamada debe ser manejada por una función que añada el token de autenticación (req.user.userId)
+  // en el header, ya que el endpoint /api/products/my-products es protegido.
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(`Error ${response.status}: ${errorData.message || response.statusText}`);
+    }
+    
+    const apiResponse: ProductApiResponse = await response.json();
+    
+    // Los productos ya vienen como Post[] del backend
+    const posts: Post[] = apiResponse.products;
+    
+    // Lógica de Infinite Scroll
+    const totalPages = apiResponse.pagination.totalPages;
+    const hasMore = apiResponse.pagination.page < totalPages;
+    const nextPage = hasMore ? apiResponse.pagination.page + 1 : undefined;
+
+    return { posts, nextPage, hasMore };
+    
+  } catch (error) {
+    console.error("❌ Error fetching user products:", error);
+    return { posts: [], nextPage: undefined, hasMore: false };
+  }
+}
+
+// Hook principal usePostsWithFilters (Adaptado para Perfil)
 export const usePostsWithFilters = (filters: PostFilters) => {
   const queryClient = useQueryClient()
 
-  // Crear clave única para la query basada en los filtros
-  const queryKey = ['posts', filters.searchTerm, filters.categoryId]
+  // 🛑 Cambiamos la clave de caché para ser específica del usuario
+  const queryKey = ['profile-products', filters.searchTerm, filters.categoryId] 
 
   const {
     data,
@@ -23,20 +75,13 @@ export const usePostsWithFilters = (filters: PostFilters) => {
     queryFn: ({ pageParam }) => fetchPosts({ pageParam, filters }),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
-    enabled: true, // Siempre habilitado
+    enabled: true, 
   })
 
-  // Limpiar cache cuando cambian los filtros significativamente
-  const clearCache = () => {
-    queryClient.removeQueries({ queryKey: ['posts'] })
-  }
-
-  // Aplanar todas las páginas en un solo array
   const posts = useMemo(() => {
     return data?.pages.flatMap(page => page.posts) ?? []
   }, [data])
 
-  // Información de resultados
   const hasResults = posts.length > 0
   const totalResults = posts.length
 
@@ -51,39 +96,11 @@ export const usePostsWithFilters = (filters: PostFilters) => {
     isError,
     error,
     refetch,
-    clearCache
+    clearCache: () => queryClient.removeQueries({ queryKey: ['profile-products'] })
   }
 }
 
-// Función para fetch de posts con simulación de API - SIN LÍMITE ARTIFICIAL
-const fetchPosts = async ({
-  pageParam = 1,
-  filters
-}: {
-  pageParam?: number
-  filters: PostFilters
-}): Promise<{ posts: Product[], nextPage: number | undefined, hasMore: boolean }> => {
-  console.log(`🔍 Fetching page ${pageParam} with filters:`, filters)
-
-  // Simular delay de red
-  await new Promise(resolve => setTimeout(resolve, 300))
-
-  // TODO: Implementar llamada real a la API
-  // Por ahora, devolver array vacío para evitar errores
-  const posts: Product[] = []
-
-  // SCROLL INFINITO REAL - Sin límite artificial de páginas
-  // Solo detener si no hay posts debido a filtros muy restrictivos
-  const hasMore = posts.length > 0
-
-  return {
-    posts,
-    nextPage: hasMore ? pageParam + 1 : undefined,
-    hasMore
-  }
-}
-
-// Hook para debounce
+// Hook para debounce (MANTENER)
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value)
 

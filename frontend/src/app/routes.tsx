@@ -1,7 +1,7 @@
 // src/app/routes.tsx
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from '@/features/Login/Login.UI/LoginPage'
-import HomePage from '@/features/Marketplace/Marketplace.UI/HomePage'
+import HomePage from '@/features/marketplace/Marketplace.UI/HomePage'
 import CrearPublicacionPage from '@/features/CrearPublicacion/CrearPublicacion.UI/CrearPublicacionPage'
 import EditarPublicacionPage from '@/features/EditarPublicacion/EditarPublicacion.UI/EditarPublicacionPage'
 import MisPublicacionesPage from '@/features/MyPublications/MyPublications.UI/MisPublicacionesPage'

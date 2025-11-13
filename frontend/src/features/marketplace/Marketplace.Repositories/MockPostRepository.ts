@@ -1,4 +1,4 @@
-import type { PostRepository } from '@/features/Marketplace/Marketplace.Types/PostInterfaces'
+import type { PostRepository } from '@/features/marketplace/Marketplace.Types/ProductInterfaces'
 import type { Product as Post, PostFilters } from '@/types/entities'
 
 // TODO: Eliminar datos hardcodeados y obtener categorías desde la API

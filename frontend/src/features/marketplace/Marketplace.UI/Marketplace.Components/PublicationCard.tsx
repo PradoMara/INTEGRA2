@@ -1,8 +1,8 @@
-import type { Post as PostType } from "@/features/Marketplace/Marketplace.Types/post";
+import type { Post as PostType } from "@/features/marketplace/Marketplace.Types/ProductInterfaces"; 
 import React from "react";
 import Card from "../../../../../public/components/Card";
 import Button from "../../../../../public/components/Button";
-import { formatCLP } from "@/features/Marketplace/Marketplace.Utils/format";
+import { formatCLP } from '../../Marketplace.Utils/format';
 
 /* Usamos una interfaz flexible con campos opcionales para evitar errores
    cuando el tipo externo no tiene exactamente las mismas propiedades */

@@ -1,13 +1,58 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Product, PostFilters } from '../../../types/entities'
 
-// Hook personalizado para el manejo de posts con filtros
+// 🛑 CORRECCIÓN: Importar tipos canónicos desde el archivo de Marketplace.
+import type { Post, PostFilters, FetchResult, ProductApiResponse } from '../../marketplace/Marketplace.Types/ProductInterfaces'
+
+// 🛑 CORRECCIÓN: La función fetchPosts debe usar la lógica real de la API
+const fetchPosts = async ({
+  pageParam = 1,
+  filters
+}: {
+  pageParam?: number
+  filters: PostFilters
+}): Promise<FetchResult> => {
+  
+  const limit = 20; 
+  // 🛑 NOTA: Se usa /api/publications/me como endpoint para obtener las publicaciones del usuario autenticado.
+  const BASE_URL = '/api/publications/me'; 
+  
+  const searchParam = filters.searchTerm ? `&search=${encodeURIComponent(filters.searchTerm)}` : '';
+  const url = `${BASE_URL}?page=${pageParam}&limit=${limit}${searchParam}`;
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(`Error ${response.status}: ${errorData.message || response.statusText}`);
+    }
+    
+    const apiResponse: ProductApiResponse = await response.json();
+    
+    // Los productos ya vienen como Post[] del backend
+    const posts: Post[] = apiResponse.products;
+    
+    // Lógica de Infinite Scroll
+    const totalPages = apiResponse.pagination.totalPages;
+    const hasMore = apiResponse.pagination.page < totalPages;
+    const nextPage = hasMore ? apiResponse.pagination.page + 1 : undefined;
+
+    return { posts, nextPage, hasMore };
+    
+  } catch (error) {
+    console.error("❌ Error fetching user publications:", error);
+    // Devolver array vacío en caso de error
+    return { posts: [], nextPage: undefined, hasMore: false };
+  }
+}
+
+// Hook principal usePostsWithFilters (MANTENER)
 export const usePostsWithFilters = (filters: PostFilters) => {
   const queryClient = useQueryClient()
 
-  // Crear clave única para la query basada en los filtros
-  const queryKey = ['posts', filters.searchTerm, filters.categoryId]
+  // Mantenemos 'my-posts' para la caché de este hook específico
+  const queryKey = ['my-posts', filters.searchTerm, filters.categoryId] 
 
   const {
     data,
@@ -23,20 +68,17 @@ export const usePostsWithFilters = (filters: PostFilters) => {
     queryFn: ({ pageParam }) => fetchPosts({ pageParam, filters }),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
-    enabled: true, // Siempre habilitado
+    enabled: true, 
   })
 
-  // Limpiar cache cuando cambian los filtros significativamente
   const clearCache = () => {
-    queryClient.removeQueries({ queryKey: ['posts'] })
+    queryClient.removeQueries({ queryKey: ['my-posts'] })
   }
 
-  // Aplanar todas las páginas en un solo array
   const posts = useMemo(() => {
     return data?.pages.flatMap(page => page.posts) ?? []
   }, [data])
 
-  // Información de resultados
   const hasResults = posts.length > 0
   const totalResults = posts.length
 
@@ -55,35 +97,7 @@ export const usePostsWithFilters = (filters: PostFilters) => {
   }
 }
 
-// Función para fetch de posts con simulación de API - SIN LÍMITE ARTIFICIAL
-const fetchPosts = async ({
-  pageParam = 1,
-  filters
-}: {
-  pageParam?: number
-  filters: PostFilters
-}): Promise<{ posts: Product[], nextPage: number | undefined, hasMore: boolean }> => {
-  console.log(`🔍 Fetching page ${pageParam} with filters:`, filters)
-
-  // Simular delay de red
-  await new Promise(resolve => setTimeout(resolve, 300))
-
-  // TODO: Implementar llamada real a la API
-  // Por ahora, devolver array vacío para evitar errores
-  const posts: Product[] = []
-
-  // SCROLL INFINITO REAL - Sin límite artificial de páginas
-  // Solo detener si no hay posts debido a filtros muy restrictivos
-  const hasMore = posts.length > 0
-
-  return {
-    posts,
-    nextPage: hasMore ? pageParam + 1 : undefined,
-    hasMore
-  }
-}
-
-// Hook para debounce
+// Hook para debounce (MANTENER)
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value)
 
