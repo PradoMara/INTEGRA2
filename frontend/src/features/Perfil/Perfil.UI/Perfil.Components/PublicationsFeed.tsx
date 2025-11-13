@@ -4,6 +4,8 @@ import { RatingStars } from './RatingStars'
 import { formatInt, formatCLP } from '@/features/Perfil/Perfil.Utils/format'
 import { usePostsWithFilters } from '@/features/Perfil/Perfil.Hooks/usePostWithFilters'
 
+// Modal eliminado: navegación a páginas específicas según acción
+
 type MyPublicationsFeedProps = {
   searchTerm?: string
   selectedCategoryId?: string
@@ -38,6 +40,10 @@ const MyPublicationsFeed: React.FC<MyPublicationsFeedProps> = ({
     authorId,          // ⚠️ si tu hook no soporta esto, elimínalo o adapta
     onlyMine: true     // idem: si tu hook soporta esta flag, genial; si no, remuévela
   } as any)
+
+  // Modal eliminado: sin estado ni chequeos de ruta
+
+  // Modal eliminado: sin handlers asociados
 
   useEffect(() => {
     if (onStatsChange && !isLoading) onStatsChange(hasResults, totalResults)
@@ -274,6 +280,8 @@ const MyPublicationsFeed: React.FC<MyPublicationsFeedProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal eliminado: navegación directa en otras vistas cuando corresponda */}
     </div>
   )
 }

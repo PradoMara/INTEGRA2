@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 // 1. CORRECCIÓN: Usar ruta relativa para usePostsWithFilters
 import { usePostsWithFilters } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
@@ -15,9 +15,7 @@ interface InfiniteFeedProps {
   onStatsChange?: (hasResults: boolean, totalResults: number) => void
 }
 
-// Agrega placeholders para probar carrusel (puedes desactivar luego)
-const AUGMENT_IMAGES_FOR_DEV = true
-const DEV_STRESS_LONG_DESC = false
+// Modal eliminado: ya no se requiere lógica extra para imágenes o descripciones
 
 const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   searchTerm = '',
@@ -44,9 +42,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     categoryId: selectedCategoryName 
   })
 
-  // Modal state
-  const [openModal, setOpenModal] = useState(false)
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null)
+  // Modal eliminado: sin estado de modal
 
   // ... (parsePrice, buildDevImages, mapPostToDetail, onOpenDetail, handleContact) ...
   
@@ -125,14 +121,15 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                     )}
                   </span>
                 )}
-              </>
-            ) : hasResults ? (
-              'Cargando resultados...'
-            ) : (
-              'No hay resultados para mostrar'
+                {selectedCategoryId && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    📁 {categoryNames[selectedCategoryId]}
+                  </span>
+                )}
+              </span>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {isError && <ErrorState />}
@@ -165,6 +162,15 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
       </div>
 
       {/* ... (código de no more posts y modal se mantiene) ... */}
+      {!hasNextPage && posts.length > 0 && !isFetchingNextPage && posts.length >= 27 && (
+        <div className="text-center py-8 text-gray-500">
+          <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+            <span className="mr-2">🎉</span>
+            <span>Has visto todas las publicaciones disponibles</span>
+        </div>
+          </div>
+      )}
+
     </div>
   )
 }

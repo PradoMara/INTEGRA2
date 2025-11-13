@@ -1,0 +1,157 @@
+* [33m21a73f0[m[33m ([m[1;31morigin/rodrigo[m[33m)[m Integracion MisPublicacionesPage con servicios mock
+* [33m2bc9250[m Integracion PerfilPage con servicios mock
+* [33m8540da1[m Integrar HomePage con servicios mock
+* [33mb2bba03[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Identificar Endpoints MODULO AUTH
+* [33m6a82367[m Renombre de documentacion
+* [33m5a4fc11[m Documentacion endpoints modulo perfil
+[31m|[m *   [33m98a47ca[m[33m ([m[1;31morigin/Daniel[m[33m)[m Merge remote-tracking branch 'origin/devs' into Daniel
+[31m|[m [32m|[m[33m\[m  
+[31m|[m [32m|[m *   [33m6ca1d82[m[33m ([m[1;31morigin/devs[m[33m, [m[1;31morigin/Diego[m[33m)[m Merge branch 'devs' into Diego
+[31m|[m [32m|[m [34m|[m[35m\[m  
+[31m|[m [32m|[m [34m|[m * [33m40365cf[m .env
+[31m|[m [32m|[m * [35m|[m [33m5ef77a7[m KK
+[31m|[m [32m|[m * [35m|[m [33m5ad412c[m DB creada, mañana se continuara mejorando y ver tema del host
+[31m|[m [32m|[m[31m/[m [35m/[m  
+[31m|[m[31m/[m[32m|[m [35m|[m   
+* [32m|[m [35m|[m   [33m642f944[m Merge branch 'devs'
+[36m|[m[35m\[m [32m\[m [35m\[m  
+[36m|[m [35m|[m [32m|[m[35m/[m  
+[36m|[m [35m|[m[35m/[m[32m|[m   
+* [35m|[m [32m|[m   [33m61e63bd[m Merge remote-tracking branch 'origin/main'
+[1;32m|[m[1;33m\[m [35m\[m [32m\[m  
+[1;32m|[m * [35m|[m [32m|[m [33m76fec91[m actualizacion diagrama de componentes
+* [1;33m|[m [35m|[m [32m|[m [33m1c6b671[m IGNORAR
+[1;33m|[m[1;33m/[m [35m/[m [32m/[m  
+[1;33m|[m [35m|[m * [33m6cfa736[m implementar footer
+[1;33m|[m [35m|[m *   [33mdb21335[m Merge branch 'devs' into Daniel
+[1;33m|[m [35m|[m [1;34m|[m[35m\[m  
+[1;33m|[m [35m|[m [1;34m|[m[35m/[m  
+[1;33m|[m [35m|[m[35m/[m[1;34m|[m   
+[1;33m|[m * [1;34m|[m [33m5d3e258[m Crear nuevos tokens y hacer enlace
+[1;33m|[m * [1;34m|[m [33m11c26a3[m Solucion bug PageLayout
+[1;33m|[m * [1;34m|[m [33mffcacab[m arreglo de duplicados + solucion a problemas con los merge
+[1;33m|[m * [1;34m|[m   [33m41c6af2[m Merge branch 'msanhueza' into devs
+[1;33m|[m [1;36m|[m[31m\[m [1;34m\[m  
+[1;33m|[m [1;36m|[m [31m|[m * [33medacc55[m Investigacion Hosting Web
+[1;33m|[m [1;36m|[m [31m|[m *   [33mc92c97b[m Merge remote-tracking branch 'origin/Daniel' into Daniel
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m[33m\[m  
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m63700b3[m[33m ([m[1;31morigin/nmartinez[m[33m)[m modulo-mensajeria-endpoints
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m4be8330[m modulo-feed-endpoints
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m5fdd91a[m modulo-publicaciones-endpoints
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m5f289ef[m ayuda a martin
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33ma17ae0c[m sprint-reportV2
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m4945c3c[m sprint1-reporte
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m1cb46ef[m Se agrega Feature Modularization y sus beneficios
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33madadd9f[m guia visual
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33me8ac564[m diagramas de flujo
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33me7da8b2[m Documentación arquitectura
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33md9f61fc[m Flujos principales
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m87dea0f[m Se identifican los roles y actores
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m5d29aca[m Reajuste al objetivo general del proyecto
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33mcc620a3[m Borrador de documentación general del proyecto
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33mcfadc8d[m IGNORAR
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m39fbd85[m Documentación para instalar node
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33md69dff5[m PRUEBA
+[1;33m|[m [1;36m|[m[1;33m_[m[31m|[m[1;33m_[m[32m|[m[1;33m_[m[33m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[1;36m|[m [31m|[m [32m|[m [33m|[m   
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33mcdf69f6[m[33m ([m[1;31morigin/msanhueza[m[33m)[m Implementacion de Terminos y condiciones
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m [33m|[m * [33m685f101[m Implementacion de seccion ayuda y solucion de errores y rutas
+[1;33m|[m [1;36m|[m [31m|[m [32m|[m[31m_[m[33m|[m[31m/[m  
+[1;33m|[m [1;36m|[m [31m|[m[31m/[m[32m|[m [33m|[m   
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m   [33m0bede5d[m Merge branch 'devs' into msanhueza
+[1;33m|[m [1;36m|[m [36m|[m[1;36m\[m [32m\[m [33m\[m  
+[1;33m|[m [1;36m|[m [36m|[m[1;36m/[m [32m/[m [33m/[m  
+[1;33m|[m [1;36m|[m[1;36m/[m[36m|[m [32m|[m [33m|[m   
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m [33mf4cf2f1[m (IGNORAR)
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m [33mf827348[m Se crea el modelo base de la seccion ayuda
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m [33m7cd0a0e[m Resolucion de conflictos entre archivos (Ignorar)
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m   [33m43dd210[m Merge remote-tracking branch 'origin/msanhueza' into msanhueza
+[1;33m|[m [1;36m|[m [1;32m|[m[1;33m\[m [32m\[m [33m\[m  
+[1;33m|[m [1;36m|[m [1;32m|[m * [32m|[m [33m|[m [33m9a02c70[m Setup Tailwind y tokens de diseño
+[1;33m|[m [1;36m|[m * [1;33m|[m [32m|[m [33m|[m [33ma76d0d7[m Se configura y mejor tailwind.config.js
+[1;33m|[m [1;36m|[m * [1;33m|[m [32m|[m [33m|[m [33mff1ec39[m Setup Tailwind y tokens de diseño
+[1;33m|[m [1;36m|[m [1;33m|[m[1;33m/[m [32m/[m [33m/[m  
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m [33mec819ea[m Reorden de Carpetas y Archivos (Ignorar)
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m [33ma37e91e[m Revert "Creación de Botones, Inputs y Modales (Estilo Base)"
+[1;33m|[m [1;36m|[m * [32m|[m [33m|[m [33mbdc6ba6[m Creación de Botones, Inputs y Modales (Estilo Base)
+[1;33m|[m [1;36m|[m[1;33m/[m [32m/[m [33m/[m  
+[1;33m|[m[1;33m/[m[1;36m|[m [32m|[m [33m|[m   
+[1;33m|[m [1;36m|[m [32m|[m [33m|[m * [33m20ffbbb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mElias[m[33m, [m[1;31morigin/Elias[m[33m)[m Reapply "Merge branch 'Elias' into devs"
+[1;33m|[m [1;36m|[m [32m|[m [33m|[m * [33m3fb7ad0[m Revert "Merge branch 'Elias' into devs"
+[1;33m|[m [1;36m|[m [32m|[m[1;36m_[m[33m|[m[1;36m/[m  
+[1;33m|[m [1;36m|[m[1;36m/[m[32m|[m [33m|[m   
+[1;33m|[m * [32m|[m [33m|[m   [33mf6a3a34[m Merge branch 'Elias' into devs
+[1;33m|[m [1;35m|[m[1;36m\[m [32m\[m [33m\[m  
+[1;33m|[m [1;35m|[m * [32m|[m [33m|[m [33m9622d87[m ME falto estos errores
+[1;33m|[m [1;35m|[m * [32m|[m [33m|[m [33mfd602f1[m Correccion de error de ruta
+[1;33m|[m [1;35m|[m * [32m|[m [33m|[m [33maee423e[m Reordenar carpetas V2
+[1;33m|[m [1;35m|[m * [32m|[m [33m|[m   [33m51e6bcd[m Merge branch 'devs' into Elias
+[1;33m|[m [1;35m|[m [31m|[m[1;35m\[m [32m\[m [33m\[m  
+[1;33m|[m [1;35m|[m [31m|[m[1;35m/[m [32m/[m [33m/[m  
+[1;33m|[m [1;35m|[m[1;35m/[m[31m|[m [32m|[m [33m|[m   
+[1;33m|[m * [31m|[m [32m|[m [33m|[m   [33m4b97a2e[m Merge branch 'devs' of https://github.com/PradoMara/INTEGRA2 into devs
+[1;33m|[m [33m|[m[34m\[m [31m\[m [32m\[m [33m\[m  
+[1;33m|[m [33m|[m * [31m\[m [32m\[m [33m\[m   [33m56dcfe9[m Merge remote-tracking branch 'origin/rodrigo' into devs
+[1;33m|[m [33m|[m [35m|[m[36m\[m [31m\[m [32m\[m [33m\[m  
+[1;33m|[m [33m|[m [35m|[m * [31m|[m [32m|[m [33m|[m [33m341dea1[m Reorganizar carpetas
+[1;33m|[m * [35m|[m [36m|[m [31m|[m [32m|[m [33m|[m [33m5ee2846[m arreglando topones del merge
+[1;33m|[m [35m|[m[35m/[m [36m/[m [31m/[m [32m/[m [33m/[m  
+[1;33m|[m * [36m|[m [31m|[m [32m|[m [33m|[m   [33mfd7789e[m Merge branch 'Esban' into devs
+[1;33m|[m [1;31m|[m[1;32m\[m [36m\[m [31m\[m [32m\[m [33m\[m  
+[1;33m|[m [1;31m|[m * [36m|[m [31m|[m [32m|[m [33m|[m [33m33af151[m[33m ([m[1;31morigin/Esban[m[33m)[m base de perfil con publicaciones para editar
+[1;33m|[m [1;31m|[m * [36m|[m [31m|[m [32m|[m [33m|[m [33m1c9b328[m validaciones en el formulario de creacion de publicacion
+[1;33m|[m [1;31m|[m * [36m|[m [31m|[m [32m|[m [33m|[m [33mb0a6ffe[m integracion formulario crear publicacion con imagenes con vista previa
+[1;33m|[m [1;31m|[m * [36m|[m [31m|[m [32m|[m [33m|[m [33m804c6e2[m creacion de componentes
+[1;33m|[m * [1;32m|[m [36m|[m [31m|[m [32m|[m [33m|[m [33mf2d48a1[m Resolucion de errores
+[1;33m|[m * [1;32m|[m [36m|[m [31m|[m [32m|[m [33m|[m   [33m78197c9[m Merge remote-tracking branch 'origin/Daniel' into devs
+[1;33m|[m [32m|[m[33m\[m [1;32m\[m [36m\[m [31m\[m [32m\[m [33m\[m  
+[1;33m|[m [32m|[m [33m|[m[32m_[m[1;32m|[m[32m_[m[36m|[m[32m_[m[31m|[m[32m/[m [33m/[m  
+[1;33m|[m [32m|[m[32m/[m[33m|[m [1;32m|[m [36m|[m [31m|[m [33m/[m   
+[1;33m|[m [32m|[m [33m|[m [1;32m|[m[33m_[m[36m|[m[33m_[m[31m|[m[33m/[m    
+[1;33m|[m [32m|[m [33m|[m[33m/[m[1;32m|[m [36m|[m [31m|[m     
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m5207e4c[m Reorganizacion de carpetas
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m495c996[m Validación de dominios @alu.uct.cl y @uct.cl en signup/login
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33md5d4108[m Configurar credenciales de Google API (Cloud Console)
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m64e4a27[m Planificacion de tareas de la semana 4
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m515c17d[m Ajustes frontend en el componente de Login
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m8261792[m Se hizo responsivo el navbar
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m085b5d0[m Navegación básica Header
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33mdef23bb[m Navbar base
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33m6fc57fd[m Se Refactoriza el código del login (FRONTEND)
+[1;33m|[m [32m|[m * [1;32m|[m [36m|[m [31m|[m [33md6a4ee4[m Merge remote-tracking branch 'origin/Esban' into Daniel
+[1;33m|[m [32m|[m [1;35m|[m[1;32m\[m[1;32m|[m [36m|[m [31m|[m 
+[1;33m|[m [32m|[m [1;35m|[m * [36m|[m [31m|[m [33mb346782[m ahora si con el gitignore
+[1;33m|[m [32m|[m [1;35m|[m * [36m|[m [31m|[m [33md22c9c8[m boceto frontend login + marketplace
+[1;33m|[m [32m|[m * [1;36m|[m [36m|[m [31m|[m [33m3afea7a[m Prueba REact
+[1;33m|[m [32m|[m * [1;36m|[m [36m|[m [31m|[m [33m4838240[m REact
+[1;33m|[m [32m|[m * [1;36m|[m [36m|[m [31m|[m [33mbc05386[m react subir
+[1;33m|[m [32m|[m * [1;36m|[m [36m|[m [31m|[m [33m0694442[m Cambios pruebas
+[1;33m|[m [32m|[m * [1;36m|[m [36m|[m [31m|[m [33m335d462[m[33m ([m[1;32mDaniel[m[33m)[m diagrama de caso de uso (elias)
+[1;33m|[m [32m|[m [1;36m|[m[1;36m/[m [36m/[m [31m/[m  
+[1;33m|[m * [1;36m|[m [36m|[m [31m|[m   [33m8518024[m Merge branch 'rodrigo' into devs
+[1;33m|[m [31m|[m[36m\[m [1;36m\[m [36m\[m [31m\[m  
+[1;33m|[m [31m|[m [36m|[m [1;36m|[m[36m/[m [31m/[m  
+[1;33m|[m [31m|[m [36m|[m[36m/[m[1;36m|[m [31m|[m   
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33mec506eb[m Spinner y skeleton
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33mcc95079[m arreglo de feed, busqueda por texto y categoria
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33mafc1606[m buscador de publicaciones
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33mc0e19b0[m cambios select y barra de busqueda
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33md738000[m Actualizacion feed
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33me84a014[m Optimizacion scroll infinito
+[1;33m|[m [31m|[m * [1;36m|[m [31m|[m [33meecb63a[m Avance inicial Scroll
+[1;33m|[m [31m|[m[1;33m/[m [1;36m/[m [31m/[m  
+[1;33m|[m[1;33m/[m[31m|[m [1;36m|[m [31m|[m   
+[1;33m|[m * [1;36m|[m [31m|[m [33m310b2b5[m Agregar contenido inicial a InfoDev.md
+[1;33m|[m[1;33m/[m [1;36m/[m [31m/[m  
+* [1;36m|[m [31m|[m [33mb1c7a83[m Diagrama arqui
+* [1;36m|[m [31m|[m [33md127d9a[m mejoras en mer
+* [1;36m|[m [31m|[m [33m78c9ec2[m orden
+* [1;36m|[m [31m|[m   [33m39c23d2[m Merge remote-tracking branch 'origin/main'
+[33m|[m[34m\[m [1;36m\[m [31m\[m  
+* [34m|[m [1;36m|[m [31m|[m [33m1e31124[m MER modificado
+[34m|[m [34m|[m [1;36m|[m * [33m335b89d[m Reorganizacion de carpetas
+[34m|[m [34m|[m [1;36m|[m *   [33m5b7a3b1[m merge
+[34m|[m [34m|[m [1;36m|[m [35m|[m[36m\[m  
+[34m|[m [34m|[m [1;36m|[m [35m|[m * [33m8de2bca[m Se agrego la logica de estado de cada mensaje
+[34m|[m [34m|[m [1;36m|[m * [36m|[m [33m562fbf5[m Se agrego la logica de estado de cada mensaje y  diferencia propio/ajeno
+[34m|[m [34m|[m [1;36m|[m [36m|[m[36m/[m  

@@ -1,15 +1,15 @@
 /* App global overrides for full-bleed pages (e.g., Login) */
 #root { max-width: none; margin: 0; padding: 0; text-align: initial; }
 
+/*
+  Unificamos las clases de fondo:
+  - Usamos /FONDO.jpg (archivo en public/) para que funcione en dev y producción.
+  - Mantengo .app-background como alias para compatibilidad.
+*/
+.bg-fondo,
 .app-background {
   background-image: url('./assets/img/FONDO.jpg');
   background-size: cover;
   background-position: center;
   min-height: 100vh;
-}
-
-.bg-fondo {
-  background-image: url('./assets/img/FONDO.jpg');
-  background-size: cover;
-  background-position: center;
 }
