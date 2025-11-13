@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 // Tipos para las props del componente
 interface SearchAndFilterProps {
@@ -119,7 +118,40 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         )}
       </div>
 
-      {/* Panel de "No hay resultados" eliminado de aquí - solo se muestra abajo en InfiniteFeed */}
+      {(searchTerm || selectedCategory) && !hasResults && (
+        <div className="no-results-container">
+          <div className="no-results-message">
+            <div className="text-4xl mb-3">🔍</div>
+            <h3>No se encontraron resultados</h3>
+            <p>
+              {searchTerm && selectedCategory 
+                ? `No hay publicaciones que coincidan con "${searchTerm}" en la categoría "${selectedCategory}"`
+                : searchTerm
+                ? `No hay publicaciones que coincidan con "${searchTerm}"`
+                : `No hay publicaciones en la categoría "${selectedCategory}"`
+              }
+            </p>
+            <div className="no-results-suggestions">
+              <h4>Sugerencias:</h4>
+              <ul>
+                <li>Verifica la ortografía de las palabras</li>
+                <li>Intenta con términos más generales</li>
+                <li>Prueba con una categoría diferente</li>
+                {onClearFilters && (
+                  <li>
+                    <button 
+                      onClick={onClearFilters}
+                      className="clear-filters-btn"
+                    >
+                      Limpiar todos los filtros
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

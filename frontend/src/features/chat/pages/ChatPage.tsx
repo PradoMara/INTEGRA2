@@ -4,7 +4,7 @@ import { ChatHeader } from '../components/ChatHeader'
 import { ChatWindow } from '../components/ChatWindow'
 import { ChatInput } from '../components/ChatInput'
 import { ChatList } from '../components/ChatList' // ya presente
-import { Sidebar } from '../../marketplace/ui/components/Sidebar'
+import { MiniSidebar } from '../../marketplace/ui/components/MiniSidebar'
 import type { Chat, Mensaje } from '@/features/chat/types/chat'
 import { MockChatWS } from '../mocks/MockChatWS'
 import { mockChats } from '../mocks/mockChats'
@@ -349,7 +349,7 @@ export default function ChatPage() {
   return (
     <div className="grid h-screen overflow-hidden max-h-222 grid-cols-[64px_320px_1fr]">
       <aside className="border-r bg-white max-h-222">
-        <Sidebar active="chats" />
+        <MiniSidebar active="chats" />
       </aside>
 
       <div className="border-r bg-white min-w-0 min-h-0 max-h-222 flex flex-col">

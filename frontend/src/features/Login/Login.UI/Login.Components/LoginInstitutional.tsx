@@ -1,4 +1,3 @@
-// frontend/src/features/Login/Login.UI/Login.Components/LoginInstitutional.tsx
 import img from "@/assets/img/favicon.png";
 import styles from './Login.module.css';
 import { useEffect, useRef, useState } from 'react';
@@ -7,13 +6,12 @@ import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '@/features/Log
 
 type Props = {
   onOAuth?: () => void | Promise<void>;
-  onShowAdminLogin?: () => void;
 };
 
 const ALUMNO_DOMAIN = "alu.uct.cl";
 const PROFESOR_DOMAIN = "uct.cl";
 
-export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props) {
+export default function LoginInstitutional({ onOAuth }: Props) {
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const [error, setError] = useState<string>('');
 
@@ -62,8 +60,6 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
 
     const container = document.createElement('div');
     container.style.width = '100%';
-    container.style.display = 'flex';
-    container.style.justifyContent = 'center'; // Centrar el botón de Google
     if (btnRef.current && btnRef.current.parentNode) {
       btnRef.current.parentNode.replaceChild(container, btnRef.current);
     }
@@ -80,47 +76,30 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
   return (
     <div className={styles.heroBg}>
       <div className={styles.card}>
-        {/* Header centrado */}
-        <header className={`${styles.header} ${styles.centered}`} role="banner" aria-labelledby="login-title">
+        <header className={styles.header} role="banner" aria-labelledby="login-title">
           <div className={styles.logo}>
             <img src={img} alt="Logo UCT" className={styles.logoImg} loading="lazy" decoding="async" />
           </div>
-          <div className={`${styles.headerText} ${styles.centered}`}>
+          <div className={styles.headerText}>
             <h2 id="login-title" className={styles.title}>Iniciar sesión</h2>
             <span className={styles.badge} aria-hidden>Solo cuentas @{PROFESOR_DOMAIN} @{ALUMNO_DOMAIN}</span>
           </div>
         </header>
 
-        {/* Contenedor centrado para el botón de Google */}
-        <div className={styles.googleBtnContainer}>
-          <button
-            ref={btnRef}
-            type="button"
-            className={styles.googleBtn}
-            onClick={() => { if (onOAuth) onOAuth(); }}
-            aria-label="Continuar con Google"
-          >
-            <GoogleIcon />
-            <span>Continuar con Google</span>
-          </button>
-        </div>
-
-        {/* BOTÓN DE ADMIN DISCRETO CENTRADO */}
-        {onShowAdminLogin && (
-          <div className={styles.adminContainer}>
-            <button 
-              onClick={onShowAdminLogin}
-              className={styles.adminBtn}
-            >
-              ¿Eres administrador?
-            </button>
-          </div>
-        )}
+        <button
+          ref={btnRef}
+          type="button"
+          className={styles.googleBtn}
+          onClick={() => { if (onOAuth) onOAuth(); }}
+          aria-label="Continuar con Google"
+        >
+          <GoogleIcon />
+          <span>Continuar con Google</span>
+        </button>
 
         {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
       </div>
 
-      {/* Footer original sin cambios */}
       <LoginFooter />
     </div>
   );

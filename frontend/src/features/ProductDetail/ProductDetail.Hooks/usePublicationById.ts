@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPublicationById } from '../ProductDetail.Repositories/publicationsService';
+import { getPublicationById } from '../../services/publicationsService';
 import type { Publication } from '../ProductDetail.Types/publication';
 
 export function publicationKeys(id?: string) {
@@ -12,9 +12,7 @@ type Options = {
 };
 
 export function usePublicationById(id?: string, options?: Options) {
-  const { initialData } = options ?? {};
-  // Si viene initialData desde la navegación, no disparamos fetch para evitar error
-  const enabled = !!id && !initialData;
+  const { enabled = !!id, initialData } = options ?? {};
   return useQuery<Publication>({
     queryKey: publicationKeys(id),
     queryFn: () => getPublicationById(id!),

@@ -6,7 +6,7 @@ import Header from '@/features/shared/ui/Header'
 
 export default function AyudaPage() {
   return (
-    <div className="min-h-screen bg-transparent grid grid-cols-1 lg:grid-cols-[200px_1fr]">
+    <div className="min-h-screen bg-transparent grid grid-cols-1 lg:grid-cols-[260px_1fr]">
       <aside className="border-r">
         <Sidebar active="ayuda" />
       </aside>

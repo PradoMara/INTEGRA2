@@ -1,11 +1,10 @@
-/* Header with Navy + Orange theme matching Sidebar/Onboarding */
+/* Styles copied */
+/* content is identical to presentation/components/Header.module.css */
 .headerRoot {
 	width: 100%;
-	background: linear-gradient(90deg, #0b3a6e 0%, #072c52 100%);
+	background: linear-gradient(90deg, #002b5c 0%, #004c97 100%);
 	color: #fff;
-	box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-	position: relative;
-	z-index: 100;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .headerInner {
@@ -64,40 +63,12 @@
 	font-size: .9rem;
 	font-weight: 500;
 	position: relative;
-	padding: .5rem .75rem;
-	border-radius: 8px;
-	transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+	padding: .35rem .15rem;
+	transition: color .2s;
 }
-.navLink::after {
-	content: '';
-	position: absolute;
-	bottom: 4px;
-	left: 50%;
-	width: 0;
-	height: 2px;
-	background: #e97b1c;
-	transform: translateX(-50%);
-	transition: width .3s cubic-bezier(0.4, 0, 0.2, 1);
-	border-radius: 2px;
-}
-.navLink:hover {
-	background: rgba(233, 123, 28, 0.1);
-	color: #fff;
-}
-.navLink:hover::after { width: 80%; }
-.navLink.active {
-	background: rgba(233, 123, 28, 0.15);
-	color: #fff;
-}
-.navLink.active::after {
-	width: 80%;
-	background: #e97b1c;
-}
-.navLink:focus-visible { 
-	outline: 2px solid #e97b1c; 
-	outline-offset: 3px; 
-	border-radius: 8px; 
-}
+.navLink:hover { color: #e6f3ff; }
+.navLink:active { color: #c8e7ff; }
+.navLink:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 4px; }
 
 .navLinkPrimary {
 	background: rgba(255,255,255,0.18);
@@ -120,13 +91,9 @@
 	border-radius: 100px;
 	background: rgba(255,255,255,0.12);
 	border: 1px solid rgba(255,255,255,0.2);
-	transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: background .2s;
 }
-.profileLink:hover { 
-	background: rgba(233, 123, 28, 0.2);
-	border-color: rgba(233, 123, 28, 0.4);
-	box-shadow: 0 0 12px rgba(233, 123, 28, 0.3);
-}
+.profileLink:hover { background: rgba(255,255,255,0.22); }
 
 .profileAvatar {
 	width: 34px;
@@ -146,7 +113,7 @@
 	margin-left: auto;
 }
 
-/* Botón de Logout con orange accent */
+/* Botón de Logout - mismo estilo que profileLink */
 .logoutButton {
 	display: flex;
 	align-items: center;
@@ -159,18 +126,16 @@
 	border-radius: 100px;
 	background: rgba(255,255,255,0.12);
 	border: 1px solid rgba(255,255,255,0.2);
-	transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: background .2s;
 	cursor: pointer;
 }
 
 .logoutButton:hover {
-	background: rgba(233, 123, 28, 0.2);
-	border-color: rgba(233, 123, 28, 0.4);
-	box-shadow: 0 0 12px rgba(233, 123, 28, 0.3);
+	background: rgba(255,255,255,0.22);
 }
 
 .logoutButton:focus-visible {
-	outline: 2px solid #e97b1c;
+	outline: 2px solid #fff;
 	outline-offset: 2px;
 }
 
@@ -178,9 +143,9 @@
 	width: 34px;
 	height: 34px;
 	border-radius: 50%;
-	background: linear-gradient(135deg, #e97b1c 0%, #d66a15 100%);
+	background: rgba(255, 80, 80, 0.8);
 	border: 2px solid rgba(255,255,255,0.35);
-	box-shadow: 0 2px 8px rgba(233, 123, 28, 0.3);
+	box-shadow: 0 0 0 2px rgba(0,0,0,0.15);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -205,13 +170,12 @@
 	border-radius: 100px;
 	background: rgba(255,255,255,0.12);
 	border: 1px solid rgba(255,255,255,0.2);
-	transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: background .2s;
 	cursor: pointer;
 }
 
 .logoutButtonMobile:hover {
-	background: rgba(233, 123, 28, 0.2);
-	border-color: rgba(233, 123, 28, 0.4);
+	background: rgba(255,255,255,0.22);
 }
 
 .menuToggle {
@@ -225,12 +189,9 @@
 	justify-content: center;
 	cursor: pointer;
 	position: relative;
-	transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: background .25s;
 }
-.menuToggle:hover { 
-	background: rgba(233, 123, 28, 0.2);
-	border-color: rgba(233, 123, 28, 0.4);
-}
+.menuToggle:hover { background: rgba(255,255,255,0.25); }
 .burger, .burger::before, .burger::after {
 	content: '';
 	display: block;
@@ -270,35 +231,17 @@
 		top: 100%;
 		left: 0;
 		width: 100%;
-		background: linear-gradient(180deg, rgba(11, 58, 110, 0.97) 0%, rgba(7, 44, 82, 0.97) 100%);
-		backdrop-filter: blur(8px);
-		box-shadow: 0 8px 24px rgba(0,0,0,.3);
+		background: linear-gradient(180deg, rgba(0,43,92,0.97) 0%, rgba(0,76,151,0.97) 100%);
+		backdrop-filter: blur(6px);
+		box-shadow: 0 6px 18px -4px rgba(0,0,0,.35);
 		padding: .9rem 1.1rem 1.4rem;
-		border-bottom: 2px solid rgba(233, 123, 28, 0.3);
-		overflow: hidden;
+		animation: panelFade .35s ease;
+		border-bottom: 1px solid rgba(255,255,255,0.18);
 	}
 	.mobilePanelInner { display: flex; flex-direction: column; gap: 1rem; }
 	.mobileNavList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
-	.mobileNavList a { 
-		text-decoration: none; 
-		color: #fff; 
-		padding: .55rem .65rem; 
-		border-radius: 8px; 
-		font-size: .95rem; 
-		font-weight: 500; 
-		background: rgba(255,255,255,0.1); 
-		border: 1px solid rgba(255,255,255,0.18);
-		transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-	}
-	.mobileNavList a:hover { 
-		background: rgba(233, 123, 28, 0.2);
-		border-color: rgba(233, 123, 28, 0.4);
-	}
-	.mobileNavList a.active {
-		background: rgba(233, 123, 28, 0.25);
-		border-color: rgba(233, 123, 28, 0.5);
-		border-left: 3px solid #e97b1c;
-	}
+	.mobileNavList a { text-decoration: none; color: #fff; padding: .55rem .65rem; border-radius: 8px; font-size: .95rem; font-weight: 500; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); }
+	.mobileNavList a:hover { background: rgba(255,255,255,0.2); }
 	.mobileSearch { display: flex; }
 	.mobileSearch .searchBar { display: flex; max-width: none; flex: 1; }
 	.mobilePanelFooter { 

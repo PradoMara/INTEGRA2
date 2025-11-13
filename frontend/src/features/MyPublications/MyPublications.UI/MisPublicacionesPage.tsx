@@ -14,7 +14,7 @@ export default function MisPublicacionesPage() {
   }, [])
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[200px_1fr]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr]">
       <aside className="border-r">
         <Sidebar active="marketplace" />
       </aside>

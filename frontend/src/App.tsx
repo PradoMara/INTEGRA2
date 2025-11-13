@@ -1,56 +1,94 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminRoute from './components/auth/AdminRoute';
-
-// Importar tus páginas
-import LoginPage from './pages/LoginPage';
-import MarketplacePage from './pages/MarketplacePage';
-import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/AdminDashboard';
-import Header from './features/shared/ui/Header';
-import FloatingChat from './features/shared/ui/FloatingChat';
+import { useState, useCallback } from 'react'
+import InfiniteFeed from './features/Marketplace/Marketplace.UI/Marketplace.Components/InfiniteFeed'
+import SearchAndFilter from './features/Marketplace/Marketplace.UI/Marketplace.Components/SearchAndFilter'
+import { useDebounce } from './features/Marketplace/Marketplace.Hooks/useProductsWithFilters'
+import Header from './features/shared/ui/Header'
+import FloatingChat from './features/shared/ui/FloatingChat'
 
 function App() {
-  // CORREGIDO: Agregar tipo explícito al selector
-  const isLoggedIn = useAuthStore((state: any) => state.isLoggedIn());
+  // Estado para la búsqueda y filtros
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [feedStats, setFeedStats] = useState({ hasResults: true, totalResults: 0 })
+
+  // Debounce del término de búsqueda para optimizar las consultas
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+
+  // Mapeo de categorías para compatibilidad
+  const categories = [
+    'Electrónicos',
+    'Libros y Materiales', 
+    'Ropa y Accesorios',
+    'Deportes',
+    'Hogar y Jardín',
+    'Vehículos',
+    'Servicios'
+  ]
+
+  // Mapear nombres de categorías a IDs
+  const categoryMap: Record<string, string> = {
+    'Electrónicos': 'electronics',
+    'Libros y Materiales': 'books',
+    'Ropa y Accesorios': 'clothing',
+    'Deportes': 'sports',
+    'Hogar y Jardín': 'home',
+    'Vehículos': 'vehicles',
+    'Servicios': 'services'
+  }
+
+  // Convertir categoría seleccionada a ID
+  const selectedCategoryId = selectedCategory ? categoryMap[selectedCategory] || '' : ''
+
+  // Manejadores de eventos con optimización
+  const handleSearchChange = useCallback((newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm)
+  }, [])
+
+  const handleCategoryChange = useCallback((newCategory: string) => {
+    setSelectedCategory(newCategory)
+  }, [])
+
+  // Manejador para limpiar filtros
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm('')
+    setSelectedCategory('')
+  }, [])
+
+  // Callback para recibir estadísticas del feed
+  const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => {
+    setFeedStats({ hasResults, totalResults })
+  }, [])
 
   return (
-    <Router>
-      <div className="min-h-screen">
-        {/* Header visible en todas las páginas excepto login */}
-        {isLoggedIn && <Header />}
-        
-        <main>
-          <Routes>
-            {/* Ruta pública - Login */}
-            <Route path="/login" element={<LoginPage />} />
-            
-            {/* Rutas protegidas para usuarios normales */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<MarketplacePage />} />
-              <Route path="/perfil" element={<ProfilePage />} />
-              <Route path="/marketplace" element={<MarketplacePage />} />
-            </Route>
-            
-            {/* Rutas protegidas solo para admin */}
-            <Route element={<AdminRoute />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-            </Route>
-            
-            {/* Ruta por defecto - redirige según autenticación */}
-            <Route 
-              path="*" 
-              element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} 
-            />
-          </Routes>
-        </main>
-        
-        {/* Chat flotante solo cuando está logueado */}
-        {isLoggedIn && <FloatingChat />}
-      </div>
-    </Router>
-  );
+    <div className="min-h-screen">
+      <header>
+        <Header/>
+      </header>
+      
+      {/* Componente de búsqueda y filtros */}
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        selectedCategory={selectedCategory}
+        categories={categories}
+        onSearchChange={handleSearchChange}
+        onCategoryChange={handleCategoryChange}
+        onClearFilters={handleClearFilters}
+        hasResults={feedStats.hasResults}
+        totalResults={feedStats.totalResults}
+      />
+      
+      <main className="py-6">
+        {/* Feed con filtros integrados */}
+        <InfiniteFeed
+          searchTerm={debouncedSearchTerm}
+          selectedCategoryId={selectedCategoryId}
+          onStatsChange={handleFeedStatsChange}
+        />
+      </main>
+      {/* Floating chat widget visible en todas las rutas excepto /chats */}
+      <FloatingChat />
+    </div>
+  )
 }
 
-export default App;
+export default App

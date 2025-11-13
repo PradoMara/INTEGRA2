@@ -1,4 +1,3 @@
-// frontend/src/features/auth/ui/LoginForm.tsx - Versión con transparencia
 import React, { useState } from "react";
 import Input from "../../../../public/components/Input";
 import Button from "../../../../public/components/Button";
@@ -29,10 +28,10 @@ export default function LoginForm({ onSubmit, loading = false, className = "" }:
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="admin@ejemplo.com"
+          placeholder="tú@ejemplo.com"
           required
           autoComplete="email"
-          className="h-11 bg-white/70 backdrop-blur-sm" // Añade transparencia
+          className="h-11"
         />
       </div>
 
@@ -45,20 +44,13 @@ export default function LoginForm({ onSubmit, loading = false, className = "" }:
           placeholder="••••••••"
           required
           autoComplete="current-password"
-          className="h-11 bg-white/70 backdrop-blur-sm" // Añade transparencia
+          className="h-11"
         />
       </div>
 
       <div>
-        <Button 
-          type="submit" 
-          variant="primary" 
-          size="md" 
-          fullWidth 
-          disabled={loading}
-          className="backdrop-blur-sm" // Añade transparencia al botón si es posible
-        >
-          {loading ? "Entrando..." : "Iniciar Sesión"}
+        <Button type="submit" variant="primary" size="md" fullWidth disabled={loading}>
+          {loading ? "Entrando..." : "Entrar"}
         </Button>
       </div>
     </form>

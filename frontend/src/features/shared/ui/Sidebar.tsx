@@ -1,8 +1,6 @@
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import React from "react";
-import { motion } from "framer-motion";
-import logo from "@/assets/img/logouct.png";
-import styles from './Sidebar.module.css';
+import logo from "@/assets/img/logouct.png"; // Se mantiene tu logo
 
 export function Sidebar({
   active = "marketplace",
@@ -12,79 +10,91 @@ export function Sidebar({
   className?: string;
 }) {
   return (
-    <motion.aside 
-      className={`${styles.sidebar} ${className}`}
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <motion.div 
-        className={styles.brand}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-      >
-        <div className={styles.logo}>
-          <img
-            src={logo}
-            alt="Logo UCT"
-            loading="lazy"
-            decoding="async"
-          />
+    // CAMBIO 1: Fondo amarillo como en la imagen (en lugar del gradiente)
+    <aside className={`relative bg-yellow-400 min-h-[100dvh] ${className}`}>
+      <div className="sticky top-0 min-h-[100dvh] flex flex-col gap-4 p-4">
+        
+        {/* CAMBIO 2: Título y logo mantenidos, pero con texto blanco */}
+        <div className="flex items-center gap-2.5 px-1 py-1.5">
+          {/* Le quité el 'bg-slate-50' para que el fondo sea amarillo */}
+          <div className="w-11 h-11 rounded-xl grid place-items-center"> 
+            <img
+              src={logo}
+              alt="Logo UCT"
+              className="max-w-[70%] max-h-[70%] object-contain"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <strong className="font-extrabold text-black text-xl">MarketUCT</strong>
         </div>
-        <h1 className={styles.brandText}>MarketUCT</h1>
-      </motion.div>
 
-      <nav className={styles.nav}>
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3, duration: 0.3 }}
-        >
-          <NavLink
-            to="/home"
-            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
+        <nav role="navigation" className="grid gap-1.5">
+          
+          {/* CAMBIO 3: Estilos de links actualizados al de la imagen */}
+          <Link
+            to="/marketplace"
+            className={[
+              "px-3 py-2 rounded-xl no-underline text-white", // Clase base
+              active === "marketplace"
+                ? "font-extrabold" // Estilo ACTIVO (como en tu imagen)
+                : "font-medium hover:bg-yellow-500", // Estilo INACTIVO
+            ].join(" ")}
           >
-            <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
             MarketPlace
-          </NavLink>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4, duration: 0.3 }}
-        >
-          <NavLink
+          </Link>
+          <Link
             to="/chats"
-            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
+            className={[
+              "px-3 py-2 rounded-xl no-underline text-white",
+              active === "chats"
+                ? "font-extrabold"
+                : "font-medium hover:bg-yellow-500",
+            ].join(" ")}
           >
-            <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
             Chats
-          </NavLink>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          <NavLink
+          </Link>
+          
+          {/* CAMBIO 4: Se mantiene tu link de "Terminos" con el nuevo estilo */}
+          <Link
             to="/terminos"
-            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
+            className={[
+              "px-3 py-2 rounded-xl no-underline text-white",
+              active === "terminos"
+                ? "font-extrabold"
+                : "font-medium hover:bg-yellow-500",
+            ].join(" ")}
           >
-            <svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Términos y Condiciones
-          </NavLink>
-        </motion.div>
-      </nav>
-    </motion.aside>
+            Terminos y Condiciones
+          </Link>
+
+          <Link
+            to="/foro"
+            className={[
+              "px-3 py-2 rounded-xl no-underline text-white",
+              active === "foro"
+                ? "font-extrabold"
+                : "font-medium hover:bg-yellow-500",
+            ].join(" ")}
+          >
+            Foro
+          </Link>
+        </nav>
+
+        {/* CAMBIO 5: Añadido "Cerrar Sesion" al final (como en la imagen) */}
+        <div className="mt-auto"> {/* mt-auto empuja esto al fondo */}
+          <button
+            onClick={() => {
+              // Tu lógica de logout aquí
+              console.log("Cerrando sesión...");
+            }}
+            className="px-3 py-2 rounded-xl font-medium text-white no-underline bg-red-500 hover:bg-yellow-500 w-full text-left"
+          >
+            Cerrar Sesion
+          </button>
+        </div>
+      </div>
+    </aside>
   );
 }
 

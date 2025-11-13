@@ -10,14 +10,11 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const token = params.get('token')
-    if (!token) {
-      navigate('/login', { replace: true })
-      return
-    }
+    if (!token) return navigate('/login', { replace: true })
 
     // Podrías pedir /me al backend para obtener user; o decodificar si lo incluyes en el token
     // Aquí hago una llamada opcional a /api/me
-    void (async () => {
+    ;(async () => {
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/me`, {
           headers: { Authorization: `Bearer ${token}` }

@@ -1,4 +1,4 @@
-import { PostRepository } from './PostRepository'
+import type { PostRepository } from './PostRepository'
 import type { Post, PostFilters } from '@/features/Login/Login.Types/Post'
 
 // Datos de categorías
@@ -37,18 +37,7 @@ const productData = [
   { title: 'Reparación de Computadores', desc: 'Servicio técnico especializado, domicilio', category: 'services', priceRange: [20000, 50000] }
 ]
 
-export class MockPostRepository extends PostRepository {
-  async getAll(): Promise<Post[]> {
-    const { posts } = await this.findAll({ searchTerm: '', categoryId: '' }, 1, 20)
-    return posts
-  }
-
-  async getById(id: number): Promise<Post> {
-    const post = await this.findById(id)
-    if (!post) throw new Error('Post no encontrado')
-    return post
-  }
-
+export class MockPostRepository implements PostRepository {
   async findAll(filters: PostFilters, page: number = 1, limit: number = 9): Promise<{
     posts: Post[]
     hasMore: boolean

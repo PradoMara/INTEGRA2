@@ -1,11 +1,7 @@
-import { GoogleLogin } from '@react-oauth/google'
-
-type GoogleCredential = {
-  credential?: string | null
-}
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
 
 export default function GoogleAuthButton() {
-  async function onSuccess(cred: GoogleCredential) {
+  async function onSuccess(cred: CredentialResponse) {
     const idToken = cred.credential
     if (!idToken) return alert('No se recibió token de Google')
 

@@ -81,8 +81,7 @@ export default function ItemCard({ post }: ItemCardProps) {
             )}
           </div>
             <Link 
-             to={`/publications/${id}`}
-             state={{ publication: { id, title, description, price, images: image ? [image] : undefined, stock, seller: { name: author, avatarUrl: avatar }, categoryName } }}
+             to={`/producto/${id}`} 
              className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
           >
             Ver detalle

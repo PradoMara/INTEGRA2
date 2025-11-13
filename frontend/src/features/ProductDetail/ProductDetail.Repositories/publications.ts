@@ -1,4 +1,4 @@
-import type { Publication } from '../ProductDetail.Types/publication';
+import type { Publication } from '../../../ProductDetail/ProductDetail.Types/publication';
 
 export const mockPublications: Record<string, Publication> = {
   'p-1001': {
