@@ -4,17 +4,19 @@ import SearchAndFilter from './Marketplace.Components/SearchAndFilter'
 import InfiniteFeed from './Marketplace.Components/InfiniteFeed'
 import Header from '@/features/shared/ui/Header'
 
-// 💥 IMPORTS REQUERIDOS
-import { useCategories } from '@/features/marketplace/Marketplace.Hooks/useCategories'
-import { useDebounce } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
+// 🛑 SOLUCIÓN: Cambiar la ruta de alias (@/) a la ruta relativa (../)
+// Antes: import { useCategories } from '@/features/marketplace/Marketplace.Hooks/useCategories'
+// Antes: import { useDebounce } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters' 
+
+import { useCategories } from '../Marketplace.Hooks/useCategories' 
+import { useDebounce } from '../Marketplace.Hooks/usePostsWithFilters' 
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [feedStats, setFeedStats] = useState<{ hasResults: boolean; totalResults: number }>({ hasResults: true, totalResults: 0 })
 
-  // ❌ SE ELIMINA EL CÓDIGO MOCK DE CATEGORÍAS (categories, categoryMap, selectedCategoryId)
-  
+
   // 1. Obtener categorías reales del backend
   const { categories, isLoading: isLoadingCategories, isError: isCategoriesError } = useCategories(); 
 
@@ -27,6 +29,8 @@ export default function HomePage() {
   const handleFeedStatsChange = useCallback((hasResults: boolean, totalResults: number) => setFeedStats({ hasResults, totalResults }), [])
   
   // Manejo de carga de categorías
+  // 🛑 IMPORTANTE: Si categories no está listo, se usa un array vacío (por defecto del hook) para no romper el SearchAndFilter
+  
   if (isLoadingCategories) {
       return (
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -35,14 +39,10 @@ export default function HomePage() {
       )
   }
   
-  // ✅ CAMBIO: Mostrar la página aunque haya error en categorías (no bloquear navegación)
-  // if (isCategoriesError) {
-  //     return (
-  //         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-  //             <p className="text-red-500">Error al cargar la lista de categorías.</p>
-  //         </div>
-  //     )
-  // }
+  if (isCategoriesError) {
+      // Devolvemos un mensaje de error sin romper la navegación.
+      console.error("Error al cargar la lista de categorías:", isCategoriesError);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 grid grid-cols-1 lg:grid-cols-[260px_1fr]">
@@ -56,7 +56,7 @@ export default function HomePage() {
             <SearchAndFilter
               searchTerm={searchTerm} 
               selectedCategory={selectedCategory}
-              categories={categories} // ✅ Lista REAL
+              categories={categories} // ✅ Lista REAL (si no está lista, el hook devuelve [] para no fallar)
               onSearchChange={handleSearchChange}
               onCategoryChange={handleCategoryChange}
               onClearFilters={handleClearFilters}
