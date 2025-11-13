@@ -51,7 +51,7 @@ async function prepareMocks() {
   if (import.meta.env.DEV) {
     try {
       const { worker } = await import('./mocks/browser');
-      await worker.start({ onUnhandledRequest: 'bypass' });
+      //await worker.start({ onUnhandledRequest: 'bypass' });
     } catch (e) {
       // MSW opcional; si falla, continuamos sin mocks
       console.warn('[MSW] No se pudo iniciar el worker:', e);

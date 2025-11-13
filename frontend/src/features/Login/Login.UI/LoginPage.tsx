@@ -1,77 +1,101 @@
-import { useState } from 'react'; // <--- ¡NUEVO!
+// frontend/src/features/Login/Login.UI/LoginPage.tsx
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore'; // <--- ¡NUEVO! (El store de la Tarea 1)
-import { login as apiLogin } from '@/features/auth/api/authApi'; // <--- ¡NUEVO! (La API real)
-import LoginForm from '@/features/auth/ui/LoginForm'; // <--- ¡NUEVO! (El formulario)
+import { useAuthStore } from '@/store/authStore';
+import { login as apiLogin } from '@/features/auth/api/authApi';
+import type { User as StoreUser } from '@/store/authStore';
+import LoginForm from '@/features/auth/ui/LoginForm';
 import LoginInstitutional from './Login.Components/LoginInstitutional';
-import Logo from '@/assets/img/logouct.png'; // (Asumo que esta es la ruta de tu logo)
+import styles from './Login.Components/Login.module.css'; // MISMO CSS
+import Logo from '@/assets/img/logouct.png';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  // Traemos la función de login de nuestro store de Zustand
   const authLogin = useAuthStore((state) => state.login);
-
-  // Estados para manejar el formulario
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
-  // Esta función se la pasaremos al LoginForm
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('google_credential');
+      if (token) navigate('/home', { replace: true });
+    } catch {}
+  }, [navigate]);
+
   async function handleEmailPasswordLogin(email: string, password: string) {
     setLoading(true);
     setError(null);
-
     try {
-      // 1. Llama a la API real
-      const { token, user } = await apiLogin({ email, password });
-
-      // 2. Si tiene éxito, guarda en el store de Zustand
-      authLogin(token, user);
-
-      // 3. Redirige al home
+      const { token, user: userFromApi } = await apiLogin({ email, password });
+      const userParaElStore: StoreUser = {
+        ...userFromApi,
+        rol: userFromApi.role === 'ADMINISTRADOR' ? 'ADMIN' : userFromApi.role === 'VENDEDOR' ? 'VENDEDOR' : 'USER',
+      };
+      authLogin(token, userParaElStore);
       navigate('/home', { replace: true });
-
     } catch (err: any) {
-      // 4. Si falla, muestra el error de la API
       setError(err.message);
       setLoading(false);
     }
   }
 
-  // Esta es la función para el botón de Google (la dejamos como estaba)
   async function handleOAuth() {
     navigate('/home', { replace: true });
   }
 
-  // ¡MODIFICADO! Ahora renderizamos toda la página
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
-        <img
-          src={Logo}
-          alt="MarketUCT Logo"
-          className="mx-auto mb-6 h-20 w-auto"
-        />
-        
-        {/* 1. Mostramos el LoginForm */}
-        <LoginForm onSubmit={handleEmailPasswordLogin} loading={loading} />
+  if (showAdminLogin) {
+    return (
+      // MISMO FONDO que el login institucional
+      <div className={styles.heroBg}>
+        <div className={styles.card}>
+          {/* Header centrado - MISMO ESTILO que el login institucional */}
+          <header className={`${styles.header} ${styles.centered}`} role="banner">
+            <div className={styles.logo}>
+              <img src={Logo} alt="Logo UCT" className={styles.logoImg} />
+            </div>
+            <div className={`${styles.headerText} ${styles.centered}`}>
+              <h2 className={styles.title}>Inicio de Sesión (Admin)</h2>
+              <span className={styles.subtitle}>Acceso para administradores del sistema</span>
+            </div>
+          </header>
 
-        {/* 2. Mostramos el error si existe */}
-        {error && (
-          <div className="my-4 rounded-md bg-red-100 p-3 text-center text-sm text-red-700">
-            {error}
+          {/* Formulario centrado */}
+          <div className={styles.googleBtnContainer}>
+            <LoginForm 
+              onSubmit={handleEmailPasswordLogin} 
+              loading={loading}
+              className={styles.form}
+            />
           </div>
-        )}
 
-        {/* 3. Separador */}
-        <div className="my-6 flex items-center">
-          <div className="flex-grow border-t border-gray-300"></div>
-          <span className="mx-4 flex-shrink text-sm text-gray-500">O</span>
-          <div className="flex-grow border-t border-gray-300"></div>
+          {error && (
+            <div className={styles.errorContainer}>
+              <p className={styles.error} role="alert">{error}</p>
+            </div>
+          )}
+
+          {/* Botón de volver */}
+          <div className={styles.adminContainer}>
+            <button 
+              onClick={() => {
+                setShowAdminLogin(false);
+                setError(null);
+              }}
+              className={styles.adminBtn}
+            >
+              ← Volver a Acceso Institucional
+            </button>
+          </div>
         </div>
-
-        {/* 4. Mostramos el Login Institucional */}
-        <LoginInstitutional onOAuth={handleOAuth} />
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <LoginInstitutional 
+      onOAuth={handleOAuth} 
+      onShowAdminLogin={() => setShowAdminLogin(true)}
+    />
   );
 }
