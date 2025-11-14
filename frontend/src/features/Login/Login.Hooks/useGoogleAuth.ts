@@ -17,11 +17,6 @@ function resolveAuthUrl() {
   return '/routes/auth'
 }
 
-/**
- * Hook to exchange a Google ID Token (credential) for an app session/JWT
- * - Reads the One Tap credential from localStorage key "google_credential" if not provided
- * - Sends POST to your backend and returns the parsed response
- */
 export function useGoogleAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

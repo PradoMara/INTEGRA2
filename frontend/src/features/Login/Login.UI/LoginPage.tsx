@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { login as apiLogin } from '@/features/auth/api/authApi';
-import type { User as StoreUser } from '@/store/authStore';
 import LoginForm from '@/features/auth/ui/LoginForm';
 import LoginInstitutional from './Login.Components/LoginInstitutional';
 import styles from './Login.Components/Login.module.css'; // MISMO CSS
 import Logo from '@/assets/img/logouct.png';
+import useGoogleAuth from '@/features/Login/Login.Hooks/useGoogleAuth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const { exchange } = useGoogleAuth();
 
   useEffect(() => {
     try {
@@ -28,11 +29,8 @@ export default function LoginPage() {
     setError(null);
     try {
       const { token, user: userFromApi } = await apiLogin({ email, password });
-      const userParaElStore: StoreUser = {
-        ...userFromApi,
-        rol: userFromApi.role === 'ADMINISTRADOR' ? 'ADMIN' : userFromApi.role === 'VENDEDOR' ? 'VENDEDOR' : 'USER',
-      };
-      authLogin(token, userParaElStore);
+      // El API ya entrega el usuario en la forma que espera el cliente (con 'rol').
+      authLogin(token, userFromApi as any);
       navigate('/home', { replace: true });
     } catch (err: any) {
       setError(err.message);
@@ -41,7 +39,15 @@ export default function LoginPage() {
   }
 
   async function handleOAuth() {
-    navigate('/home', { replace: true });
+    // Intercambia el idToken (guardado por Google One Tap en localStorage)
+    // por la sesión/JWT de la app antes de navegar.
+    try {
+      await exchange();
+      navigate('/home', { replace: true });
+    } catch (e: any) {
+      // Mostrar feedback mínimo; no bloquea el botón
+      setError(e?.message || 'No se pudo completar el inicio de sesión con Google');
+    }
   }
 
   if (showAdminLogin) {
