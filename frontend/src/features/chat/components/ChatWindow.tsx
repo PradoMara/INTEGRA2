@@ -11,11 +11,8 @@ export function ChatWindow({ mensajes }: { mensajes: Mensaje[] }) {
   }, [mensajes]);
 
   return (
-    // CAMBIO:
-    // 1. 'bg-transparent' se cambia por 'bg-white/30' (fondo blanco al 30% de opacidad).
-    // 2. Se añade 'backdrop-blur-sm' para el efecto "esmerilado" (frosted glass).
-    <div className="h-full min-h-0 overflow-y-auto bg-white/30 backdrop-blur-sm">
-      <div className="px-8 py-6 space-y-2">
+    <div className="h-full min-h-0 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+      <div className="px-8 py-6 space-y-3">
         {mensajes.map((m) => <ChatBubble key={m.id} mensaje={m} />)}
         <div ref={endRef} />
       </div>

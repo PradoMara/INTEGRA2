@@ -42,6 +42,7 @@ export function Sidebar({
             ].join(" ")}
           >
             MarketPlace
+<<<<<<< HEAD
           </Link>
           <Link
             to="/chats"
@@ -80,6 +81,10 @@ export function Sidebar({
             Foro
           </Link>
         </nav>
+=======
+          </NavLink>
+        </motion.div>
+>>>>>>> origin/Daniel
 
         {/* CAMBIO 5: Añadido "Cerrar Sesion" al final (como en la imagen) */}
         <div className="mt-auto"> {/* mt-auto empuja esto al fondo */}

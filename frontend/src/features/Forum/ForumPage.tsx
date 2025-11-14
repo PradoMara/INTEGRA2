@@ -12,6 +12,7 @@ import { es } from 'date-fns/locale'
 import { Sidebar } from '@/features/shared/ui/Sidebar'
 // (Asegúrate de que la ruta de tu Header sea correcta)
 import Header from '@/features/shared/ui/Header' 
+import { Link } from 'react-router-dom'
 
 // --- 2. Tipos de Datos (Sin cambios) ---
 interface PublicationAuthor {
@@ -132,7 +133,8 @@ const ForumContent = () => {
       {/* Encabezado */}
       <div className="mb-8 rounded-lg bg-white p-6 shadow-lg">
         <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-          Foro General
+          Foro General 
+          <Link to="/my-publications">Mis Publicaciones</Link>
         </h1>
         <p className="mt-2 text-lg text-gray-600">
           Un espacio para compartir ideas, preguntas y anuncios.

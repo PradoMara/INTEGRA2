@@ -118,37 +118,17 @@ export class MockPostRepository implements PostRepository {
     console.log(`Post ${id} deleted`)
   }
 
-  // Método privado para generar posts (migrado de tu hook)
-  private generatePosts(page: number, limit: number, filters: PostFilters): Post[] {
-    const posts: Post[] = []
-    const startId = (page - 1) * limit + 1
-    
-    for (let i = 0; i < limit; i++) {
-      const id = startId + i
-      const productIndex = (id - 1) % productData.length
-      const product = productData[productIndex]
-      const category = categories.find(cat => cat.id === product.category)!
-      
-      const post: Post = {
-        id,
-        title: `${product.title} ${Math.floor(id / productData.length) > 0 ? `(${Math.floor(id / productData.length) + 1})` : ''}`,
-        description: product.desc,
-        content: `${product.title} - ${product.desc}`,
-        categoryId: product.category,
-        categoryName: category.name,
-        author: `${category.name === 'Servicios' ? 'Proveedor' : 'Usuario'} ${id}`,
-        avatar: `https://avatar.iran.liara.run/public/${id}`,
-        image: `https://picsum.photos/400/300?random=${id}`,
-        likes: Math.floor(Math.random() * 50),
-        comments: Math.floor(Math.random() * 15),
-        shares: Math.floor(Math.random() * 5),
-        timeAgo: `${Math.floor(Math.random() * 48)}h`,
-        price: `$${(Math.random() * (product.priceRange[1] - product.priceRange[0]) + product.priceRange[0]).toLocaleString('es-CL')}`,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      
-      posts.push(post)
+// Hook para debounce
+export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
     }
     
     // Aplicar filtros (migrado de tu lógica)

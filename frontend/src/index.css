@@ -11,10 +11,11 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: url('./assets/img/FONDO.jpg');
+  background-image: url('./assets/img/fondo_16-9.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 a {
