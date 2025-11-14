@@ -1,4 +1,5 @@
 import React from 'react'
+import styles from './SelectCarrera.module.css'
 
 type Option = { id: string; name: string }
 
@@ -12,24 +13,39 @@ interface SelectCarreraProps {
 
 export default function SelectCarrera({ value, onChange, options = [], loading = false, disabled = false }: SelectCarreraProps) {
 	return (
-		<div className="mb-4">
-			<label htmlFor="select-carrera" className="block text-sm font-medium text-gray-700 mb-1">Carrera</label>
+		<div className={styles.field}>
+			<label htmlFor="select-carrera" className={styles.label}>
+				Carrera <span className={styles.required}>*</span>
+			</label>
 			{loading ? (
-				<div className="text-sm text-gray-500">Cargando carreras...</div>
+				<div className={styles.loading}>
+					<div className={styles.spinner} />
+					<span>Cargando carreras...</span>
+				</div>
 			) : (
-				<select
-					id="select-carrera"
-					className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-					value={value ?? ''}
-					onChange={(e) => onChange(e.target.value || null)}
-					disabled={disabled}
-				>
-					<option value="">Selecciona una carrera</option>
-					{options.map((o) => (
-						<option key={o.id} value={o.id}>{o.name}</option>
-					))}
-				</select>
+				<div className={styles.selectWrapper}>
+					<select
+						id="select-carrera"
+						className={styles.select}
+						value={value ?? ''}
+						onChange={(e) => onChange(e.target.value || null)}
+						disabled={disabled}
+					>
+						<option value="">
+							{disabled ? 'Primero selecciona un campus' : 'Selecciona tu carrera'}
+						</option>
+						{options.map((o) => (
+							<option key={o.id} value={o.id}>{o.name}</option>
+						))}
+					</select>
+					<svg className={styles.chevron} width="20" height="20" viewBox="0 0 20 20" fill="none">
+						<path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+					</svg>
+				</div>
 			)}
+			<p className={`${styles.helper} ${disabled ? styles.disabledHelper : ''}`}>
+				{disabled ? 'Disponible después de seleccionar campus' : 'Selecciona tu programa de estudio'}
+			</p>
 		</div>
 	)
 }

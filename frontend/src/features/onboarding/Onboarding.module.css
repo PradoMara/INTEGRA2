@@ -1,0 +1,155 @@
+/* Paleta del proyecto: Navy + Orange */
+.container {
+  --onb-primary: #0b3a6e;
+  --onb-primary-dark: #072c52;
+  --onb-primary-light: #eaf2fb;
+  --onb-accent: #e97b1c;
+  --onb-text: #0f172a;
+  --onb-muted: #64748b;
+  --onb-border: rgba(2, 6, 23, 0.12);
+  --onb-shadow-sm: 0 2px 8px rgba(2, 6, 23, 0.08);
+  --onb-shadow-md: 0 8px 24px rgba(2, 6, 23, 0.12);
+  
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 48px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: var(--onb-shadow-md);
+  border: 1px solid var(--onb-border);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--onb-primary), var(--onb-primary-dark));
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(11, 58, 110, 0.20);
+}
+
+.icon svg {
+  width: 32px;
+  height: 32px;
+  color: #fff;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--onb-primary);
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--onb-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.button {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.buttonPrimary {
+  background: var(--onb-accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(233, 123, 28, 0.25);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: #d66e15;
+  box-shadow: 0 6px 20px rgba(233, 123, 28, 0.35);
+  transform: translateY(-2px);
+}
+
+.buttonPrimary:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.buttonSecondary {
+  background: var(--onb-primary-light);
+  color: var(--onb-primary);
+  border: 1px solid var(--onb-border);
+}
+
+.buttonSecondary:hover {
+  background: #d8e6f9;
+  transform: translateY(-1px);
+}
+
+.progress {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.progressDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: all 0.3s ease;
+}
+
+.progressDot.active {
+  background: var(--onb-accent);
+  width: 24px;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 32px 24px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+}

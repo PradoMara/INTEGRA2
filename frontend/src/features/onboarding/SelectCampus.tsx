@@ -1,4 +1,5 @@
 import React from 'react'
+import styles from './SelectCampus.module.css'
 
 type Option = { id: string; name: string }
 
@@ -12,23 +13,34 @@ interface SelectCampusProps {
 
 export default function SelectCampus({ value, onChange, options = [], loading = false }: SelectCampusProps) {
 	return (
-		<div className="mb-4">
-			<label htmlFor="select-campus" className="block text-sm font-medium text-gray-700 mb-1">Campus</label>
+		<div className={styles.field}>
+			<label htmlFor="select-campus" className={styles.label}>
+				Campus <span className={styles.required}>*</span>
+			</label>
 			{loading ? (
-				<div className="text-sm text-gray-500">Cargando campuses...</div>
+				<div className={styles.loading}>
+					<div className={styles.spinner} />
+					<span>Cargando campuses...</span>
+				</div>
 			) : (
-				<select
-					id="select-campus"
-					className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-					value={value ?? ''}
-					onChange={(e) => onChange(e.target.value || null)}
-				>
-					<option value="">Selecciona un campus</option>
-					{options.map((o) => (
-						<option key={o.id} value={o.id}>{o.name}</option>
-					))}
-				</select>
+				<div className={styles.selectWrapper}>
+					<select
+						id="select-campus"
+						className={styles.select}
+						value={value ?? ''}
+						onChange={(e) => onChange(e.target.value || null)}
+					>
+						<option value="">Selecciona tu campus</option>
+						{options.map((o) => (
+							<option key={o.id} value={o.id}>{o.name}</option>
+						))}
+					</select>
+					<svg className={styles.chevron} width="20" height="20" viewBox="0 0 20 20" fill="none">
+						<path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+					</svg>
+				</div>
 			)}
+			<p className={styles.helper}>Selecciona el campus donde estudias</p>
 		</div>
 	)
 }
