@@ -1,0 +1,28 @@
+# --- Configuración de la Base de Datos (PostgreSQL) ---
+# Esta es la "cadena de conexión" que le dice a Prisma (y a tu app)
+# dónde está la base de datos y cómo conectarse.
+# Formato: postgresql://[USUARIO]:[CONTRASEÑA]@[HOST]:[PUERTO]/[NOMBRE_BASE_DE_DATOS]
+DATABASE_URL="postgresql://username:password@localhost:5432/marketplace"
+
+# --- Configuración del Servidor ---
+# El puerto en el que se ejecutará el servidor backend.
+PORT=3001
+# El entorno de la aplicación. Puede ser "development" (desarrollo) o "production" (producción).
+NODE_ENV=development
+
+# --- Configuración de Autenticación (JWT) ---
+# Una "frase secreta" larga y aleatoria usada para firmar los JSON Web Tokens.
+# ¡Debe ser muy segura!
+JWT_SECRET=tu_jwt_secret_muy_seguro_aqui
+# Define cuánto tiempo será válido un token antes de que expire (ej. 7 días).
+JWT_EXPIRES_IN=7d
+
+# --- Configuración de Seguridad (CORS) ---
+# Define qué dominios (frontends) tienen permiso para hacer peticiones a esta API.
+# Aquí permites peticiones desde tu app web local (puerto 3000) y quizás tu app móvil (puerto 8080).
+CORS_ORIGIN=http://localhost:3000,http://localhost:8080
+
+# --- Configuración de Encriptación (Bcrypt) ---
+# Define el "costo" o número de rondas de hashing para encriptar contraseñas.
+# Un número más alto es más seguro pero también más lento. 12 es un valor estándar y seguro.
+BCRYPT_ROUNDS=12
