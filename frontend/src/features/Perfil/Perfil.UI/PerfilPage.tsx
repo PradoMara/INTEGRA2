@@ -87,224 +87,58 @@ function StarRating({ value = 0, size = 18 }: { value?: number; size?: number })
 
 // --- Componente Principal ---
 export default function PerfilPage() {
-  const { token } = useAuth()
-  const queryClient = useQueryClient()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const user = {
+    name: "Nombre",
+    email: "nombre@alu.uct.cl",
+    campus: "Campus San Juan Pablo II",
+    rating: 4.5,
+  };
 
-  // Estado de Edición
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState<UpdateProfileData>({
-    usuario: "",
-    apellido: "",
-    campus: "",
-  })
+  const reviews: Review[] = [
+    { id: "r1", author: "Usuario", rating: 4.5 },
+    { id: "r2", author: "Usuario", rating: 5 },
+    { id: "r3", author: "Usuario", rating: 4 },
+    { id: "r4", author: "Usuario", rating: 4.5 },
+    { id: "r5", author: "Usuario", rating: 5 },
+    { id: "r6", author: "Usuario", rating: 3.5 },
+  ];
 
-  // 1. Cargar datos del perfil
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: () => fetchProfile(token),
-    enabled: !!token,
-  })
+  const publications: Publication[] = [
+    { id: "p1", title: "Publicación", price: 8900, status: "Disponible" },
+    { id: "p2", title: "Publicación", price: 5900, status: "Disponible" },
+    { id: "p3", title: "Publicación", price: 12900, status: "Agotado" },
+  ];
 
-  // 2. Sincronizar formulario cuando llegan los datos
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        usuario: user.usuario || "",
-        apellido: user.apellido || "",
-        campus: user.campus || "Campus San Juan Pablo II",
-      })
-    }
-  }, [user])
-
-  // 3. Mutación para actualizar
-  const { mutate: saveProfile, isPending: isSaving } = useMutation({
-    mutationFn: (data: UpdateProfileData) => updateProfile(data, token),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] })
-      setIsEditing(false)
-      alert("Perfil actualizado correctamente")
-    },
-    onError: (err) => alert(err.message),
-  })
-
-  const handleSave = () => {
-    saveProfile(formData)
-  }
-
-  const handleCancel = () => {
-    if (user) {
-      // Revertir cambios
-      setFormData({
-        usuario: user.usuario || "",
-        apellido: user.apellido || "",
-        campus: user.campus || "",
-      })
-    }
-    setIsEditing(false)
-  }
-
-  // Mock data para las secciones que aún no tienen API dedicada en este contexto
-  const reviews = [
-    { id: "r1", author: "Estudiante1", rating: 5 },
-    { id: "r2", author: "Comprador2", rating: 4 },
-  ]
-  // Nota: Para publicaciones reales, deberías conectar el fetchMyPublications aquí también
-
-  if (isLoading) return <div className="flex h-screen items-center justify-center"><LuLoader className="animate-spin h-10 w-10 text-blue-600" /></div>
-  if (error) return <div className="p-10 text-center text-red-600">Error al cargar perfil</div>
-  if (!user) return null
-
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar fijo a la izquierda */}
-      <Sidebar active="marketplace" className="hidden md:flex w-64" />
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
+      <Sidebar />
 
-      {/* Contenido Principal */}
-      <div className="flex-1 flex flex-col h-screen min-w-0">
-        <main
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 md:p-8 w-full bg-gradient-to-br from-blue-50 to-white scroll-smooth"
+      <div className="min-w-0 flex flex-col h-screen">
+        
+        {/* <main> (Todo el contenido de abajo es idéntico al de la respuesta anterior) */}
+        <main 
+          ref={scrollContainerRef as any} // Reutilizamos el ref o definimos uno nuevo para el main
+          className="flex-1 overflow-y-auto max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 w-full bg-gradient-to-br from-blue-100 to-white scrollbar-hide scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // Soluciones para Firefox y IE/Edge
         >
-          <div className="max-w-4xl mx-auto space-y-8">
-            
-            {/* --- TARJETA DE PERFIL --- */}
-            <section className="bg-white rounded-2xl shadow-lg p-6 md:p-8 relative transition-all duration-300 hover:shadow-xl">
-              
-              {/* Botón de Editar (Top Right) */}
-              <div className="absolute top-6 right-6 z-10">
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <LuPencil size={16} /> Editar Perfil
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleCancel}
-                      disabled={isSaving}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
-                    >
-                      <LuX size={16} /> Cancelar
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {isSaving ? <LuLoader className="animate-spin" /> : <LuSave size={16} />}
-                      Guardar
-                    </button>
-                  </div>
-                )}
+          <section className="flex flex-col items-center gap-4 pt-4 pb-8">
+            <img 
+              src={UserDefault} 
+              alt={user.name} 
+              className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-lg"
+            />
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <StarRating value={user.rating} />
+                <span className="text-sm text-gray-700 font-medium">{user.rating.toFixed(1)}</span>
               </div>
-
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  <img
-                    src={UserDefault}
-                    alt={user.nombre}
-                    className="h-32 w-32 rounded-full object-cover border-4 border-blue-100 shadow-md"
-                  />
-                </div>
-
-                {/* Info de Usuario */}
-                <div className="flex-1 text-center md:text-left w-full space-y-4">
-                  
-                  {/* Encabezado Editable: Usuario y Rating */}
-                  <div>
-                    {isEditing ? (
-                      <div className="mb-2">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre de Usuario</label>
-                        <input
-                          type="text"
-                          value={formData.usuario}
-                          onChange={(e) => setFormData({...formData, usuario: e.target.value})}
-                          className="w-full md:w-1/2 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none font-bold text-xl"
-                        />
-                      </div>
-                    ) : (
-                      <h1 className="text-3xl font-bold text-gray-900">{user.usuario}</h1>
-                    )}
-                    
-                    <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
-                      <StarRating value={Number(user.reputacion)} />
-                      <span className="text-sm text-gray-700 font-medium">
-                        {Number(user.reputacion).toFixed(1)} / 5.0
-                      </span>
-                      <span className="text-xs text-gray-400 ml-2">
-                        ({user.role})
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Grid de Datos Personales */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    
-                    {/* Nombre (Solo lectura según backend) */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-full shadow-sm text-blue-500"><LuUser /></div>
-                      <div>
-                        <p className="text-xs text-gray-500">Nombre</p>
-                        <p className="font-medium text-gray-800">{user.nombre}</p>
-                      </div>
-                    </div>
-
-                    {/* Apellido (Editable) */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-full shadow-sm text-blue-500"><LuUser /></div>
-                      <div className="w-full">
-                        <p className="text-xs text-gray-500">Apellido</p>
-                        {isEditing ? (
-                          <input
-                            className="w-full px-2 py-1 text-sm border rounded focus:border-blue-500 outline-none"
-                            value={formData.apellido}
-                            onChange={e => setFormData({...formData, apellido: e.target.value})}
-                            placeholder="Tu apellido"
-                          />
-                        ) : (
-                          <p className="font-medium text-gray-800">{user.apellido || "No especificado"}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Correo (Solo lectura) */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-full shadow-sm text-blue-500"><LuMail /></div>
-                      <div className="w-full overflow-hidden">
-                        <p className="text-xs text-gray-500">Correo Institucional</p>
-                        <p className="font-medium text-gray-800 truncate" title={user.correo}>{user.correo}</p>
-                      </div>
-                    </div>
-
-                    {/* Campus (Editable) */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-full shadow-sm text-blue-500"><LuMapPin /></div>
-                      <div className="w-full">
-                        <p className="text-xs text-gray-500">Campus</p>
-                        {isEditing ? (
-                          <select
-                            className="w-full px-2 py-1 text-sm border rounded focus:border-blue-500 outline-none bg-white"
-                            value={formData.campus}
-                            onChange={e => setFormData({...formData, campus: e.target.value})}
-                          >
-                            <option value="Campus San Francisco">Campus San Francisco</option>
-                            <option value="Campus San Juan Pablo II">Campus San Juan Pablo II</option>
-                            <option value="Campus Menchaca Lira">Campus Menchaca Lira</option>
-                          </select>
-                        ) : (
-                          <p className="font-medium text-gray-800">{user.campus || "No especificado"}</p>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </section>
+              <p className="text-base text-gray-600 mt-2">{user.email}</p>
+              <p className="text-base text-gray-600">{user.campus}</p>
+            </div>
+          </section>
 
             {/* --- VALORACIONES (Mock) --- */}
             <section>

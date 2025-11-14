@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import type { PostRepository } from '../features/marketplace/application/interfaces/PostInterfaces'
 import type { Product as Post, PostFilters } from '../types/entities'
+=======
+import type { PostRepository } from '@/features/marketplace/Marketplace.Types/PostInterfaces'
+import type { Post, PostFilters } from '../types/Post'
+>>>>>>> origin/Daniel
 
 // TODO: Eliminar datos hardcodeados y obtener categorías desde la API
 // Por ahora, mantener datos mock pero sin constantes globales

@@ -22,40 +22,43 @@ import ForumPage from '@/features/Forum/ForumPage'
 export function AppRoutes() {
   return (
     <Routes>
-      {/* --- Rutas Públicas --- */}
-      {/* (Cualquiera puede verlas) */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterTest />} />
-      <Route path="/login-test" element={<LoginTest />} />
+      {/* Redirige la raíz a /home */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
 
-      {/* Rutas públicas que usan el layout (navbar/footer) */}
       <Route element={<PageLayout />}>
+        
+        {/* Rutas Públicas (Cualquiera puede verlas) */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/ayuda" element={<AyudaPage />} />
         <Route path="/terminos" element={<TermsPage />} />
         <Route path="/about" element={<AboutPage />} />
-      </Route>
+        <Route path="/publications/:id" element={<PublicationDetailPage />} />
+        <Route path="/sandbox/posts" element={<PostsSandboxPage />} />
 
-      {/* --- Rutas Protegidas --- */}
-      {/* (Solo usuarios logueados pueden verlas) */}
-      <Route element={<ProtectedRoute />}>
-        {/* Usamos PageLayout para que también tengan navbar/footer */}
-        <Route element={<PageLayout />}>
+        {/* --- Rutas Protegidas (Requiere cualquier login) --- */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/crear" element={<CrearPublicacionPage />} />
           <Route path="/editar" element={<EditarPublicacionPage />} />
           <Route path="/mis-publicaciones" element={<MisPublicacionesPage />} />
-          <Route path="/foro" element={<ForumPage/>} />
           <Route path="/perfil" element={<PerfilPage />} />
+          <Route path="/perfil/editar" element={<EditProfilePage />} />
           <Route path="/chats" element={<ChatPage />} />
-          <Route path="/my-publications" element={<MyPublications />} />
+        </Route>
+
+        {/* --- Rutas de Administrador (Requiere rol 'ADMIN') --- */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/usuarios" element={<UsersPage />} />
+          <Route path="/admin/publicaciones" element={<AdminPostsPage />} />
+          <Route path="/admin/ajustes" element={<AdminSettingsPage />} />
+          <Route path="/admin/marketplace" element={<AdminMarketplacePage />} />
         </Route>
       </Route>
-
-      {/* Redirecciones por defecto */}
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default AppRoutes
+export default AppRoutes;

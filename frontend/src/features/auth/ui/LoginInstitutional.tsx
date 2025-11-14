@@ -2,7 +2,7 @@ import img from "/favicon.png";
 import styles from './Login.module.css';
 import { useEffect, useRef, useState } from 'react';
 import LoginFooter from './LoginFooter';
-import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '../../marketplace/utils/validators';
+import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '@/features/Login/Login.Utils/validators';
 
 type Props = {
   onOAuth?: () => void | Promise<void>;

@@ -4,7 +4,7 @@ import { ChatHeader } from '../components/ChatHeader'
 import { ChatWindow } from '../components/ChatWindow'
 import { ChatInput } from '../components/ChatInput'
 import { ChatList } from '../components/ChatList' // ya presente
-import { MiniSidebar } from '../../marketplace/ui/components/MiniSidebar'
+import { Sidebar } from '../../marketplace/ui/components/Sidebar'
 import type { Chat, Mensaje } from '@/features/chat/types/chat'
 import { MockChatWS } from '../mocks/MockChatWS'
 import { mockChats } from '../mocks/mockChats'
@@ -349,16 +349,16 @@ export default function ChatPage() {
   return (
     <div className="grid h-screen overflow-hidden max-h-222 grid-cols-[64px_320px_1fr]">
       <aside className="border-r bg-white max-h-222">
-        <MiniSidebar active="chats" />
+        <Sidebar active="chats" />
       </aside>
 
-      <div className="border-r bg-white min-w-0 min-h-0 max-h-222 flex flex-col">
-        <div className="shrink-0 px-4 py-3 border-b">
-          <h2 className="text-sm font-semibold text-slate-700">Mis Chats</h2>
+      <div className="border-r bg-gradient-to-b from-slate-50 to-gray-100 min-w-0 min-h-0 max-h-222 flex flex-col">
+        <div className="shrink-0 px-4 py-4 bg-gradient-to-r from-blue-900 to-blue-800 border-b border-blue-700">
+          <h2 className="text-base font-bold text-white">Chats</h2>
         </div>
 
         {/* Inserto ChatRules inline para que el botón sea visible en la columna de chats */}
-        <div className="shrink-0 px-3 py-2">
+        <div className="shrink-0 px-3 py-2 bg-white/50">
           <ChatRules inline />
         </div>
 

@@ -11,10 +11,11 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: url('./assets/img/FONDO.jpg');
+  background-image: url('./assets/img/fondo_16-9.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 a {
@@ -213,7 +214,11 @@ html, body, #root {
 }
 
 body {
-    background-image: url('/FONDO.jpg');
+    /* FONDO menos claro: superponemos un degradado azul marino y un tinte anaranjado mate */
+    background-image:
+      radial-gradient(1000px 600px at 10% -10%, rgba(233, 123, 28, 0.16), transparent 60%),
+      linear-gradient(180deg, rgba(7, 44, 82, 0.75), rgba(7, 44, 82, 0.75)),
+      url('/FONDO.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

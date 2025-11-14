@@ -1,5 +1,5 @@
-import type { Publication } from '../types/publication';
-import { mockPublications } from '../mocks/fixtures/publications';
+import type { Publication } from '../ProductDetail.Types/publication';
+import { mockPublications } from './publications';
 
 // Flag para alternar mocks ↔ API real
 const USE_MOCKS = (import.meta as any)?.env?.VITE_USE_MOCKS !== 'false';
