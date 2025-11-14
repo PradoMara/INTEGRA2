@@ -6,7 +6,8 @@ import Header from '@/features/shared/ui/Header'
 
 // 💥 IMPORTS REQUERIDOS
 import { useCategories } from '@/features/marketplace/Marketplace.Hooks/useCategories'
-import { useDebounce } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
+// FIX: La importación ahora apunta al archivo useDebounce.ts que acabamos de crear
+import { useDebounce } from '@/features/marketplace/Marketplace.Hooks/useDebounce'
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState<string>('')
