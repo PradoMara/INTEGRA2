@@ -4,12 +4,29 @@ import { LabeledInput, LabeledNumber, LabeledSelect, LabeledTextArea } from "./f
 import { MultiImageUploader } from "./MultiImageUploader";
 import { TagInput } from "./TagInput";
 
+// FIX: Importamos el hook de categorías Y el tipo 'CategoryResponse'
+import { useCategories, CategoryResponse } from "@/features/marketplace/Marketplace.Hooks/useCategories";
+import { productService, CreateProductData } from "@/features/marketplace/Marketplace.Repositories/PostRepository";
+
+// --- SIMULACIÓN DE AUTH (para tu "login tester") ---
+const useAuth = () => {
+  const MOCK_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2MCwiZW1haWwiOiJwcnVlYmEudHNAYWx1LnVjdC5jbCIsInJvbGUiOiJDTElFTlRFIiwiaWF0IjoxNzYzMTI4ODExLCJleHAiOjE3NjM3MzM2MTF9.Lcobl70BYXYsD6PmAbeoOdALyQogL7xT6RRJATBtWmo"; // ❗️ Pega tu token aquí
+
+  const updateUserRole = (newRole: string) => {
+    console.log(`🎉 ¡ROL ACTUALIZADO EN LA SESIÓN (FRONTEND) A: ${newRole}!`);
+    alert(`¡Felicidades! Tu rol ha sido actualizado a: ${newRole}`);
+  };
+
+  return { token: MOCK_TOKEN, updateUserRole };
+};
+// --- FIN DE SIMULACIÓN DE AUTH ---
+
+
 const CAMPUS = ["San Juan Pablo II", "San Francisco"] as const;
-const CATEGORIAS = ["Libros", "Electrónica", "Ropa", "Deportes", "Otros"] as const;
 const CONDICIONES = ["Nuevo", "Usado"] as const;
 
 type Errors = Partial<Record<
-  "titulo" | "precio" | "stock" | "descripcion" | "campus" | "categoria" | "condicion" | "imagenes" | "etiquetas",
+  "titulo" | "precio" | "stock" | "descripcion" | "campus" | "categoriaId" | "condicion" | "imagenes" | "etiquetas",
   string
 >>;
 
@@ -18,8 +35,8 @@ export function CreatePostForm() {
   const [titulo, setTitulo] = useState("");
   const [precio, setPrecio] = useState<string>("");
   const [campus, setCampus] = useState<(typeof CAMPUS)[number]>(CAMPUS[0]);
-  const [stock, setStock] = useState<string>("");
-  const [categoria, setCategoria] = useState<(typeof CATEGORIAS)[number]>(CATEGORIAS[0]);
+  const [stock, setStock] = useState<string>("1"); 
+  const [categoriaId, setCategoriaId] = useState<string>(""); 
   const [condicion, setCondicion] = useState<(typeof CONDICIONES)[number]>(CONDICIONES[0]);
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [etiquetas, setEtiquetas] = useState<string[]>([]);
@@ -28,6 +45,22 @@ export function CreatePostForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const { token, updateUserRole } = useAuth();
+  const { categories: categoryNames, isLoading: isLoadingCategories, data: categoriesData } = useCategories();
+
+  const categoryOptions = useMemo(() => {
+    if (!categoriesData) return [{ label: "Cargando...", value: "" }];
+    
+    // FIX: Le damos el tipo 'CategoryResponse' a 'cat' para evitar el error 'any'
+    const options = categoriesData.map((cat: CategoryResponse) => ({
+      label: cat.nombre,
+      value: String(cat.id) // FIX: Convertimos el 'id' (number) a 'string'
+    }));
+    
+    return [{ label: "Selecciona una categoría...", value: "" }, ...options];
+  }, [categoriesData]);
+
 
   const pricePreview = useMemo(() => formatCLP(Number(precio) || 0), [precio]);
 
@@ -38,39 +71,20 @@ export function CreatePostForm() {
 
     if (!titulo.trim()) e.titulo = "Ingresa un título";
     if (!precio.trim()) e.precio = "Ingresa un precio";
-    else if (Number.isNaN(p) || p < 0 || p > 999999999) e.precio = "Precio inválido";
+    else if (Number.isNaN(p) || p < 1) e.precio = "Precio debe ser al menos 1";
 
     if (!stock.trim()) e.stock = "Ingresa el stock";
-    else if (!Number.isInteger(s) || s < 0) e.stock = "Stock debe ser un entero ≥ 0";
-    else if (!Number.isInteger(s) || s > 100000) e.stock = "Stock muy grande";
+    else if (!Number.isInteger(s) || s < 1) e.stock = "Stock debe ser al menos 1";
     
     if (!descripcion.trim() || descripcion.trim().length < 10)
       e.descripcion = "Describe el producto (mín. 10 caracteres)";
 
     if (descripcion.trim().length > 1500)
       e.descripcion = "La descripción es muy larga (máx. 1500 caracteres)";
-
-    if (!campus) e.campus = "Selecciona un campus";
-    if (!categoria) e.categoria = "Selecciona una categoría";
-    if (!condicion) e.condicion = "Selecciona la condición";
-    if (imagenes.length < 1) e.imagenes = "Sube al menos una imagen";
-    if (etiquetas.length === 0) e.etiquetas = "Agrega al menos una etiqueta";
+    
+    if (!categoriaId || Number(categoriaId) < 1) e.categoriaId = "Selecciona una categoría";
 
     return e;
-  };
-
-  async function submitCreatePost(data: any) {
-    // Simulación de envío, reemplazar por el método real
-    await new Promise((r) => setTimeout(r, 1200));
-    return { ok: true };
-  }
-
-  const onDeleteImage = (idx: number) => {
-    setImagenes(imagenes => {
-      const newImages = [...imagenes];
-      newImages.splice(idx, 1);
-      return newImages;
-    });
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -81,35 +95,38 @@ export function CreatePostForm() {
     const eMap = validate();
     setErrors(eMap);
     if (Object.keys(eMap).length > 0) {
+      setFormError("Por favor, corrige los errores en el formulario.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const payload = {
-        titulo: titulo.trim(),
+      const payload: CreateProductData = {
+        nombre: titulo.trim(),
         descripcion: descripcion.trim(),
-        precio: Number(precio),
-        stock: Number(stock),
-        campus,
-        categoria,
-        condicion,
-        imagenes,
-        etiquetas,
+        precioActual: Number(precio),
+        cantidad: Number(stock),
+        categoriaId: Number(categoriaId),
       };
 
-      const res = await submitCreatePost(payload);
-      if (!(res as any).ok) throw new Error("No se pudo publicar");
+      const res = await productService.create(payload, token);
 
-      setSuccessMsg("¡Publicación creada!");
+      if (res.ok && res.roleChanged && res.newRole) {
+        updateUserRole(res.newRole); 
+        setSuccessMsg(res.message); 
+      } else {
+        setSuccessMsg(res.message || "¡Publicación creada!");
+      }
+
       setTitulo("");
       setDescripcion("");
       setPrecio("");
-      setStock("");
-      setCategoria(CATEGORIAS[0]);
+      setStock("1");
+      setCategoriaId("");
       setCondicion(CONDICIONES[0]);
       setImagenes([]);
       setEtiquetas([]);
+
     } catch (err: any) {
       setFormError(err?.message || "Error inesperado. Intenta nuevamente.");
     } finally {
@@ -125,6 +142,7 @@ export function CreatePostForm() {
         noValidate
         aria-busy={isSubmitting}
       >
+        
         {formError && (
           <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {formError}
@@ -136,50 +154,46 @@ export function CreatePostForm() {
           </div>
         )}
 
-        {/* Descripción */} 
         <section className="grid gap-2 mb-5 rounded-xl p-4 border border-gray-200">
           <label className="text-sm font-semibold text-gray-700 mb-2">Descripción</label>
             <LabeledTextArea
-            value={descripcion}
-            onChange={setDescripcion}
-            placeholder="Escribe una descripción detallada de tu producto..."
-            rows={6}
-            disabled={isSubmitting}
-            error={errors.descripcion}
-            maxLength={1000}
+              value={descripcion}
+              onChange={setDescripcion}
+              placeholder="Escribe una descripción detallada de tu producto..."
+              rows={6}
+              disabled={isSubmitting}
+              error={errors.descripcion}
+              maxLength={1000}
             />
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 min-w-0">
-          {/* Columna izquierda */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end min-w-0">
 
             <div className="md:col-span-12">
                 <LabeledInput
-                label="Título"
-                value={titulo}
-                onChange={setTitulo}
-                placeholder="Ej. Libro Cálculo I"
-                disabled={isSubmitting}
-                error={errors.titulo}
-                maxLength={100}
+                  label="Título"
+                  value={titulo}
+                  onChange={setTitulo}
+                  placeholder="Ej. Libro Cálculo I"
+                  disabled={isSubmitting}
+                  error={errors.titulo}
+                  maxLength={100}
                 />
             </div>
 
-            {/* Categoría */}
             <div className="md:col-span-12">
               <LabeledSelect
                 label="Categoría"
-                value={categoria}
-                onChange={(v) => setCategoria(v as any)}
-                options={CATEGORIAS.map((c) => ({ label: c, value: c }))}
+                value={categoriaId} 
+                onChange={(v) => setCategoriaId(String(v))} 
+                options={categoryOptions} 
                 className="w-full"
-                disabled={isSubmitting}
-                error={errors.categoria}
+                disabled={isSubmitting || isLoadingCategories} 
+                error={errors.categoriaId}
               />
             </div>
 
-            {/* Condición */}
             <div className="md:col-span-12">
               <LabeledSelect
                 label="Condición"
@@ -192,10 +206,9 @@ export function CreatePostForm() {
               />
             </div>
 
-            {/* Etiquetas */}
             <div className="md:col-span-12">
               <TagInput
-                label="Etiquetas"
+                label="Etiquetas (Opcional)"
                 tags={etiquetas}
                 onChange={setEtiquetas}
                 disabled={isSubmitting}
@@ -207,19 +220,18 @@ export function CreatePostForm() {
 
             <div className="md:col-span-12">
                 <LabeledNumber
-                label="Precio"
-                value={precio}
-                onChange={setPrecio}
-                placeholder="Ej. 10000"
-                min={0}
-                max={999_999_999}
-                step={1}
-                disabled={isSubmitting}
-                error={errors.precio}
+                  label="Precio"
+                  value={precio}
+                  onChange={setPrecio}
+                  placeholder="Ej. 10000"
+                  min={1} 
+                  max={999_999_999}
+                  step={1}
+                  disabled={isSubmitting}
+                  error={errors.precio}
                 />
             </div>
 
-            {/* Fila: Campus + Stock + Publicar */}
             <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
               <div className="md:col-span-7">
                 <LabeledSelect
@@ -235,15 +247,15 @@ export function CreatePostForm() {
 
               <div className="md:col-span-2">
                 <LabeledNumber
-                label="Stock"
-                value={stock}
-                onChange={setStock}
-                placeholder="0"
-                min={0}
-                max={10_000}
-                step={1}
-                disabled={isSubmitting}
-                error={errors.stock}
+                  label="Stock"
+                  value={stock}
+                  onChange={setStock}
+                  placeholder="1"
+                  min={1} 
+                  max={10_000}
+                  step={1}
+                  disabled={isSubmitting}
+                  error={errors.stock}
                 />
               </div>
 
@@ -259,11 +271,9 @@ export function CreatePostForm() {
             </div>
           </div>
 
-          {/* Columna derecha (vista previa de imágenes y cuadrado celeste) */}
           <div className="grid gap-2.5 content-end min-w-0">
-            {/* Cuadrado de vista previa (color celeste) */}
             <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-white border border-gray-200 mb-2 relative">
-              {imagenes.length > 0 ? (
+               {imagenes.length > 0 ? (
                 <div className="flex gap-2 flex-wrap items-start p-2">
                   {imagenes.map((file, idx) => {
                     const url = URL.createObjectURL(file);
@@ -283,9 +293,8 @@ export function CreatePostForm() {
               )}
             </div>
             
-            {/* MultiImageUploader */}
             <MultiImageUploader
-              label={`Imágenes${imagenes.length > 0 ? `` : "" }`}
+              label={`Imágenes (máx 5)`}
               images={imagenes}
               onImagesChange={setImagenes}
               disabled={isSubmitting}
@@ -298,8 +307,7 @@ export function CreatePostForm() {
         </div>
       </form>
 
-      {/* Overlay de carga */}
-      {isSubmitting && (
+       {isSubmitting && (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-black/40 backdrop-blur-sm">
           <div className="w-[min(400px,92vw)] rounded-2xl bg-white p-6 shadow-xl text-center">
             <div className="mx-auto mb-3 size-10 rounded-full border-4 border-violet-500/30 border-t-violet-600 animate-spin" />
@@ -308,11 +316,6 @@ export function CreatePostForm() {
           </div>
         </div>
       )}
-
-      {/* Región aria-live para mensajes */}
-      <p className="sr-only" aria-live="polite">
-        {isSubmitting ? "Enviando" : successMsg ? "Publicación creada" : formError ? "Error" : ""}
-      </p>
     </div>
   );
 }

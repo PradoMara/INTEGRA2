@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 // Interfaz de respuesta de la API (basada en products.js)
-interface CategoryResponse {
+// FIX: La exportamos para que otros archivos (como el formulario) la puedan usar
+export interface CategoryResponse {
     id: number;
     nombre: string;
     categoriaPadreId: number | null;
@@ -47,7 +48,8 @@ export const useCategories = () => {
     }, [data]);
 
     return {
-        categories: categoryNames, 
+        categories: categoryNames, // Lista de strings (para filtros)
+        data: data, // FIX: Devolvemos los datos completos (para formularios)
         isLoading,
         isError,
     };
