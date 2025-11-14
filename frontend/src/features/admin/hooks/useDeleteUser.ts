@@ -1,30 +1,31 @@
-const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+// frontend/src/features/admin/hooks/useDeleteUser.ts - ACTUALIZADO
 
-function _mockStorageKey() { return 'admin_users_mock_v1'; }
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api'; 
+import { adminUserKeys } from './useAdminUsers'; 
 
-async function _delay<T>(value: T, ms = 300) {
-  return new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
-}
+const deleteUserRequest = async (userId: string) => {
+  console.log('🔄 Eliminando usuario ID:', userId);
+  const response = await api.delete(`/admin/users/${userId}`);
+  console.log('✅ Respuesta DELETE:', response);
+  // Si response es null (204 No Content), retornamos un objeto de éxito
+  return response || { success: true, message: 'Usuario eliminado correctamente' };
+};
 
 export function useDeleteUser() {
-  const deleteUser = async (id: string) => {
-    if (BASE) {
-      const res = await fetch(`${BASE}/admin/users/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
-      return res.json();
-    }
+  const queryClient = useQueryClient();
 
-    // Fallback mock: localStorage
-    const key = _mockStorageKey();
-    const raw = localStorage.getItem(key);
-    const list = raw ? JSON.parse(raw) : [];
-    const newList = list.filter((u: any) => String(u.id) !== String(id));
-    localStorage.setItem(key, JSON.stringify(newList));
-    return _delay({ ok: true });
-  };
-
-  return { deleteUser };
+  return useMutation({
+    mutationFn: deleteUserRequest,
+    onSuccess: (data, userId) => {
+      console.log('🎉 Usuario eliminado exitosamente:', { userId, data });
+      // Invalida la caché de la lista para forzar el refetch
+      queryClient.invalidateQueries({ queryKey: adminUserKeys.lists() });
+    },
+    onError: (error: any, userId) => {
+      console.error('❌ Error eliminando usuario:', { userId, error });
+      const errorMessage = error.message || "Fallo la eliminación del usuario.";
+      throw new Error(errorMessage);
+    },
+  });
 }
