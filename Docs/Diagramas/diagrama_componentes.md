@@ -1,89 +1,87 @@
 ## DIAGRAMA DE COMPONENTES PROYECTO MARKETPLACE UCT
 
-
-
-## Arquitectura del Sistema
+### Arquitectura del Sistema
 
 ```mermaid
 graph TB
     %% Frontend Layer
-    subgraph "Frontend - React/TypeScript + Tailwind CSS"
-        UI[Interface de Usuario]
-        DASH[Dashboard]
-        ADMIN[Panel Admin]
-        MSGS[Mensajería]
-        FORUMS[Foros]
+    subgraph "Frontend – React/TypeScript + Tailwind CSS"
+        UI[Interfaz de Usuario]
+        DASH[Dashboard Usuario]
+        ADMIN[Panel Administrador]
+        MSGS[Mensajeria Directa]
+        FOROS[Foros y Grupos]
         NOTIF[Notificaciones]
     end
 
     %% API Gateway
-    API[API Gateway<br/>Express/Node.js]
+    API[API Gateway - Express Node.js]
 
     %% Backend Services
-    subgraph "Backend Services"
-        AUTH[Autenticación OAuth<br/>+ Gestión de Roles<br/>Admin/Usuario]
-        USER[Gestión de<br/>Usuarios/Perfiles<br/>+ Reputación]
-        PUB[Gestión de<br/>Publicaciones]
-        PROD[Gestión de<br/>Productos/Categorías<br/>+ Imágenes]
-        TRANS[Sistema de<br/>Transacciones<br/>+ Confirmaciones]
-        RATING[Sistema de<br/>Calificaciones<br/>+ Reputación]
-        MSG[Servicio de<br/>Mensajería]
-        ACTIVITY[Tracking de<br/>Actividad Usuario]
-        REPORTS[Gestión de<br/>Reportes]
-        MOD[Moderación<br/>+ IA/NLP Futuro]
-        REC[Sistema de<br/>Recomendaciones ML]
-        NOTS[Servicio de<br/>Notificaciones]
+    subgraph "Servicios Backend"
+        AUTH[Autenticacion OAuth y Gestion de Roles]
+        USER[Gestion de Usuarios y Perfiles]
+        PUB[Gestion de Publicaciones]
+        PROD[Gestion de Productos y Categorias]
+        TRANS[Transacciones y Confirmaciones]
+        VAL[Valoraciones y Reputacion]
+        MSG[Servicio de Mensajeria]
+        ACT[Actividad de Usuario]
+        REP[Gestion de Reportes]
+        MOD[Moderacion y IA NLP Futuro]
+        REC[Recomendaciones ML]
+        NOTS[Servicio de Notificaciones]
     end
 
     %% Database Layer
-    subgraph "Base de Datos - PostgreSQL"
-        DB_USER[(Usuarios/Perfiles<br/>+ Reputación)]
-        DB_PUB[(Publicaciones<br/>Categorías)]
-        DB_PROD[(Productos/Categorías<br/>+ Imágenes)]
-        DB_TRANS[(Transacciones<br/>Historial)]
-        DB_RATING[(Calificaciones<br/>+ Estados)]
-        DB_MSG[(Mensajes<br/>Conversaciones)]
-        DB_FORUM[(Foros<br/>Grupos)]
-        DB_ACTIVITY[(Actividad<br/>Usuario)]
-        DB_REPORTS[(Reportes<br/>+ Estados)]
+    subgraph "Base de Datos – PostgreSQL"
+        DB_USER[(Usuarios y Perfiles)]
+        DB_PUB[(Publicaciones)]
+        DB_PROD[(Productos Categorias Imagenes)]
+        DB_TRANS[(Transacciones Historial)]
+        DB_VAL[(Valoraciones)]
+        DB_MSG[(Mensajes Conversaciones)]
+        DB_FOROS[(Foros Grupos)]
+        DB_ACT[(Actividad Usuario)]
+        DB_REP[(Reportes)]
         DB_NOTIF[(Notificaciones)]
-        DB_LOC[(Ubicaciones<br/>Campus)]
+        DB_LOC[(Ubicaciones Campus)]
     end
 
     %% External Services
     subgraph "Servicios Externos"
-        OAUTH[Google OAuth 2.0<br/>Validación UCT]
-        STORAGE[Almacenamiento<br/>AWS S3/Cloudinary]
-        CDN[CDN<br/>CloudFlare]
-        ML_API[API ML<br/>Recomendaciones]
+        OAUTH[Google OAuth 2.0]
+        STORAGE[Almacenamiento AWS S3 o Cloudinary]
+        CDN[CDN CloudFlare]
+        ML_API[API ML Recomendaciones]
     end
 
     %% Real-time Communication
-    WS[WebSocket Server<br/>Socket.io]
+    WS[WebSocket Server Socket.io]
 
-    %% Connections Frontend -> API
+    %% Conexiones Frontend → API
     UI --> API
     DASH --> API
     ADMIN --> API
     MSGS --> WS
-    FORUMS --> API
+    FOROS --> API
     NOTIF --> WS
 
-    %% API -> Backend Services
+    %% API → Backend Services
     API --> AUTH
     API --> USER
     API --> PUB
     API --> PROD
     API --> TRANS
-    API --> RATING
+    API --> VAL
     API --> MSG
-    API --> ACTIVITY
-    API --> REPORTS
+    API --> ACT
+    API --> REP
     API --> MOD
     API --> REC
     API --> NOTS
 
-    %% Backend -> Database
+    %% Backend → Base de Datos
     AUTH --> DB_USER
     USER --> DB_USER
     USER --> DB_LOC
@@ -93,27 +91,24 @@ graph TB
     TRANS --> DB_TRANS
     TRANS --> DB_USER
     TRANS --> DB_PROD
-    RATING --> DB_RATING
-    RATING --> DB_TRANS
-    RATING --> DB_USER
+    VAL --> DB_VAL
+    VAL --> DB_TRANS
+    VAL --> DB_USER
     MSG --> DB_MSG
-    ACTIVITY --> DB_ACTIVITY
-    REPORTS --> DB_REPORTS
-    REPORTS --> DB_USER
+    ACT --> DB_ACT
+    REP --> DB_REP
+    REP --> DB_USER
     MOD --> DB_PUB
     MOD --> DB_MSG
-    MOD --> DB_REPORTS
+    MOD --> DB_REP
     REC --> DB_PUB
     REC --> DB_USER
     REC --> DB_PROD
     NOTS --> DB_NOTIF
-    
-    %% Forums connections
-    API --> DB_FORUM
+    FOROS --> DB_FOROS
 
-    %% External Services
+    %% Servicios Externos
     AUTH --> OAUTH
-    PUB --> STORAGE
     UI --> CDN
     REC --> ML_API
 
@@ -121,7 +116,10 @@ graph TB
     WS --> MSG
     WS --> NOTS
 
-    %% Styling con colores más vibrantes
+    %% Almacenamiento
+    PROD --> STORAGE
+
+    %% Clases y colores para visualizacion
     classDef frontend fill:#1976D2,stroke:#0D47A1,stroke-width:3px,color:#FFFFFF
     classDef backend fill:#7B1FA2,stroke:#4A148C,stroke-width:3px,color:#FFFFFF
     classDef database fill:#388E3C,stroke:#1B5E20,stroke-width:3px,color:#FFFFFF
@@ -130,64 +128,61 @@ graph TB
     classDef api fill:#D32F2F,stroke:#B71C1C,stroke-width:3px,color:#FFFFFF
     classDef future fill:#607D8B,stroke:#37474F,stroke-width:2px,color:#FFFFFF
 
-    class UI,DASH,ADMIN,MSGS,FORUMS,NOTIF frontend
-    class AUTH,USER,PUB,PROD,TRANS,RATING,MSG,ACTIVITY,REPORTS,REC,NOTS backend
+    class UI,DASH,ADMIN,MSGS,FOROS,NOTIF frontend
+    class AUTH,USER,PUB,PROD,TRANS,VAL,MSG,ACT,REP,REC,NOTS backend
     class MOD future
-    class DB_USER,DB_PUB,DB_PROD,DB_TRANS,DB_RATING,DB_MSG,DB_FORUM,DB_ACTIVITY,DB_REPORTS,DB_NOTIF,DB_LOC database
+    class DB_USER,DB_PUB,DB_PROD,DB_TRANS,DB_VAL,DB_MSG,DB_FOROS,DB_ACT,DB_REP,DB_NOTIF,DB_LOC database
     class OAUTH,STORAGE,CDN,ML_API external
     class WS websocket
     class API api
 ```
 
-## Componentes Principales
+---
 
-### Frontend (Azul)
+### Componentes Principales
+
+#### Frontend (Azul)
 - **React + TypeScript + Tailwind CSS**
-- Interface responsive y moderna
-- Dashboard para usuarios y administradores
+- Interfaz responsiva y moderna
+- Dashboard para usuario y administrador
+- Mensajería directa, foros y notificaciones
 
-### Backend (Morado)
+#### Backend (Morado)
 - **Node.js + Express**
-- Arquitectura de microservicios
-- API RESTful con autenticación OAuth
+- Microservicios: gestión de usuarios, publicaciones, productos, transacciones, valoraciones, reportes y recomendaciones
+- Moderación con IA/NLP (futuro)
 
-### Nuevos Servicios Backend Agregados:
-- **Gestión de Productos/Categorías**: CRUD completo de productos, categorías e imágenes
-- **Sistema de Calificaciones**: Manejo de valoraciones y reputación de usuarios
-- **Tracking de Actividad**: Registro y seguimiento de actividad de usuarios
-- **Gestión de Reportes**: Administración de reportes y su procesamiento
-
-### Base de Datos (Verde)
+#### Base de Datos (Verde)
 - **PostgreSQL**
-- Esquema normalizado completo
-- Nuevas tablas agregadas: productos, calificaciones, actividad_usuario, reportes
+- Tablas: usuarios, perfiles, publicaciones, productos, categorías, imágenes, transacciones, valoraciones, actividad, reportes, foros, notificaciones, ubicaciones
 
-### Servicios Externos (Naranja)
-- **Google OAuth 2.0** para autenticación UCT
+#### Servicios Externos (Naranja)
+- **Google OAuth 2.0** para autenticación
 - **Almacenamiento en la nube** para archivos e imágenes
 - **CDN** para optimización de recursos
+- **API ML** para recomendaciones inteligentes
 
-### Tiempo Real (Rosa)
-- **WebSocket** para mensajería instantánea
-- Notificaciones en vivo
+#### Tiempo Real (Rosa)
+- **WebSocket** para mensajería y notificaciones en vivo
 
-### Funcionalidades Futuras (Gris)
+#### Funcionalidades Futuras (Gris)
 - **IA/NLP** para moderación automática
 
-## Mejoras Implementadas
+---
+
+### Mejoras y actualizaciones implementadas
 
 ✅ **Servicios agregados:**
 - Gestión completa de productos y categorías
-- Sistema de calificaciones y reputación
-- Tracking de actividad de usuarios
-- Gestión de reportes y moderación
+- Sistema de valoraciones y reputación
+- Tracking de actividad de usuarios y reportes
+- Moderación escalable y foros para comunidad
 
 ✅ **Conexiones mejoradas:**
 - Productos conectados con transacciones y recomendaciones
-- Calificaciones vinculadas con transacciones y usuarios
-- Reportes integrados con moderación
-- Actividad de usuario para analytics
+- Valoraciones vinculadas a transacciones y usuarios
+- Reportes integrados con moderación y actividad
 
 ✅ **Base de datos actualizada:**
-- Todas las tablas del esquema MER reflejadas
+- Esquema normalizado y ampliado
 - Separación clara de responsabilidades por dominio

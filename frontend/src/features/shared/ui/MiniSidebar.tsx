@@ -1,13 +1,11 @@
-// src/components/MiniSidebar.tsx (VERSION REFRACTORIZADA CON NUEVOS COLORES)
-
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 import logo from "../../../assets/img/logouct.png";
+import styles from './MiniSidebar.module.css';
 
 type SidebarProps = {
   active?: "marketplace" | "chats";
 };
-
-// --- ICONOS (Sin Cambios) ---
 
 function IconStore(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -43,63 +41,65 @@ function IconChats(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-// -----------------------------
-
 export function MiniSidebar({ active = "marketplace" }: SidebarProps) {
-  const base =
-    "w-12 h-12 rounded-xl grid place-items-center transition-colors duration-150";
-    
-  // Colores Inactivos: Texto Negro (contorno de la bolsa) sobre el fondo Naranja.
-  // El hover es un púrpura suave (bg-purple-100) para indicar la selección.
-  const inactive = "text-black hover:bg-amber-600 hover:text-black";
-  
-  // Colores Activos: Texto Púrpura (contorno del chat) sobre el fondo Naranja/Amarillo más claro.
-  // Usamos ring-purple para el contorno de selección.
-  const activeCls = "text-purple-700 bg-amber-400 ring-2 ring-purple-500/50"; 
-
   return (
-    // Fondo de aside a alto completo; contenido sticky
-    // CRÍTICO: Cambio de color de fondo a un Amarillo/Naranja fuerte
-    <aside className="relative bg-yellow-400 border-r border-amber-600"> 
-      <div className="sticky top-0 h-dvh flex flex-col items-center gap-6 p-4">
-        {/* Logo superior */}
-        {/* Usar un fondo de contraste para el logo */}
-        <Link to="/home" className="w-11 h-11 rounded-xl grid place-items-center bg-white">
-          <img
-            src={logo}
-            alt="Logo UCT"
-            className="max-w-[70%] max-h-[70%] object-contain"
-            loading="lazy"
-            decoding="async"
-          />
-        </Link>
+    <motion.aside 
+      className={styles.miniSidebar}
+      initial={{ x: -10, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className={styles.container}>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+        >
+          <NavLink to="/home" className={styles.logoLink}>
+            <img
+              src={logo}
+              alt="Logo UCT"
+              loading="lazy"
+              decoding="async"
+            />
+          </NavLink>
+        </motion.div>
 
-        {/* Navegación: solo íconos */}
-        <nav className="grid gap-3">
-          <Link
-            to="/home"
-            title="Marketplace"
-            aria-label="Marketplace"
-            aria-current={active === "marketplace" ? "page" : undefined}
-            className={[base, active === "marketplace" ? activeCls : inactive].join(" ")}
+        <nav className={styles.nav}>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
           >
-            <IconStore className="w-6 h-6" />
-            <span className="sr-only">Marketplace</span>
-          </Link>
+            <NavLink
+              to="/home"
+              title="Marketplace"
+              aria-label="Marketplace"
+              className={({ isActive }) => `${styles.iconLink} ${isActive ? styles.active : ''}`}
+            >
+              <IconStore />
+              <span className="sr-only">Marketplace</span>
+            </NavLink>
+          </motion.div>
 
-          <Link
-            to="/chats"
-            title="Chats"
-            aria-label="Chats"
-            aria-current={active === "chats" ? "page" : undefined}
-            className={[base, active === "chats" ? activeCls : inactive].join(" ")}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
           >
-            <IconChats className="w-6 h-6" />
-            <span className="sr-only">Chats</span>
-          </Link>
+            <NavLink
+              to="/chats"
+              title="Chats"
+              aria-label="Chats"
+              className={({ isActive }) => `${styles.iconLink} ${isActive ? styles.active : ''}`}
+            >
+              <IconChats />
+              <span className="sr-only">Chats</span>
+            </NavLink>
+          </motion.div>
         </nav>
       </div>
-    </aside>
+    </motion.aside>
   );
 }
 

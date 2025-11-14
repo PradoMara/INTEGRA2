@@ -6,6 +6,7 @@ import UserDefault from "@/assets/img/user_default.png";
 // CAMBIO: Añadido el import para el logo (ajusta la ruta si es necesario)
 import logo from "@/assets/img/logouct.png"; 
 import { useMe } from "@/features/users/hooks/useMe";
+import { Link } from 'react-router-dom'
 import { useUpdateUser } from "@/features/users/hooks/useUpdateUser";
 
 const MyPublicationsFeedAny = MyPublicationsFeed as any;
@@ -82,7 +83,7 @@ export default function PerfilPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[200px_1fr]">
       <Sidebar />
 
       <div className="min-w-0 flex flex-col h-screen">
@@ -117,8 +118,11 @@ export default function PerfilPage() {
                     updateUser.mutate({ id: user.id, data: { about: 'Actualizado desde demo ' + new Date().toLocaleTimeString() } })
                   }}
                 >
-                  {updateUser.isPending ? 'Guardando…' : 'Actualizar perfil (mock)'}
+                  {updateUser.isPending ? 'Guardando…' : 'Actualizar perfil'}
                 </button>
+                <Link to="/perfil/editar" className="ml-3 inline-block">
+                  <button className="px-3 py-1.5 text-sm rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300">Editar perfil</button>
+                </Link>
                 {updateUser.isError && (
                   <p className="mt-2 text-sm text-rose-600">Error al actualizar (mock).</p>
                 )}

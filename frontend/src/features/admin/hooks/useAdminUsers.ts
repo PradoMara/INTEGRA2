@@ -1,39 +1,39 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import type { AdminUser } from '../types/adminUser';
 
-const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+// Definimos el "query key" para que sea reutilizable
+export const adminUserKeys = {
+  all: ['admin', 'users'] as const,
+  lists: () => [...adminUserKeys.all, 'list'] as const,
+  list: (query: string) => [...adminUserKeys.lists(), { query }] as const,
+};
 
-export function useAdminUsers(initialQuery = '') {
-  const [query, setQuery] = useState(initialQuery);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// Definimos la función de fetching
+const fetchUsers = async (query: string): Promise<AdminUser[]> => {
+  const params = new URLSearchParams();
+  if (query) {
+    params.append('q', query);
+  }
+  const queryString = params.toString();
 
-  const fetchUsers = useCallback(async (q = query) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${BASE}/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      setError(err?.message ?? 'Error fetching users');
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
+  // --- ¡CORRECCIÓN AQUÍ! ---
+  // La ruta no debe incluir /api, porque api.ts ya lo tiene.
+  const url = `/admin/users${queryString ? `?${queryString}` : ''}`;
+  // -------------------------
+  
+  // Usamos nuestro api.get() global que ya incluye el token
+  // El backend (según admin.js) devuelve { users: [...] }
+  const res = await api.get<{ users: AdminUser[] }>(url);
+  return res.users; // Devolvemos solo el array de usuarios
+};
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
-
-  return {
-    users,
-    loading,
-    error,
-    query,
-    setQuery,
-    refetch: () => fetchUsers(query),
-  };
+// Creamos el hook
+export function useAdminUsers(query: string) {
+  return useQuery<AdminUser[], Error>({
+    queryKey: adminUserKeys.list(query),
+    queryFn: () => fetchUsers(query),
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache
+    // placeholderData: [], // Deshabilitado temporalmente para ver el estado 'loading'
+  });
 }
