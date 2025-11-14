@@ -13,6 +13,7 @@ import TermsPage from '@/features/About.Terms.Help/Terms.UI/TermsPage'
 import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage'
 import RegisterTest from '@/features/Login/Login.UI/RegisterTest'
 import LoginTest from '@/features/Login/Login.UI/LoginTest'
+import MyPublications from '@/features/Forum/MyPublications'
 
 // --- 1. Importa tu ruta protegida ---
 import { ProtectedRoute } from '@/app/context/AuthContext'
@@ -46,6 +47,7 @@ export function AppRoutes() {
           <Route path="/foro" element={<ForumPage/>} />
           <Route path="/perfil" element={<PerfilPage />} />
           <Route path="/chats" element={<ChatPage />} />
+          <Route path="/my-publications" element={<MyPublications />} />
         </Route>
       </Route>
 
