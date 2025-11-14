@@ -12,7 +12,7 @@
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
     "@tanstack/react-query": "^5.90.2",
-    "framer-motion": "^11.2.10",
+    "framer-motion": "^11.18.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3"
@@ -33,6 +33,6 @@
     "tailwindcss": "^4.1.14",
     "typescript": "~5.8.3",
     "vite": "^7.1.2",
-    "vitest": "^2.1.9"
+    "vitest": "^4.0.8"
   }
 }
