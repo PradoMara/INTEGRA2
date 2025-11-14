@@ -13,8 +13,25 @@ function resolveAuthUrl() {
   const api = import.meta.env.VITE_API_URL as string | undefined
   if (fromEnv) return fromEnv
   if (api) return `${api.replace(/\/$/, '')}/auth/google`
-  // Fallback used in the task description
-  return '/routes/auth'
+  // Fallback al prefijo /api si no hay envs definidos
+  return '/api/auth/google'
+}
+
+// Decodifica el JWT emitido por Google (resp.credential)
+function decodeJwt(token: string): Record<string, any> {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) throw new Error('Invalid JWT')
+    const b64url = parts[1]
+    let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = b64.length % 4
+    if (pad === 2) b64 += '=='
+    else if (pad === 3) b64 += '='
+    const json = atob(b64)
+    return JSON.parse(json)
+  } catch {
+    return {}
+  }
 }
 
 export function useGoogleAuth() {
@@ -37,13 +54,23 @@ export function useGoogleAuth() {
     // Avoid duplicate exchanges with the same token (double clicks/fast re-renders)
     if (lastToken.current === token) return {}
 
+    // Extrae email y nombre del idToken para cumplir con el backend actual
+    const payload = decodeJwt(token)
+    const email = String(payload?.email || '')
+    const name = String(payload?.name || payload?.given_name || '')
+    if (!email) {
+      setError('El idToken no contiene email.')
+      throw new Error('Google token without email')
+    }
+
     setLoading(true)
     try {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // allow backend to set session cookie
-        body: JSON.stringify({ token }),
+        credentials: 'include', // permitir cookies de sesión
+        // Backend actual espera: { idToken, email, name }
+        body: JSON.stringify({ idToken: token, email, name }),
       })
 
       if (!res.ok) {
