@@ -70,10 +70,10 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               className="category-select"
             >
               <option value="">Todas las categorías</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
+              {[...new Set(categories)].map((category, index) => (
+              <option key={category + "-" + index} value={category}>
+                {category}
+              </option>
               ))}
             </select>
           </div>

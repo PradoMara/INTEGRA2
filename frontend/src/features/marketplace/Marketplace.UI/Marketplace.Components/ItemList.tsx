@@ -1,7 +1,7 @@
 import React from 'react'
 import { usePostsWithFilters } from '../../Marketplace.Hooks/usePostsWithFilters'
 import ItemCard from './ItemCard'
-// 🛑 SOLUCIÓN: Importar el tipo Post para ItemList
+// Importar el tipo Post para ItemList
 import type { Post } from '../../Marketplace.Types/ProductInterfaces' 
 
 export default function ItemList() {
@@ -19,7 +19,7 @@ export default function ItemList() {
 
   return (
     <div className="grid grid-cols-3 gap-6">
-      {/* 🛑 Se pasa el objeto 'post' completo a la prop 'post' */}
+      {/* Se pasa el objeto 'post' completo a la prop 'post' */}
       {posts?.map((post: Post) => ( 
         <ItemCard key={post.id} post={post} /> 
       ))}

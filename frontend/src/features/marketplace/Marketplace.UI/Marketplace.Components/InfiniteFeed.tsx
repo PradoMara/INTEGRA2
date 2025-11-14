@@ -1,13 +1,24 @@
-import React, { useRef, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-// 1. CORRECCIÓN: Usar ruta relativa para usePostsWithFilters
+import React, { useRef, useEffect, useState, useCallback } from 'react'
+import { useNavigate, Link } from 'react-router-dom' // Importar Link
+
+// 🛑 SOLUCIÓN: Usar rutas de alias (@/) para resolver el conflicto de mayúsculas/minúsculas
+
+// Antes: import { usePostsWithFilters } from '../../Marketplace.Hooks/usePostsWithFilters'
 import { usePostsWithFilters } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
 
+// Antes: import type { Post } from '../../Marketplace.Types/ProductInterfaces'
+import type { Post } from '@/features/marketplace/Marketplace.Types/ProductInterfaces'
+
+// Antes: import { RatingStars } from './RatingStars'
 import { RatingStars } from '@/features/marketplace/Marketplace.UI/Marketplace.Components/RatingStars'
 
+// Antes: import { formatInt, formatCLP } from '../../Marketplace.Utils/format'
 import { formatInt, formatCLP } from '@/features/marketplace/Marketplace.Utils/format'
 
-import { PostDetailModal, PostDetailData } from '@/features/marketplace/Marketplace.UI/Marketplace.Components/PostDetailModal' 
+// Antes: import { PostDetailModal, PostDetailData } from './PostDetailModal'
+import { PostDetailModal, PostDetailData } from '@/features/marketplace/Marketplace.UI/Marketplace.Components/PostDetailModal'
+
+// -----------------------------------------------------------------
 
 interface InfiniteFeedProps {
   searchTerm: string
@@ -15,13 +26,12 @@ interface InfiniteFeedProps {
   onStatsChange?: (hasResults: boolean, totalResults: number) => void
 }
 
-// Agrega placeholders para probar carrusel (puedes desactivar luego)
 const AUGMENT_IMAGES_FOR_DEV = true
 const DEV_STRESS_LONG_DESC = false
 
 const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   searchTerm = '',
-  selectedCategoryName = '', // ✅ Recibimos la prop correcta
+  selectedCategoryName = '', // Usar la prop corregida
   onStatsChange
 }) => {
   const navigate = useNavigate()
@@ -40,26 +50,112 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     error
   } = usePostsWithFilters({
     searchTerm: searchTerm.trim(),
-    // 2. CORRECCIÓN: Pasamos el nombre de la categoría al hook de filtro
-    categoryId: selectedCategoryName 
+    categoryId: selectedCategoryName // Usar el nombre de la categoría
   })
 
   // Modal state
   const [openModal, setOpenModal] = useState(false)
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null)
 
-  // ... (parsePrice, buildDevImages, mapPostToDetail, onOpenDetail, handleContact) ...
+  // --- INICIO DE FUNCIONES FALTANTES ---
+
+  const parsePrice = (v: unknown): number => {
+    const n = parseInt(String(v ?? '').replace(/\D/g, ''), 10)
+    return Number.isFinite(n) ? n : 0
+  }
+
+  const buildDevImages = (seedBase: string, existing: string[]) => {
+    if (!AUGMENT_IMAGES_FOR_DEV) return existing
+    if ((existing?.length ?? 0) > 1) return existing
+    const seed = encodeURIComponent(String(seedBase || 'seed').replace(/\s+/g, '-'))
+    const variants = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/675`)
+    if (existing?.length === 1) return [existing[0], ...variants]
+    return variants
+  }
+
+  const mapPostToDetail = (post: Post): PostDetailData => {
+    const baseImages: string[] = post.imagenes?.map(img => img.url) ?? (post.image ? [post.image] : [])
+    const images = buildDevImages(String(post.id ?? post.title ?? 'post'), baseImages)
+
+    const baseDesc = post.description ?? 'Sin descripción'
+    const longAddon =
+      DEV_STRESS_LONG_DESC
+        ? '\n\n' +
+          'Características destacadas:\n' +
+          '- Pantalla 15.6" 144Hz\n- GPU RTX 4060\n- 16GB RAM\n- SSD 1TB NVMe\n' +
+          '\n'.repeat(2) +
+          'Descripción extendida: '.concat(baseDesc, ' ').repeat(20)
+        : ''
+
+    return {
+      id: String(post.id),
+      titulo: post.title ?? 'Sin título',
+      descripcion: baseDesc + longAddon,
+      precio: parsePrice(post.price),
+      stock: post.cantidad ?? 1,
+      campus: post.vendedor?.campus ?? 'San Juan Pablo II',
+      categoria: post.categoryName ?? 'Sin categoría',
+      condicion: post.estado ?? 'Usado', // Asumiendo que 'estado' es 'Nuevo' o 'Usado'
+      fechaPublicacion: post.fechaAgregado ?? new Date(),
+      imagenes: images,
+      vendedor: {
+        id: post.vendedor?.id ?? undefined,
+        nombre: post.author ?? 'Usuario',
+        avatarUrl: post.avatar,
+        reputacion: post.calificacion ?? 0
+      }
+    }
+  }
   
-  // 3. ❌ ELIMINAR EL MAPEO MOCK categoryNames (si lo tenías en tu código original)
-  /* const categoryNames: Record<string, string> = { ... } */
+  const onOpenDetail = (post: Post) => {
+    setSelectedPost(mapPostToDetail(post))
+    setOpenModal(true)
+  }
   
-  // 4. CORRECCIÓN DE SCOPE: Las funciones internas acceden a las props
+  const handleContact = (detail: PostDetailData) => {
+    const toId = detail.vendedor?.id ?? undefined
+    const toName = detail.vendedor?.nombre ?? ''
+    const toAvatar = detail.vendedor?.avatarUrl ?? ''
+    const qs = new URLSearchParams()
+    if (toId) qs.set('toId', String(toId))
+    if (toName) qs.set('toName', toName)
+    if (toAvatar) qs.set('toAvatar', toAvatar)
+
+    navigate(`/chats${qs.toString() ? `?${qs}` : ''}`, {
+      state: { toUser: detail.vendedor }
+    })
+    setOpenModal(false)
+  }
+
+  // --- FIN DE FUNCIONES FALTANTES ---
+
+
+  useEffect(() => {
+    if (onStatsChange && !isLoading) onStatsChange(hasResults, totalResults)
+  }, [hasResults, totalResults, isLoading, onStatsChange])
+
+  useEffect(() => {
+    if (isLoading || isFetchingNextPage) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.5, rootMargin: '200px' }
+    )
+    if (lastPostElementRef.current) observer.current.observe(lastPostElementRef.current)
+    return () => observer.current?.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, posts.length])
+
+
   const EmptyState = () => (
     <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500">
       <div className="text-8xl mb-6">🛒</div>
       <h3 className="text-2xl font-semibold mb-3 text-gray-700">No se encontraron productos</h3>
       <p className="text-center max-w-md text-gray-600 leading-relaxed">
-        {searchTerm || selectedCategoryName // ✅ Usa las props en scope
+        {searchTerm || selectedCategoryName
           ? 'Intenta ajustar tus filtros de búsqueda o explora otras categorías.'
           : 'No hay publicaciones disponibles en este momento.'}
       </p>
@@ -77,7 +173,25 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
 
   const PostSkeleton = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
-      {/* ... (código del skeleton se mantiene) ... */}
+      <div className="relative aspect-video w-full bg-gray-300" />
+      <div className="p-4 md:p-5">
+        <div className="flex items-center mb-3 md:mb-4">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-300 mr-3" />
+          <div className="flex-1">
+            <div className="h-3 md:h-4 bg-gray-300 rounded w-24 mb-1" />
+            <div className="h-2 md:h-3 bg-gray-300 rounded w-16" />
+          </div>
+        </div>
+        <div className="h-4 md:h-5 bg-gray-300 rounded w-full mb-2" />
+        <div className="h-4 md:h-5 bg-gray-300 rounded w-3/4 mb-3" />
+        <div className="h-3 md:h-4 bg-gray-300 rounded w-full mb-2" />
+        <div className="h-3 md:h-4 bg-gray-300 rounded w-5/6 mb-2" />
+        <div className="h-3 md:h-4 bg-gray-300 rounded w-2/3 mb-4" />
+        <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-gray-100">
+          <div className="h-3 md:h-4 bg-gray-300 rounded w-24" />
+          <div className="h-3 md:h-4 bg-gray-300 rounded w-16" />
+        </div>
+      </div>
     </div>
   )
 
@@ -111,16 +225,16 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
             {posts.length > 0 ? (
               <>
                 Mostrando {posts.length} publicación{posts.length !== 1 ? 'es' : ''}
-                {(searchTerm || selectedCategoryName) && ( 
+                {(searchTerm || selectedCategoryName) && (
                   <span className="ml-2">
                     {searchTerm && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 mr-2 font-medium">
                         🔍 "{searchTerm}"
                       </span>
                     )}
-                    {selectedCategoryName && ( 
+                    {selectedCategoryName && (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">
-                        📁 {selectedCategoryName} 
+                        📁 {selectedCategoryName}
                       </span>
                     )}
                   </span>
@@ -144,17 +258,94 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
           <EmptyState />
         ) : (
           <>
-            {posts.map((post, index) => {
-              const rating = (post as any).sellerRating ?? (post as any).rating ?? 0
-              const sales = (post as any).sellerSales ?? (post as any).sales
+            {posts.map((post: Post, index) => { 
+              
+              const finalRating = post.calificacion || 0;
+              const authorName = post.author || post.vendedor?.nombre;
+              const priceDisplay = formatCLP(parseFloat(String(post.price)) || 0);
+              const stockDisplay = formatInt(Number(post.cantidad));
+              const timeDisplay = post.fechaAgregado ? new Date(post.fechaAgregado).toLocaleDateString() : 'hace poco';
 
               return (
                 <div
-                  key={`${post.id}-${searchTerm}-${selectedCategoryName}`} 
+                  key={`${post.id}-${searchTerm}-${selectedCategoryName}`}
                   ref={index === posts.length - 1 ? lastPostElementRef : null}
                   className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 w-full"
                 >
-                  {/* ... (código de post y detalle se mantiene) ... */}
+                  {post.image && (
+                    <div className="relative aspect-video w-full">
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      {post.price && (
+                        <div className="absolute top-3 right-3 bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-bold shadow-lg">
+                          {priceDisplay}
+                        </div>
+                      )}
+                      {post.categoryName && (
+                        <div className="absolute top-3 left-3">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-white/95 text-gray-800 font-medium shadow-sm">
+                            {post.categoryName}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="p-4 md:p-5">
+                    <div className="flex items-center mb-3 md:mb-4">
+                      {post.avatar && (
+                        <img
+                          src={post.avatar}
+                          alt={authorName}
+                          className="w-8 h-8 md:w-10 md:h-10 rounded-full mr-3 border-2 border-gray-100"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs md:text-sm font-medium text-gray-900 truncate">
+                          {authorName}
+                        </h4>
+                        <p className="text-xs text-gray-500">{timeDisplay}</p>
+                      </div>
+                    </div>
+
+                    <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-2 md:mb-3 line-clamp-2 leading-tight">
+                      {post.title}
+                    </h3>
+                    {post.description && (
+                      <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-3 leading-relaxed">
+                        {post.description}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-gray-100">
+                      <div className="flex items-center space-x-3 md:space-x-4 text-xs md:text-sm text-gray-500">
+                        <span className="inline-flex items-center gap-2">
+                          <RatingStars rating={finalRating} />
+                          <span className="font-semibold text-gray-700">
+                            {Number(finalRating || 0).toFixed(1)}
+                          </span>
+                        </span>
+                        {typeof post.cantidad !== 'undefined' && (
+                          <>
+                            <span className="opacity-60">•</span>
+                            <span>{stockDisplay} en stock</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => onOpenDetail(post)}
+                        className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        Ver detalle
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )
             })}
@@ -164,7 +355,21 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
         )}
       </div>
 
-      {/* ... (código de no more posts y modal se mantiene) ... */}
+      {!hasNextPage && posts.length > 0 && !isFetchingNextPage && posts.length >= 27 && (
+        <div className="text-center py-8 text-gray-500">
+          <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+            <span className="mr-2">🎉</span>
+            <span>Has visto todas las publicaciones disponibles</span>
+          </div>
+        </div>
+      )}
+
+      <PostDetailModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        post={selectedPost}
+        onContact={handleContact}
+      />
     </div>
   )
 }
