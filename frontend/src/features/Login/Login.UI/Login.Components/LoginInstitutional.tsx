@@ -1,3 +1,4 @@
+// frontend/src/features/Login/Login.UI/Login.Components/LoginInstitutional.tsx
 import img from "@/assets/img/favicon.png";
 import styles from './Login.module.css';
 import { useEffect, useRef, useState } from 'react';
@@ -6,6 +7,7 @@ import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '@/features/Log
 
 type Props = {
   onOAuth?: () => void | Promise<void>;
+  onShowAdminLogin?: () => void;
 };
 
 const ALUMNO_DOMAIN = "alu.uct.cl";
@@ -88,11 +90,12 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
   return (
     <div className={styles.heroBg}>
       <div className={styles.card}>
-        <header className={styles.header} role="banner" aria-labelledby="login-title">
+        {/* Header centrado */}
+        <header className={`${styles.header} ${styles.centered}`} role="banner" aria-labelledby="login-title">
           <div className={styles.logo}>
             <img src={img} alt="Logo UCT" className={styles.logoImg} loading="lazy" decoding="async" />
           </div>
-          <div className={styles.headerText}>
+          <div className={`${styles.headerText} ${styles.centered}`}>
             <h2 id="login-title" className={styles.title}>Iniciar sesión</h2>
             <span className={styles.badge} aria-hidden>Solo cuentas @{PROFESOR_DOMAIN} @{ALUMNO_DOMAIN}</span>
           </div>
@@ -118,6 +121,7 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
   {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
       </div>
 
+      {/* Footer original sin cambios */}
       <LoginFooter />
     </div>
   );

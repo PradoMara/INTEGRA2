@@ -19,10 +19,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     try {
-      const token = localStorage.getItem('google_credential')
-      if (token) navigate('/home', { replace: true })
+      const token = localStorage.getItem('google_credential');
+      if (token) navigate('/home', { replace: true });
     } catch {}
-  }, [navigate])
+  }, [navigate]);
 
   async function handleEmailPasswordLogin(email: string, password: string) {
     setLoading(true);
@@ -49,5 +49,59 @@ export default function LoginPage() {
       setError(e?.message || 'No se pudo completar el inicio de sesión con Google');
     }
   }
-  return <LoginInstitutional onOAuth={handleOAuth} />
+
+  if (showAdminLogin) {
+    return (
+      // MISMO FONDO que el login institucional
+      <div className={styles.heroBg}>
+        <div className={styles.card}>
+          {/* Header centrado - MISMO ESTILO que el login institucional */}
+          <header className={`${styles.header} ${styles.centered}`} role="banner">
+            <div className={styles.logo}>
+              <img src={Logo} alt="Logo UCT" className={styles.logoImg} />
+            </div>
+            <div className={`${styles.headerText} ${styles.centered}`}>
+              <h2 className={styles.title}>Inicio de Sesión (Admin)</h2>
+              <span className={styles.subtitle}>Acceso para administradores del sistema</span>
+            </div>
+          </header>
+
+          {/* Formulario centrado */}
+          <div className={styles.googleBtnContainer}>
+            <LoginForm 
+              onSubmit={handleEmailPasswordLogin} 
+              loading={loading}
+              className={styles.form}
+            />
+          </div>
+
+          {error && (
+            <div className={styles.errorContainer}>
+              <p className={styles.error} role="alert">{error}</p>
+            </div>
+          )}
+
+          {/* Botón de volver */}
+          <div className={styles.adminContainer}>
+            <button 
+              onClick={() => {
+                setShowAdminLogin(false);
+                setError(null);
+              }}
+              className={styles.adminBtn}
+            >
+              ← Volver a Acceso Institucional
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <LoginInstitutional 
+      onOAuth={handleOAuth} 
+      onShowAdminLogin={() => setShowAdminLogin(true)}
+    />
+  );
 }
