@@ -19,23 +19,20 @@ export interface Imagen {
 // Interfaz principal para el producto/post
 export interface Post { 
   id: number
-  title: string
-  description: string
-  price: string
-  categoryName: string
-  categoryId: string
-  author: string 
-  avatar: string
-  image?: string
-  
-  // Campos del backend
+  nombre: string           // FIX: Era 'title'
+  descripcion: string       // FIX: Era 'description' (aunque coincidía, lo alineamos)
+  precioActual: number     // FIX: Era 'price' y de tipo string
   precioAnterior: number | null
+  categoria: string         // FIX: Era 'categoryName'/'categoryId'
   calificacion: number | null
   cantidad: number
   estado: string
   fechaAgregado: string
-  imagenes: Imagen[]
+  imagenes: Imagen[]        // FIX: Tu tipo anterior tenía 'image?: string'
   vendedor: Vendedor
+
+  // Eliminamos los campos que no venían en el JSON
+  // title, price, categoryName, categoryId, author, avatar, image
 }
 
 // Interfaz para los filtros

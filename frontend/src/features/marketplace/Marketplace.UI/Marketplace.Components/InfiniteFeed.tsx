@@ -1,22 +1,12 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { useNavigate, Link } from 'react-router-dom' // Importar Link
+import React, { useRef, useEffect, useState, useCallback } from 'react' // FIX: Era 'in'
+import { useNavigate, Link } from 'react-router-dom'
 
-// 🛑 SOLUCIÓN: Usar rutas de alias (@/) para resolver el conflicto de mayúsculas/minúsculas
-
-// Antes: import { usePostsWithFilters } from '../../Marketplace.Hooks/usePostsWithFilters'
+// Hooks y Tipos
 import { usePostsWithFilters } from '@/features/marketplace/Marketplace.Hooks/usePostsWithFilters'
-
-// Antes: import type { Post } from '../../Marketplace.Types/ProductInterfaces'
 import type { Post } from '@/features/marketplace/Marketplace.Types/ProductInterfaces'
-
-// Antes: import { RatingStars } from './RatingStars'
 import { RatingStars } from '@/features/marketplace/Marketplace.UI/Marketplace.Components/RatingStars'
-
-// Antes: import { formatInt, formatCLP } from '../../Marketplace.Utils/format'
 import { formatInt, formatCLP } from '@/features/marketplace/Marketplace.Utils/format'
-
-// Antes: import { PostDetailModal, PostDetailData } from './PostDetailModal'
-import { PostDetailModal, PostDetailData } from '@/features/marketplace/Marketplace.UI/Marketplace.Components/PostDetailModal'
+import { PostDetailModal } from '@/features/marketplace/Marketplace.UI/Marketplace.Components/PostDetailModal'
 
 // -----------------------------------------------------------------
 
@@ -26,12 +16,9 @@ interface InfiniteFeedProps {
   onStatsChange?: (hasResults: boolean, totalResults: number) => void
 }
 
-const AUGMENT_IMAGES_FOR_DEV = true
-const DEV_STRESS_LONG_DESC = false
-
 const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
   searchTerm = '',
-  selectedCategoryName = '', // Usar la prop corregida
+  selectedCategoryName = '',
   onStatsChange
 }) => {
   const navigate = useNavigate()
@@ -50,72 +37,23 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     error
   } = usePostsWithFilters({
     searchTerm: searchTerm.trim(),
-    categoryId: selectedCategoryName // Usar el nombre de la categoría
+    categoryId: selectedCategoryName
   })
 
   // Modal state
   const [openModal, setOpenModal] = useState(false)
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null)
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
-  // --- INICIO DE FUNCIONES FALTANTES ---
-
-  const parsePrice = (v: unknown): number => {
-    const n = parseInt(String(v ?? '').replace(/\D/g, ''), 10)
-    return Number.isFinite(n) ? n : 0
-  }
-
-  const buildDevImages = (seedBase: string, existing: string[]) => {
-    if (!AUGMENT_IMAGES_FOR_DEV) return existing
-    if ((existing?.length ?? 0) > 1) return existing
-    const seed = encodeURIComponent(String(seedBase || 'seed').replace(/\s+/g, '-'))
-    const variants = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${seed}-${i + 1}/1200/675`)
-    if (existing?.length === 1) return [existing[0], ...variants]
-    return variants
-  }
-
-  const mapPostToDetail = (post: Post): PostDetailData => {
-    const baseImages: string[] = post.imagenes?.map(img => img.url) ?? (post.image ? [post.image] : [])
-    const images = buildDevImages(String(post.id ?? post.title ?? 'post'), baseImages)
-
-    const baseDesc = post.description ?? 'Sin descripción'
-    const longAddon =
-      DEV_STRESS_LONG_DESC
-        ? '\n\n' +
-          'Características destacadas:\n' +
-          '- Pantalla 15.6" 144Hz\n- GPU RTX 4060\n- 16GB RAM\n- SSD 1TB NVMe\n' +
-          '\n'.repeat(2) +
-          'Descripción extendida: '.concat(baseDesc, ' ').repeat(20)
-        : ''
-
-    return {
-      id: String(post.id),
-      titulo: post.title ?? 'Sin título',
-      descripcion: baseDesc + longAddon,
-      precio: parsePrice(post.price),
-      stock: post.cantidad ?? 1,
-      campus: post.vendedor?.campus ?? 'San Juan Pablo II',
-      categoria: post.categoryName ?? 'Sin categoría',
-      condicion: post.estado ?? 'Usado', // Asumiendo que 'estado' es 'Nuevo' o 'Usado'
-      fechaPublicacion: post.fechaAgregado ?? new Date(),
-      imagenes: images,
-      vendedor: {
-        id: post.vendedor?.id ?? undefined,
-        nombre: post.author ?? 'Usuario',
-        avatarUrl: post.avatar,
-        reputacion: post.calificacion ?? 0
-      }
-    }
-  }
-  
   const onOpenDetail = (post: Post) => {
-    setSelectedPost(mapPostToDetail(post))
+    setSelectedPost(post)
     setOpenModal(true)
   }
   
-  const handleContact = (detail: PostDetailData) => {
+  const handleContact = (detail: Post) => {
     const toId = detail.vendedor?.id ?? undefined
     const toName = detail.vendedor?.nombre ?? ''
-    const toAvatar = detail.vendedor?.avatarUrl ?? ''
+    // FIX: El avatar es la primera imagen del POST (detail), no del vendedor
+    const toAvatar = detail.imagenes?.[0]?.url ?? '' 
     const qs = new URLSearchParams()
     if (toId) qs.set('toId', String(toId))
     if (toName) qs.set('toName', toName)
@@ -126,8 +64,6 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     })
     setOpenModal(false)
   }
-
-  // --- FIN DE FUNCIONES FALTANTES ---
 
 
   useEffect(() => {
@@ -211,7 +147,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
           <h4 className="text-red-800 font-medium text-lg">Error al cargar las publicaciones</h4>
           <p className="text-red-600 text-sm mt-1">
             {error?.message || 'Ha ocurrido un error inesperado. Por favor, intenta nuevamente.'}
-          </p>
+          </p>{/* FIX: Era 'p>' */}
         </div>
       </div>
     </div>
@@ -261,10 +197,11 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
             {posts.map((post: Post, index) => { 
               
               const finalRating = post.calificacion || 0;
-              const authorName = post.author || post.vendedor?.nombre;
-              const priceDisplay = formatCLP(parseFloat(String(post.price)) || 0);
+              const authorName = post.vendedor?.nombre;
+              const priceDisplay = formatCLP(post.precioActual || 0);
               const stockDisplay = formatInt(Number(post.cantidad));
               const timeDisplay = post.fechaAgregado ? new Date(post.fechaAgregado).toLocaleDateString() : 'hace poco';
+              const primaryImage = post.imagenes?.[0]?.url; 
 
               return (
                 <div
@@ -272,23 +209,23 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                   ref={index === posts.length - 1 ? lastPostElementRef : null}
                   className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 w-full"
                 >
-                  {post.image && (
+                  {primaryImage && (
                     <div className="relative aspect-video w-full">
                       <img
-                        src={post.image}
-                        alt={post.title}
+                        src={primaryImage}
+                        alt={post.nombre}
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
-                      {post.price && (
+                      {post.precioActual && (
                         <div className="absolute top-3 right-3 bg-green-600 text-white px-3 py-1 rounded-lg text-sm font-bold shadow-lg">
                           {priceDisplay}
                         </div>
                       )}
-                      {post.categoryName && (
+                      {post.categoria && (
                         <div className="absolute top-3 left-3">
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-white/95 text-gray-800 font-medium shadow-sm">
-                            {post.categoryName}
+                            {post.categoria}
                           </span>
                         </div>
                       )}
@@ -297,13 +234,7 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
 
                   <div className="p-4 md:p-5">
                     <div className="flex items-center mb-3 md:mb-4">
-                      {post.avatar && (
-                        <img
-                          src={post.avatar}
-                          alt={authorName}
-                          className="w-8 h-8 md:w-10 md:h-10 rounded-full mr-3 border-2 border-gray-100"
-                        />
-                      )}
+                      {/* Aquí iría el avatar si lo tuviéramos en Vendedor */}
                       <div className="flex-1 min-w-0">
                         <h4 className="text-xs md:text-sm font-medium text-gray-900 truncate">
                           {authorName}
@@ -313,11 +244,11 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
                     </div>
 
                     <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-2 md:mb-3 line-clamp-2 leading-tight">
-                      {post.title}
+                      {post.nombre}
                     </h3>
-                    {post.description && (
+                    {post.descripcion && (
                       <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-3 leading-relaxed">
-                        {post.description}
+                        {post.descripcion}
                       </p>
                     )}
 

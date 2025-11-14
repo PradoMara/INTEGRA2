@@ -1,31 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import { ImageCarousel } from "./ImageCarousel";
 import { RatingStars } from "./RatingStars";
+// FIX: Importamos el tipo 'Post' correcto
+import type { Post } from "@/features/marketplace/Marketplace.Types/ProductInterfaces";
 
-export type PostDetailData = {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  precio: number;
-  stock: number;
-  campus: string;
-  categoria: string;
-  condicion: string;
-  fechaPublicacion: string | number | Date;
-  imagenes?: string[];
-  vendedor?: {
-    id?: string | number;
-    nombre: string;
-    avatarUrl?: string;
-    reputacion?: number;
-  };
-};
+// FIX: Eliminamos el tipo 'PostDetailData' que estaba incorrecto
 
 type PostDetailModalProps = {
   open: boolean;
   onClose: () => void;
-  post?: PostDetailData | null;
-  onContact?: (post: PostDetailData) => void;
+  post?: Post | null; // FIX: Usamos la interfaz 'Post'
+  onContact?: (post: Post) => void; // FIX: Usamos la interfaz 'Post'
 };
 
 const formatCLP = (v: number) =>
@@ -52,7 +37,6 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  // Bloqueo de scroll del body
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -66,6 +50,7 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
 
   if (!open || !post) return null;
 
+  // FIX: Leemos la reputación desde 'post.vendedor.reputacion'
   const reputacion = typeof post.vendedor?.reputacion === "number" ? post.vendedor!.reputacion! : 0;
 
   return (
@@ -85,7 +70,7 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-gray-100 bg-white/90 backdrop-blur">
           <h2 id="post-detail-title" className="text-xl md:text-2xl font-extrabold text-slate-900 truncate">
-            {post.titulo}
+            {post.nombre} {/* FIX: Era 'post.titulo' */}
           </h2>
           <button
             ref={closeBtnRef}
@@ -104,14 +89,14 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
           <div className="p-5 md:p-6 min-h-0 max-h-[70vh] overflow-y-auto overscroll-contain">
             <div className="relative">
               <ImageCarousel
-                images={post.imagenes ?? []}
-                altPrefix={post.titulo || "Imagen"}
+                images={post.imagenes?.map(img => img.url) ?? []} // FIX: Mapeamos el array de imagenes
+                altPrefix={post.nombre || "Imagen"} // FIX: Era 'post.titulo'
                 className="mb-4"
                 rounded="rounded-xl"
               />
               <div className="pointer-events-none absolute top-3 right-3">
                 <span className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold bg-green-600 text-white shadow-lg">
-                  {formatCLP(post.precio)}
+                  {formatCLP(post.precioActual)} {/* FIX: Era 'post.precio' */}
                 </span>
               </div>
             </div>
@@ -122,18 +107,18 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
                   {post.categoria}
                 </span>
               )}
-              {post.condicion && (
+              {post.estado && ( /* FIX: Era 'post.condicion' */
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100">
-                  {post.condicion}
+                  {post.estado}
                 </span>
               )}
-              {post.campus && (
+              {post.vendedor.campus && ( /* FIX: Era 'post.campus' */
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-violet-50 text-violet-800 border border-violet-100">
-                  {post.campus}
+                  {post.vendedor.campus}
                 </span>
               )}
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-gray-50 text-gray-700 border border-gray-200">
-                Publicado: {formatDate(post.fechaPublicacion)}
+                Publicado: {formatDate(post.fechaAgregado)} {/* FIX: Era 'post.fechaPublicacion' */}
               </span>
             </div>
 
@@ -155,11 +140,9 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
               <h3 className="text-sm font-semibold text-slate-700 mb-3">Vendedor</h3>
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-full overflow-hidden border border-gray-200 bg-gradient-to-br from-slate-100 to-slate-200 grid place-items-center text-slate-700 font-bold">
-                  {post.vendedor?.avatarUrl ? (
-                    <img src={post.vendedor.avatarUrl} alt={post.vendedor.nombre} className="w-full h-full object-cover" />
-                  ) : (
+                  {/* FIX: No tenemos avatar en el JSON, usamos iniciales */
                     <span>{getInitials(post.vendedor?.nombre)}</span>
-                  )}
+                  }
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-slate-900 truncate">
@@ -177,15 +160,15 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
             <dl className="grid grid-cols-1 gap-3 text-sm">
               <div className="grid grid-cols-[120px_1fr] items-start gap-2">
                 <dt className="text-slate-500">Precio</dt>
-                <dd className="font-bold text-emerald-700">{formatCLP(post.precio)}</dd>
+                <dd className="font-bold text-emerald-700">{formatCLP(post.precioActual)}</dd> {/* FIX: Era 'post.precio' */}
               </div>
               <div className="grid grid-cols-[120px_1fr] items-start gap-2">
                 <dt className="text-slate-500">Stock</dt>
-                <dd className="font-semibold">{post.stock}</dd>
+                <dd className="font-semibold">{post.cantidad}</dd> {/* FIX: Era 'post.stock' */}
               </div>
               <div className="grid grid-cols-[120px_1fr] items-start gap-2">
                 <dt className="text-slate-500">Campus</dt>
-                <dd className="font-semibold">{post.campus}</dd>
+                <dd className="font-semibold">{post.vendedor.campus}</dd> {/* FIX: Era 'post.campus' */}
               </div>
               <div className="grid grid-cols-[120px_1fr] items-start gap-2">
                 <dt className="text-slate-500">Categoría</dt>
@@ -193,11 +176,11 @@ export function PostDetailModal({ open, onClose, post, onContact }: PostDetailMo
               </div>
               <div className="grid grid-cols-[120px_1fr] items-start gap-2">
                 <dt className="text-slate-500">Condición</dt>
-                <dd className="font-semibold">{post.condicion}</dd>
+                <dd className="font-semibold">{post.estado}</dd> {/* FIX: Era 'post.condicion' */}
               </div>
               <div className="grid grid-cols-[120px_1fr] items-start gap-2">
                 <dt className="text-slate-500">Publicado</dt>
-                <dd className="font-semibold">{formatDate(post.fechaPublicacion)}</dd>
+                <dd className="font-semibold">{formatDate(post.fechaAgregado)}</dd> {/* FIX: Era 'post.fechaPublicacion' */}
               </div>
             </dl>
           </aside>
