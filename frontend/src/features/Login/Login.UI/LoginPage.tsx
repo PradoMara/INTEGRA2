@@ -33,7 +33,19 @@ export default function LoginPage() {
       authLogin(token, userFromApi as any);
       navigate('/home', { replace: true });
     } catch (err: any) {
-      setError(err.message);
+      // Extraer mensaje de error específico
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Credenciales inválidas. Verifica tu email y contraseña';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Acceso denegado. No tienes permisos para acceder';
+      }
+      
+      setError(errorMessage);
+      console.error('Error en login:', errorMessage);
       setLoading(false);
     }
   }
@@ -41,6 +53,7 @@ export default function LoginPage() {
   async function handleOAuth() {
     // Intercambia el idToken (guardado por Google One Tap en localStorage)
     // por la sesión/JWT de la app antes de navegar.
+    setError(null);
     try {
       const response = await exchange();
       
@@ -52,8 +65,10 @@ export default function LoginPage() {
       
       navigate('/home', { replace: true });
     } catch (e: any) {
-      // Mostrar feedback mínimo; no bloquea el botón
-      setError(e?.message || 'No se pudo completar el inicio de sesión con Google');
+      // Mostrar el error específico capturado
+      const errorMsg = e?.message || 'No se pudo completar el inicio de sesión con Google';
+      setError(errorMsg);
+      console.error('Error en OAuth:', errorMsg);
     }
   }
 

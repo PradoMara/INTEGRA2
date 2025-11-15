@@ -74,10 +74,25 @@ export function useGoogleAuth() {
       })
 
       if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        const msg = text || `HTTP ${res.status}`
-        setError(msg)
-        throw new Error(msg)
+        let errorMessage = '';
+        
+        // Manejo específico de códigos de error
+        if (res.status === 403) {
+          errorMessage = 'Dominio no permitido. Solo se permiten correos @uct.cl o @alu.uct.cl';
+        } else if (res.status === 401) {
+          errorMessage = 'Token inválido o no autorizado. Por favor, intenta iniciar sesión nuevamente';
+        } else {
+          // Intentar obtener el mensaje del servidor
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorData.error || `Error HTTP ${res.status}`;
+          } catch {
+            errorMessage = `Error HTTP ${res.status}`;
+          }
+        }
+        
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
 
       const data = (await res.json()) as ExchangeResponse
