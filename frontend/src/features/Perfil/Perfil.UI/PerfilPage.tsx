@@ -171,8 +171,6 @@ export default function PerfilPage() {
                  <MyPublicationsFeed />
               </div>
             </section>
-
-          </div>
         </main>
       </div>
     </div>
