@@ -129,12 +129,15 @@ router.post(
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    const publicacion = await prisma.publicaciones.findUnique({ where: { id } });
 
-    // 1. (PENDIENTE) Verificar permisos:
-    //    const publicacion = await prisma.publicaciones.findUnique({ where: { id } });
-    //    if (publicacion.usuarioId !== req.user.userId && req.user.role !== 'ADMIN') {
-    //      return res.status(403).json({ ok: false, message: 'No autorizado' });
-    //    }
+    if (!publicacion) {
+      return res.status(404).json({ ok: false, message: 'Publicación no encontrada' });
+    }
+
+    if (publicacion.usuarioId !== req.user.userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ ok: false, message: 'No autorizado para eliminar esta publicación' });
+    }
 
     // 2. Eliminar la publicación (Hard Delete)
     const deleted = await prisma.publicaciones.delete({
@@ -170,16 +173,24 @@ router.patch('/:id/visto', authenticateToken, async (req, res) => {
 // 🔄 ACTUALIZAR PUBLICACIÓN (Protegido)
 // PUT /api/publications/:id
 // ------------------------------------------
-// NOTA: Esta ruta tampoco verifica permisos (dueño o admin).
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
+    const id = parseInt(req.params.id);
     const { titulo, cuerpo, estado } = req.body;
 
-    // 1. (PENDIENTE) Verificar permisos (ver ruta DELETE)
+    const publicacion = await prisma.publicaciones.findUnique({ where: { id } });
+
+    if (!publicacion) {
+      return res.status(404).json({ ok: false, message: 'Publicación no encontrada' });
+    }
+
+    if (publicacion.usuarioId !== req.user.userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ ok: false, message: 'No autorizado para actualizar esta publicación' });
+    }
 
     // 2. Actualizar la publicación
     const updated = await prisma.publicaciones.update({
-      where: { id: parseInt(req.params.id) },
+      where: { id },
       data: { titulo, cuerpo, estado } // Actualiza los campos enviados
     });
 
