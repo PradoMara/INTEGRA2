@@ -6,65 +6,58 @@ import { useAuthStore } from '../store/authStore';
 // Obtenemos la URL base de las variables de entorno
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
+export class ApiError extends Error {
+  status: number;
+  payload: any;
+  constructor(message: string, status = 0, payload: any = null) {
+    super(message);
+    this.status = status;
+    this.payload = payload;
+    this.name = "ApiError";
+  }
+}
+
 /**
- * Un helper de fetch actualizado que inyecta el token
- * y maneja errores de autenticación (401).
+ * apiFetch: fetch wrapper que:
+ * - concatena VITE_API_URL si path es relativo
+ * - parsea JSON y lanza ApiError con mensaje amigable cuando !res.ok
  */
-async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  // MEJORA: Obtenemos el token MÁS ACTUALIZADO desde el store
-  const token = useAuthStore.getState().token;
-
-  const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-
-  // MEJORA: Inyectamos el token si existe
-  if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
+export async function apiFetch(input: string, init?: RequestInit) {
+  const base = (import.meta.env.VITE_API_URL as string) || "";
+  const url = /^https?:\/\//.test(input) ? input : `${base.replace(/\/$/, "")}${input.startsWith("/") ? "" : "/"}${input}`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+      ...init,
+    });
+  } catch (err) {
+    throw new ApiError("Error de red: revisa tu conexión", 0, null);
   }
 
-  // Construimos la URL completa
-  const url = `${API_BASE_URL}${endpoint}`;
+  const contentType = res.headers.get("content-type") ?? "";
+  const isJson = contentType.includes("application/json");
+  const body = isJson ? await res.json().catch(() => null) : await res.text().catch(() => null);
 
-  console.log(`🚀 API Request: ${options.method || 'GET'} ${url}`, options.body ? JSON.parse(options.body as string) : null);
-
-  const res = await fetch(url, {
-    ...options,
-    headers: defaultHeaders,
-  });
-
-  // MEJORA: Manejo de errores 401/403 (Token expirado / Sin permisos)
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403) {
-      // Evitamos un bucle de redirección si ya estamos en /login
-      if (window.location.pathname !== '/login') {
-        console.warn(`Error ${res.status}: Token inválido o expirado. Cerrando sesión.`);
-        // Forzamos el logout globalmente
-        useAuthStore.getState().logout();
-      }
+    // mensaje proveniente del body (si existe) o mapeo por status
+    const serverMsg = isJson && body && (body.message || body.error) ? (body.message || body.error) : null;
+    let friendly = serverMsg ?? `${res.status}: Error en la petición`;
+
+    switch (res.status) {
+      case 400: friendly = serverMsg ?? "400: Petición inválida"; break;
+      case 401: friendly = serverMsg ?? "401: No autorizado. Por favor inicia sesión."; break;
+      case 403: friendly = serverMsg ?? "403: Acceso denegado."; break;
+      case 404: friendly = serverMsg ?? "404: No encontrado."; break;
+      case 500: friendly = serverMsg ?? "500: Error interno del servidor. Intenta más tarde."; break;
+      default: friendly = serverMsg ?? `${res.status}: Error del servidor`; break;
     }
 
-    // Lanzamos el error para que React Query o el 'catch' lo maneje
-    const errorBody = await res.json().catch(() => ({}));
-    throw new Error(errorBody.message || errorBody.error || `Error ${res.status}: ${res.statusText}`);
+    throw new ApiError(friendly, res.status, body);
   }
 
-  // CORRECCIÓN: Manejo de respuestas sin contenido
-  if (res.status === 204 || res.headers.get('content-length') === '0') {
-    console.log(`✅ API Response: ${res.status} ${url} - No Content`);
-    return null; // O return { success: true } si prefieres
-  }
-
-  // Intentar parsear JSON, pero manejar errores de parsing
-  try {
-    const data = await res.json();
-    console.log(`✅ API Response: ${res.status} ${url}`, data);
-    return data;
-  } catch (jsonError) {
-    console.log(`✅ API Response: ${res.status} ${url} - No JSON body`);
-    return null;
-  }
+  return body;
 }
 
 // Exportamos métodos específicos
