@@ -34,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restaurar sesión desde localStorage
   useEffect(() => {
     try {
-      const storedToken = localStorage.getItem('token')
+      // Intentar con app_jwt_token primero, luego con token para compatibilidad
+      const storedToken = localStorage.getItem('app_jwt_token') || localStorage.getItem('token')
       const storedUser = localStorage.getItem('user')
 
       if (storedToken && storedUser) {
@@ -51,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function login(newToken: string, newUser: User) {
     setToken(newToken)
     setUser(newUser)
+    // Guardar en ambas claves para consistencia
+    localStorage.setItem('app_jwt_token', newToken)
     localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(newUser))
   }
@@ -58,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     setToken(null)
     setUser(null)
+    // Limpiar todas las claves de autenticación
+    localStorage.removeItem('app_jwt_token')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
   }

@@ -82,10 +82,15 @@ export function useGoogleAuth() {
 
       const data = (await res.json()) as ExchangeResponse
 
-      // Optional: persist JWT returned by the API
+      // Guardar JWT del backend en localStorage con clave consistente
       if (data.token) {
-        try { localStorage.setItem('token', data.token) } catch {}
+        try { 
+          localStorage.setItem('app_jwt_token', data.token)
+          // También guardar en 'token' para compatibilidad con otros componentes
+          localStorage.setItem('token', data.token)
+        } catch {}
       }
+      
       lastToken.current = token
       return data
     } finally {
