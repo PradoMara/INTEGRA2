@@ -1,53 +1,78 @@
-// Carga las variables de entorno (del .env) al inicio de todo.
+// server,js
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const { testConnection, closeConnection } = require('./config/database');
+const admin = require('firebase-admin');
 
-// --- Importaciones de Módulos ---
-const express = require('express'); // El framework principal para el servidor web.
-const cors = require('cors'); // Para permitir peticiones desde otros dominios (el frontend).
-const helmet = require('helmet'); // Añade un conjunto de cabeceras de seguridad HTTP.
-const rateLimit = require('express-rate-limit'); // Limita la cantidad de peticiones para prevenir ataques.
-const { createServer } = require('http'); // Módulo 'http' nativo de Node (necesario para Socket.io).
-const { Server } = require('socket.io'); // El servidor de WebSockets para el chat en tiempo real.
-const jwt = require('jsonwebtoken'); // Para verificar los tokens de los usuarios (usado en el chat).
-const { testConnection, closeConnection } = require('./config/database'); // Funciones para probar y cerrar la conexión a la BD.
+let firebaseInitialized = false;
+try {
+  // Intentar cargar credenciales desde archivo local
+  const serviceAccount = require('./config/firebase-service-account.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  firebaseInitialized = true;
+  console.log('✅ Firebase Admin SDK inicializado desde archivo');
+} catch (err) {
+  // Si no hay archivo, intentar usar la variable de entorno FIREBASE_SERVICE_ACCOUNT
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+      // Acepta JSON directo o base64(JSON)
+      const parsed = raw.trim().startsWith('{')
+        ? JSON.parse(raw)
+        : JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
+      admin.initializeApp({ credential: admin.credential.cert(parsed) });
+      firebaseInitialized = true;
+      console.log('✅ Firebase Admin SDK inicializado desde FIREBASE_SERVICE_ACCOUNT');
+    } catch (e) {
+      console.warn('⚠️ Firebase no inicializado: FIREBASE_SERVICE_ACCOUNT inválida:', e.message);
+    }
+  } else {
+    console.warn('⚠️ Firebase no inicializado: ./config/firebase-service-account.json no encontrado y FIREBASE_SERVICE_ACCOUNT no definida.');
+  }
+}
 
-// --- Importación de todas las rutas de la API ---
-// Cada uno de estos archivos define los endpoints para un módulo (ej. /auth/login, /auth/register)
+const path = require('path'); // Asegúrate de tener esto arriba
+
+// Importar rutas
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const productRoutes = require('./routes/products');
 const publicationsRoutes = require('./routes/publications');
-const chatRoutes = require('./routes/chat'); // Rutas para OBTENER el historial de chat (vía HTTP)
+const chatRoutes = require('./routes/chat');
 const uploadRoutes = require('./routes/upload');
 const favoritesRoutes = require('./routes/favorites');
 const reportsRoutes = require('./routes/reports');
-const adminRoutes = require('./routes/admin');
+const transactionRoutes = require('./routes/transactions');
+const { apiLimiter, uploadLimiter } = require('./middleware/rateLimiters');
+const { secureLog, auditMiddleware } = require('./middleware/secureLogger');
 
-// --- Inicialización del Servidor ---
-const app = express(); // Inicializa la aplicación de Express.
-const server = createServer(app); // Crea un servidor HTTP que manejará las peticiones de Express.
 
-// Inicializa Socket.io y lo "ata" al servidor HTTP.
-// Express (app) maneja las peticiones HTTP (API REST).
-// Socket.io (io) maneja las conexiones WebSocket (Chat).
+const app = express();
+const server = createServer(app);
 const io = new Server(server, {
-  // Configuración de CORS específica para Socket.io.
   cors: {
     origin: function (origin, callback) {
-      // Permite conexiones sin origen (ej. apps móviles, Postman).
+      // Permitir requests sin origin (mobile apps)
       if (!origin) return callback(null, true);
 
-      // En desarrollo, permite cualquier localhost (http://localhost:3000, http://localhost:8080, etc.)
+      // En desarrollo, permitir localhost en cualquier puerto
       if (process.env.NODE_ENV === 'development') {
         if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
           return callback(null, true);
         }
       }
 
-      // En producción, usa la lista de orígenes permitidos del archivo .env
+      // Verificar la lista específica del .env
       const allowedOrigins = process.env.CORS_ORIGIN.split(',');
       const isAllowed = allowedOrigins.some(allowedOrigin => {
-        // Permite subdominios si se usa '*' (ej. *.tuapp.com)
         if (allowedOrigin.includes('*')) {
           const baseUrl = allowedOrigin.replace('*', '');
           return origin.startsWith(baseUrl);
@@ -55,30 +80,21 @@ const io = new Server(server, {
         return origin === allowedOrigin;
       });
 
-      callback(null, isAllowed); // Devuelve el resultado del chequeo
+      callback(null, isAllowed);
     },
-    credentials: true // Permite que se envíen cookies o cabeceras de autorización.
+    credentials: true
   }
 });
 
-// Define el puerto a usar (tomado del .env o 3001 por defecto).
 const PORT = process.env.PORT || 3001;
 
-// --- Configuración de Middlewares Globales (para Express) ---
+// Middleware de seguridad
+app.use(helmet());
 
-// 1. Seguridad de Cabeceras
-app.use(helmet()); // Aplica el middleware de seguridad Helmet a todas las rutas.
+// Rate limiting - Aplicar limiter general para todas las rutas API
+app.use('/api', apiLimiter);
 
-// 2. Límite de Peticiones (Rate Limiting)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // Ventana de tiempo: 15 minutos
-  max: 100, // Límite: 100 peticiones por IP en esa ventana de tiempo
-  message: 'Demasiadas peticiones desde esta IP, intenta de nuevo más tarde.'
-});
-app.use(limiter); // Aplica el limitador a todas las peticiones.
-
-// 3. Configuración de CORS para Express (API REST)
-// Esta lógica es similar a la de Socket.io para mantener consistencia.
+// CORS - Configuración más permisiva para desarrollo
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🌐 CORS: Petición desde origen:', origin);
@@ -97,7 +113,7 @@ const corsOptions = {
       }
     }
 
-    // Verificar la lista específica del .env
+    // También verificar la lista específica del .env
     const allowedOrigins = process.env.CORS_ORIGIN.split(',');
     const isAllowed = allowedOrigins.some(allowedOrigin => {
       if (allowedOrigin.includes('*')) {
@@ -113,29 +129,30 @@ const corsOptions = {
     } else {
       console.log('❌ CORS: Origen NO permitido:', origin);
       callback(new Error(`No permitido por CORS: ${origin}`));
-      İ
     }
   },
   credentials: true
 };
 app.use(cors(corsOptions));
 
-// 4. Middlewares para "entender" (parsear) las peticiones
-// Permite leer 'req.body' en formato JSON.
-app.use(express.json({ limit: '10mb' })); // Límite de 10mb para el payload JSON
-// Permite leer 'req.body' de formularios web (ej. `x-www-form-urlencoded`).
+// Middleware para parsing
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// --- Ruta de Verificación de Salud (Health Check) ---
-// Es una ruta pública para saber si la API está "viva" y conectada a la BD.
+// 🔒 Middleware de auditoría (antes de las rutas)
+app.use(auditMiddleware);
+
+// Servir archivos estáticos de uploads para acceso público
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Ruta de salud
 app.get('/api/health', async (req, res) => {
   try {
-    // Intenta conectarse a la base de datos
     const dbOk = await testConnection();
     res.json({
       ok: true,
       timestamp: new Date().toISOString(),
-      database: dbOk ? 'connected' : 'disconnected', // Informa el estado de la BD
+      database: dbOk ? 'connected' : 'disconnected',
       service: 'Marketplace API',
       version: '1.0.0'
     });
@@ -149,77 +166,79 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// --- Definición de Rutas de la API ---
-// Aquí le decimos a Express que use los archivos de rutas importados.
-// Cualquier petición a /api/auth será manejada por 'authRoutes'.
-// Cualquier petición a /api/users será manejada por 'userRoutes'.
-// etc.
+// Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/publications', publicationsRoutes);
 app.use('/api/favorites', favoritesRoutes);
-app.use('/api/chat', chatRoutes); // Rutas para historial (GET)
-app.use('/api', uploadRoutes); // Rutas para subir archivos
+app.use('/api/chat', chatRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/transactions', transactionRoutes);
+
+const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
+
 app.use('/api/reports', reportsRoutes);
 
-// ==================================================
-//           LÓGICA DEL CHAT (Socket.io)
-// ==================================================
+// WebSocket para chat en tiempo real
+const connectedUsers = new Map(); // userId -> socketId
 
-// Mapa para rastrear usuarios conectados: (clave: userId, valor: socket.id)
-// Esto nos permite saber a qué "socket" específico enviar un mensaje
-// si sabemos el ID de usuario del destinatario.
-const connectedUsers = new Map();
-
-// --- Middleware de Autenticación para WebSockets ---
-// Esto se ejecuta ANTES de que un usuario sea aceptado como "conectado".
+// Middleware de autenticación para WebSocket
 io.use((socket, next) => {
-  // El cliente debe enviar su token JWT en el 'handshake' (la conexión inicial).
   const token = socket.handshake.auth.token;
   if (!token) {
     return next(new Error('Token de autenticación requerido'));
   }
 
   try {
-    // Verifica si el token es válido y no ha expirado
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Añade los datos del usuario (del token) al objeto 'socket'
-    // para que estén disponibles en todos los eventos de este socket.
     socket.userId = decoded.userId;
     socket.userName = decoded.nombre;
-    next(); // ¡Autenticación exitosa! Permite la conexión.
+    next();
   } catch (error) {
-    next(new Error('Token inválido')); // Rechaza la conexión.
+    next(new Error('Token inválido'));
   }
 });
 
-// --- Manejador Principal de Conexión de Socket ---
-// Esto se ejecuta DESPUÉS de que el middleware de autenticación (io.use) es exitoso.
 io.on('connection', (socket) => {
+  const { prisma } = require('./config/database');
   console.log(`🔌 Usuario conectado: ${socket.userName} (ID: ${socket.userId})`);
   console.log(`🔌 Socket ID: ${socket.id}`);
 
-  // Registra al usuario en el mapa de conexiones activas.
+  // Verificar si ya existe una conexión para este usuario
+  const existingSocketId = connectedUsers.get(socket.userId);
+  if (existingSocketId && existingSocketId !== socket.id) {
+    console.log(`⚠️ Usuario ${socket.userId} ya tiene una conexión activa (${existingSocketId}). Desconectando socket anterior...`);
+    // Desconectar el socket anterior si existe y es diferente
+    const existingSocket = io.sockets.sockets.get(existingSocketId);
+    if (existingSocket) {
+      existingSocket.disconnect(true);
+    }
+    // Limpiar la entrada anterior
+    connectedUsers.delete(socket.userId);
+  }
+
+  // Guardar la nueva conexión del usuario
   connectedUsers.set(socket.userId, socket.id);
 
   console.log(`👥 Usuarios conectados ahora:`, Array.from(connectedUsers.keys()));
   console.log(`📋 Map de conexiones:`, Object.fromEntries(connectedUsers));
 
-  // Une al usuario a una "sala" privada con su propio ID.
-  // Esto es útil si quisiéramos enviarle notificaciones solo a él.
+  // Unir al usuario a una sala personal
   socket.join(`user_${socket.userId}`);
 
-  // Avisa a TODOS LOS DEMÁS usuarios conectados que este usuario está 'online'.
+  // Unir al usuario al canal público de comunidad
+  const COMMUNITY_ROOM = 'room_comunidad_uct';
+  socket.join(COMMUNITY_ROOM);
+
+  // Notificar a otros usuarios que este usuario está online
   socket.broadcast.emit('user_online', {
     userId: socket.userId,
     userName: socket.userName
   });
 
-  // --- Evento: Recibir un mensaje de un cliente ---
-  // El cliente emite un evento 'send_message' y nosotros lo "escuchamos" aquí.
+  // Manejar envío de mensajes
   socket.on('send_message', async (data) => {
     try {
       console.log('📨 Evento send_message recibido:', data);
@@ -229,22 +248,27 @@ io.on('connection', (socket) => {
 
       if (!destinatarioId || !contenido) {
         console.log('❌ Datos incompletos:', { destinatarioId, contenido });
-        // Avisa al remitente que hubo un error
         socket.emit('message_error', { error: 'Datos incompletos' });
         return;
       }
 
-      // --- Lógica de Envío ---
-      // 1. Guardar el mensaje en la Base de Datos (usando Prisma)
-      const { prisma } = require('./config/database'); // Importamos prisma
+      // Validar que el usuario no se envíe mensajes a sí mismo
+      const destinatarioIdInt = parseInt(destinatarioId);
+      if (destinatarioIdInt === socket.userId) {
+        console.log('❌ Intento de enviar mensaje a sí mismo:', socket.userId);
+        socket.emit('message_error', { error: 'No puedes enviarte mensajes a ti mismo' });
+        return;
+      }
+
+      // Guardar mensaje en la base de datos
       const mensaje = await prisma.Mensajes.create({
         data: {
-          remitenteId: socket.userId, // El ID del remitente (el dueño de este socket)
-          destinatarioId: parseInt(destinatarioId), // El ID del destinatario (del payload)
+          remitenteId: socket.userId,
+          destinatarioId: parseInt(destinatarioId),
           contenido,
           tipo: tipo || 'texto'
         },
-        include: { // Incluimos los datos del remitente y destinatario para el cliente
+        include: {
           remitente: { select: { id: true, nombre: true, usuario: true } },
           destinatario: { select: { id: true, nombre: true, usuario: true } }
         }
@@ -252,27 +276,60 @@ io.on('connection', (socket) => {
 
       console.log('💾 Mensaje guardado en BD:', mensaje.id);
 
-      // 2. Busca si el destinatario está conectado AHORA MISMO.
-      const destinatarioIdInt = parseInt(destinatarioId);
+      // Enviar mensaje al destinatario si está conectado
       const destinatarioSocketId = connectedUsers.get(destinatarioIdInt);
+      let destinatarioConectado = false;
 
-      console.log(`📤 Enviando mensaje:`);
-      console.log(`   - DestinatarioId: ${destinatarioId} (${destinatarioIdInt})`);
-      console.log(`   - DestinatarioSocketId: ${destinatarioSocketId}`);
-
-      // 3. Si está conectado, le envía el mensaje en tiempo real.
       if (destinatarioSocketId) {
-        console.log(`✅ Enviando mensaje a destinatario conectado: ${destinatarioSocketId}`);
-        // Envía el evento 'new_message' SOLO a ese socketId específico.
-        io.to(destinatarioSocketId).emit('new_message', mensaje);
-        console.log(`📤 Evento new_message emitido al socket: ${destinatarioSocketId}`);
-      } else {
-        // 4. Si no está conectado, no se hace nada (el usuario recibirá el mensaje
-        //    cuando abra la app y pida su historial por la API REST).
-        console.log(`⚠️ Destinatario ${destinatarioId} no está conectado`);
+        // Verificar que el socket del destinatario aún esté conectado
+        const destinatarioSocket = io.sockets.sockets.get(destinatarioSocketId);
+        if (destinatarioSocket && destinatarioSocket.connected) {
+          // --- EL USUARIO ESTÁ CONECTADO ---
+          console.log(`✅ Enviando mensaje a destinatario conectado: ${destinatarioSocketId}`);
+          io.to(destinatarioSocketId).emit('new_message', mensaje);
+          destinatarioConectado = true;
+        } else {
+          // El socket está en el mapa pero no está conectado, limpiar
+          console.log(`⚠️ Socket ${destinatarioSocketId} está en el mapa pero no está conectado. Limpiando...`);
+          connectedUsers.delete(destinatarioIdInt);
+        }
       }
 
-      // 5. Confirma al remitente que el mensaje fue procesado (para UI).
+      // Si el destinatario no está conectado, enviar notificación push
+      if (!destinatarioConectado) {
+        // --- EL USUARIO ESTÁ DESCONECTADO (ENVIAR PUSH) ---
+        console.log(`⚠️ Destinatario ${destinatarioIdInt} no está conectado. Enviando Push Notification.`);
+
+        // ⭐️ INICIO: Enviar Notificación Push de CHAT ⭐️
+        try {
+          // 1. Busca el token FCM del destinatario
+          const destinatario = await prisma.cuentas.findUnique({
+            where: { id: destinatarioIdInt },
+            select: { fcm_token: true }
+          });
+
+          // 2. Si tiene token, envía la notificación
+          if (destinatario && destinatario.fcm_token) {
+            console.log(`🔔 Enviando notificación de CHAT a ${destinatario.fcm_token}`);
+            await admin.messaging().send({
+              token: destinatario.fcm_token,
+              notification: {
+                title: `Nuevo mensaje de ${socket.userName} 💬`, // socket.userName viene del middleware
+                body: contenido
+              },
+              data: {
+                screen: 'chat', // Para abrir la pantalla de chat
+                senderId: socket.userId.toString() // socket.userId viene del middleware
+              }
+            });
+          }
+        } catch (fcmError) {
+          console.error("❌ Error al enviar notificación FCM de chat:", fcmError);
+        }
+        // ⭐️ FIN: Enviar Notificación Push de CHAT ⭐️
+      }
+
+      // Confirmar envío al remitente
       socket.emit('message_sent', mensaje);
       console.log(`✅ Confirmación enviada al remitente: ${socket.userId}`);
 
@@ -282,12 +339,58 @@ io.on('connection', (socket) => {
     }
   });
 
-  // --- Evento: Usuario está escribiendo (Typing Indicator) ---
+  // Manejar envío de mensajes al chat de la comunidad
+  socket.on('send_group_message', async (data) => {
+    try {
+      const { contenido, tipo = 'texto' } = data || {};
+
+      if (!contenido) {
+        socket.emit('group_message_error', { error: 'Contenido requerido' });
+        return;
+      }
+
+      // Persistir en BD y construir payload con usuario
+      const registro = await prisma.ComunidadMensajes.create({
+        data: {
+          usuarioId: socket.userId,
+          contenido,
+          tipo: tipo || 'texto'
+        },
+        include: {
+          usuario: { select: { id: true, nombre: true, usuario: true } }
+        }
+      });
+
+      const mensaje = {
+        id: registro.id,
+        contenido: registro.contenido,
+        tipo: registro.tipo,
+        remitenteId: registro.usuarioId,
+        remitente: {
+          id: registro.usuario.id,
+          nombre: registro.usuario.nombre,
+          usuario: registro.usuario.usuario
+        },
+        fechaEnvio: registro.fechaEnvio,
+        room: COMMUNITY_ROOM
+      };
+
+      // Emitir a todos en la sala de comunidad
+      io.to(COMMUNITY_ROOM).emit('group_new_message', mensaje);
+
+      // Confirmación al remitente
+      socket.emit('group_message_sent', mensaje);
+    } catch (error) {
+      console.error('❌ Error enviando mensaje de comunidad:', error);
+      socket.emit('group_message_error', { error: 'Error enviando mensaje de comunidad' });
+    }
+  });
+
+  // Manejar typing indicators
   socket.on('typing_start', (data) => {
     const { destinatarioId } = data;
     const destinatarioSocketId = connectedUsers.get(parseInt(destinatarioId));
     if (destinatarioSocketId) {
-      // Avisa al destinatario que el remitente está escribiendo
       io.to(destinatarioSocketId).emit('user_typing', {
         userId: socket.userId,
         userName: socket.userName,
@@ -296,7 +399,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // --- Evento: Usuario dejó de escribir ---
   socket.on('typing_stop', (data) => {
     const { destinatarioId } = data;
     const destinatarioSocketId = connectedUsers.get(parseInt(destinatarioId));
@@ -309,13 +411,23 @@ io.on('connection', (socket) => {
     }
   });
 
-  // --- Evento: Usuario se desconecta ---
-  socket.on('disconnect', () => {
+  // Manejar desconexión
+  socket.on('disconnect', (reason) => {
     console.log(`🔌 Usuario desconectado: ${socket.userName} (ID: ${socket.userId})`);
-    // Elimina al usuario del mapa de conectados
-    connectedUsers.delete(socket.userId);
+    console.log(`🔌 Razón de desconexión: ${reason}`);
+    
+    // Solo eliminar del mapa si el socket desconectado es el que está registrado
+    const currentSocketId = connectedUsers.get(socket.userId);
+    if (currentSocketId === socket.id) {
+      connectedUsers.delete(socket.userId);
+      console.log(`✅ Socket ${socket.id} eliminado del mapa de conexiones`);
+    } else {
+      console.log(`⚠️ Socket ${socket.id} no estaba en el mapa (actual: ${currentSocketId})`);
+    }
 
-    // Avisa a todos los demás que se desconectó
+    console.log(`👥 Usuarios conectados después de desconexión:`, Array.from(connectedUsers.keys()));
+
+    // Notificar a otros usuarios que este usuario está offline
     socket.broadcast.emit('user_offline', {
       userId: socket.userId,
       userName: socket.userName
@@ -323,15 +435,13 @@ io.on('connection', (socket) => {
   });
 });
 
-// --- Manejadores de Errores y Rutas No Encontradas (404) ---
-
-// 1. Middleware global para manejar errores (debe ir DESPUÉS de las rutas).
+// Middleware de manejo de errores
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
 
-// 2. Manejador para rutas 404 (Not Found).
-// Se ejecuta si ninguna de las rutas anteriores (API, health) coincide.
+// Ruta 404
 app.use('*', (req, res) => {
+  console.log(`📢 [Global Log] Recibida: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
     error: {
@@ -343,41 +453,34 @@ app.use('*', (req, res) => {
   });
 });
 
-// --- Función de Arranque del Servidor ---
+// Iniciar servidor
 async function startServer() {
   try {
-    // 1. Prueba la conexión a la BD antes de iniciar.
-    console.log('🗄️  Intentando conectar a PostgreSQL...');
+    // Probar conexión a base de datos
     const dbConnected = await testConnection();
-
-    // 2. Si falla, muestra un error claro y termina el proceso.
     if (!dbConnected) {
       console.error('❌ No se pudo conectar a la base de datos');
       console.log('\n💡 Asegúrate de que PostgreSQL esté corriendo y las credenciales sean correctas');
-      console.log('   Revisa el archivo .env y configura DATABASE_URL para PostgreSQL');
-      console.log('   Ejemplo: DATABASE_URL="postgresql://username:password@localhost:5432/marketplace"');
-      process.exit(1); // Termina la aplicación con un código de error.
+      console.log('   Revisa el archivo .env y configura DATABASE_URL para PostgreSQL');
+      console.log('   Ejemplo: DATABASE_URL="postgresql://username:password@localhost:5432/marketplace"');
+      process.exit(1);
     }
 
-    // 3. Si la BD está OK, inicia el servidor (HTTP y Sockets).
-    // Usamos 'server.listen' (el servidor HTTP) en lugar de 'app.listen'
-    // porque 'server' es el que está conectado a Socket.io.
     server.listen(PORT, async () => {
       console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-      console.log(`🗄️  PostgreSQL con Prisma configurado`);
+      console.log(`🗄️  PostgreSQL con Prisma configurado`);
       console.log(`🔍 Health check: http://localhost:${PORT}/api/health`);
       console.log(`📝 Entorno: ${process.env.NODE_ENV}`);
       console.log(`🎨 Prisma Studio: npm run db:studio`);
 
-      // (Opcional) Ejecutar tests automáticamente en desarrollo
+      // Ejecutar tests automáticamente en desarrollo
       if (process.env.NODE_ENV === 'development') {
         setTimeout(async () => {
           try {
-            // (Este script 'test-api' no estaba en tu árbol de archivos, pero la lógica está aquí)
-            // const { testAPI } = require('./scripts/test-api');
-            // await testAPI();
+            const { testAPI } = require('./scripts/test-api');
+            await testAPI();
           } catch (error) {
-            console.log('⚠️  (Test API no disponible aún)');
+            console.log('⚠️  Test API no disponible aún');
           }
         }, 1000);
       }
@@ -388,20 +491,17 @@ async function startServer() {
   }
 }
 
-// --- Manejo de Cierre Limpio (Graceful Shutdown) ---
-// Escucha la señal de "interrupción" (Ctrl+C en la terminal).
+// Manejo de cierre graceful
 process.on('SIGINT', async () => {
-  console.log('\n🔄 Cerrando servidor (SIGINT)...');
-  await closeConnection(); // Cierra la conexión a la BD
-  process.exit(0); // Termina el proceso
+  console.log('\n🔄 Cerrando servidor...');
+  await closeConnection();
+  process.exit(0);
 });
 
-// Escucha la señal de "terminación" (enviada por Docker, Heroku, etc.).
 process.on('SIGTERM', async () => {
-  console.log('\n🔄 Cerrando servidor (SIGTERM)...');
-  await closeConnection(); // Cierra la conexión a la BD
-  process.exit(0); // Termina el proceso
+  console.log('\n🔄 Cerrando servidor...');
+  await closeConnection();
+  process.exit(0);
 });
 
-// ¡Inicia la aplicación ejecutando la función de arranque!
 startServer();

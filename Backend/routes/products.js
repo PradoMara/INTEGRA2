@@ -1,78 +1,106 @@
-
-// routes/products.js
+//products.js
 const express = require('express');
-const { body, validationResult } = require('express-validator'); // Para validar el body
-const { prisma } = require('../config/database'); // Acceso a la BD
-const { authenticateToken } = require('../middleware/auth'); // Middleware de autenticación
+const { body, validationResult } = require('express-validator');
+const { prisma } = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ------------------------------------------
-// 🛍️ LISTAR PRODUCTOS (Público, con lógica de rol)
-// GET /api/products
-// ------------------------------------------
-// Este endpoint es público, pero su comportamiento cambia si se envía un token.
-// NOTA: Para que la lógica de roles funcione, este endpoint debe usar
-// un middleware de autenticación *opcional* que ponga 'req.user' si existe
-// un token, pero no falle si no está (no está implementado aquí, asume que 'req.user' puede ser undefined).
+// 📸 Ruta para servir imágenes desde la BD
+router.get('/images/:productoId/:imagenId', async (req, res) => {
+  try {
+    const { productoId, imagenId } = req.params;
+    
+    const imagen = await prisma.imagenesProducto.findFirst({
+      where: {
+        id: parseInt(imagenId),
+        productoId: parseInt(productoId)
+      }
+    });
+
+    if (!imagen) {
+      return res.status(404).json({ ok: false, message: 'Imagen no encontrada' });
+    }
+
+    // Si tiene imagenData en BD, servirla
+    if (imagen.imagenData) {
+      const mimeType = imagen.mimeType || 'image/jpeg';
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache 1 año
+      return res.send(Buffer.from(imagen.imagenData));
+    }
+
+    // Si solo tiene URL (compatibilidad), redirigir o servir archivo estático
+    if (imagen.urlImagen) {
+      // Retornar URL para que el cliente la use
+      return res.json({ ok: true, url: imagen.urlImagen });
+    }
+
+    return res.status(404).json({ ok: false, message: 'Imagen sin datos' });
+  } catch (error) {
+    console.error('Error sirviendo imagen:', error);
+    res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+  }
+});
+
+// GET /api/products - Listar productos
 router.get('/', async (req, res) => {
   try {
-    // 1. Obtener filtros y paginación de los query parameters
     const { category, search, page = 1, limit = 20 } = req.query;
-
-    // 2. Limpiar y validar los valores de paginación
-    //    Evita valores negativos o '0' y pone un límite máximo de 100.
+    
+    // ✅ SOLUCIÓN 1: Validar página mínima
     const currentPage = Math.max(1, parseInt(page) || 1);
     const currentLimit = Math.max(1, Math.min(100, parseInt(limit) || 20));
-
-    // 3. Construir la consulta 'where' base
+    
+    //console.log(`📊 Obteniendo productos - Página: ${currentPage}, Límite: ${currentLimit}`);
+    
+    // Construir filtros para la nueva estructura
     const where = {
-      estadoId: 1 // Solo productos "Disponibles"
+      estadoId: 1 // Solo productos disponibles
     };
-
-    // 4. Añadir filtros si existen
+    
     if (category) {
       where.categoria = {
-        nombre: { contains: category, mode: 'insensitive' } // Búsqueda case-insensitive
+        nombre: { contains: category, mode: 'insensitive' }
       };
     }
+    
     if (search) {
       where.OR = [
         { nombre: { contains: search, mode: 'insensitive' } },
         { descripcion: { contains: search, mode: 'insensitive' } }
       ];
     }
-
-    // 5. Calcular el 'skip' para Prisma (cuántos registros saltar)
+    
+    // ✅ SOLUCIÓN 2: Skip siempre positivo
     const skip = Math.max(0, (currentPage - 1) * currentLimit);
+    
+    //console.log(`🔢 Calculando skip: ${skip} = (${currentPage} - 1) * ${currentLimit}`);
 
-    // 6. LÓGICA DE ROLES (Visibilidad)
-    const user = req.user; // 'req.user' es puesto por 'authenticateToken' (si se usa)
+    // Verificamos si hay usuario autenticado
+    const user = req.user; // viene desde middleware de auth
 
-    // Se copia la base de filtros
+    // Base: solo productos activos
     const whereClause = {
-      ...where,
+      ...where, // mantiene filtros de categoría, búsqueda y estadoId
     };
 
-    // APLICAR REGLAS DE VISIBILIDAD
+    // Añadir reglas según tipo de usuario
     if (!user) {
-      // 6a. Usuario NO LOGEADO (Invitado) → solo ve productos visibles
+      // Usuario no logeado → solo visibles
       whereClause.visible = true;
     } else if (user.role === "CLIENTE") {
-      // 6b. Usuario CLIENTE → solo ve productos visibles
       whereClause.visible = true;
     } else if (user.role === "VENDEDOR") {
-      // 6c. Usuario VENDEDOR → solo ve SUS productos (visibles o no)
       whereClause.vendedorId = user.userId;
     } else if (user.role === "ADMIN") {
-      // 6d. Usuario ADMIN → Ve todo, no se añaden filtros de visibilidad.
+      // Admin ve todo
     }
 
-    // 7. Ejecutar la consulta a la BD
+    // Obtener productos con información del vendedor y categoría
     const products = await prisma.productos.findMany({
-      where: whereClause, // Aplica los filtros
+      where: whereClause,
       include: {
-        // Selecciona campos específicos del vendedor para no exponer datos sensibles
         vendedor: {
           select: {
             id: true,
@@ -83,45 +111,59 @@ router.get('/', async (req, res) => {
             reputacion: true
           }
         },
-        categoria: true, // Incluye info de categoría
-        estado: true, // Incluye info de estado
-        imagenes: true // Incluye imágenes
+        categoria: true,
+        estado: true,
+        imagenes: true
       },
       orderBy: [
-        { fechaAgregado: 'desc' } // Más nuevos primero
+        { fechaAgregado: 'desc' }
       ],
-      skip, // Paginación (saltar)
-      take: currentLimit // Paginación (tomar)
+      skip,
+      take: currentLimit
     });
 
-    // 8. Obtener el conteo total para la paginación
+    // Obtener total para paginación
     const total = await prisma.productos.count({ where: whereClause });
 
-    // 9. Formatear la respuesta
-    //    IMPORTANTE: Convierte los tipos 'Decimal' de Prisma a 'Number' para JSON.
+    //console.log(`✅ Productos encontrados: ${products.length}/${total}`);
+
+    // ✅ SOLUCIÓN 3: Conversión segura de tipos
     const formattedProducts = products.map(product => ({
       id: product.id,
       nombre: product.nombre,
       descripcion: product.descripcion,
+      // ✅ Conversión segura de Decimal a number
       precioAnterior: product.precioAnterior ? Number(product.precioAnterior) : null,
       precioActual: product.precioActual ? Number(product.precioActual) : null,
       categoria: product.categoria?.nombre,
+      // ✅ Conversión segura de calificación
       calificacion: product.calificacion ? Number(product.calificacion) : null,
       cantidad: product.cantidad,
       estado: product.estado.nombre,
       fechaAgregado: product.fechaAgregado,
-      imagenes: product.imagenes,
+      imagenes: product.imagenes.map(img => ({
+        id: img.id,
+        // Si tiene imagenData, crear URL absoluta para obtenerla desde BD
+        urlImagen: img.imagenData 
+          ? `${req.protocol}://${req.get('host')}/api/products/images/${product.id}/${img.id}`
+          : img.urlImagen,
+        tieneImagenData: !!img.imagenData
+      })),
+      // 👇 Nuevos campos
+      informacionTecnica: product.informacionTecnica,
+      estadoProducto: product.estadoProducto,
+      tiempoUso: product.tiempoUso,
       vendedor: {
         id: product.vendedor.id,
         nombre: product.vendedor.nombre,
         apellido: product.vendedor.apellido,
         correo: product.vendedor.correo,
         campus: product.vendedor.campus,
+        // ✅ Conversión segura de reputación
         reputacion: product.vendedor.reputacion ? Number(product.vendedor.reputacion) : 0
       }
     }));
 
-    // 10. Enviar respuesta final
     res.json({
       ok: true,
       products: formattedProducts,
@@ -142,26 +184,21 @@ router.get('/', async (req, res) => {
     });
   }
 });
-
-// ------------------------------------------
-// 📦 LISTAR MIS PRODUCTOS (Vendedor)
-// GET /api/products/my-products
-// ------------------------------------------
-// Ruta protegida para que un Vendedor/Admin vea solo sus propios productos.
+// GET /api/products/my-products - Listar productos del vendedor autenticado
 router.get('/my-products', authenticateToken, async (req, res) => {
   try {
-    // 1. Paginación
     const { page = 1, limit = 20 } = req.query;
+    
     const currentPage = Math.max(1, parseInt(page) || 1);
     const currentLimit = Math.max(1, Math.min(100, parseInt(limit) || 20));
     const skip = Math.max(0, (currentPage - 1) * currentLimit);
 
-    // 2. Filtro principal: solo productos del ID de usuario del token
+    // Filtrar productos por el ID del usuario autenticado
     const whereClause = {
       vendedorId: req.user.userId
     };
 
-    // 3. Ejecutar consulta y conteo en una transacción para eficiencia
+    // Obtener productos del vendedor
     const [products, total] = await prisma.$transaction([
       prisma.productos.findMany({
         where: whereClause,
@@ -169,16 +206,18 @@ router.get('/my-products', authenticateToken, async (req, res) => {
           categoria: true,
           estado: true,
           imagenes: true,
-          vendedor: { select: { id: true, nombre: true, apellido: true } }
+          vendedor: {
+            select: { id: true, nombre: true, apellido: true }
+          }
         },
         orderBy: { fechaAgregado: 'desc' },
         skip,
         take: currentLimit
       }),
-      prisma.productos.count({ where: whereClause }) // Conteo
+      prisma.productos.count({ where: whereClause })
     ]);
 
-    // 4. Formatear la respuesta (convirtiendo Decimales)
+    // Formatear productos para una respuesta consistente
     const formattedProducts = products.map(product => ({
       id: product.id,
       nombre: product.nombre,
@@ -189,10 +228,20 @@ router.get('/my-products', authenticateToken, async (req, res) => {
       calificacion: product.calificacion ? Number(product.calificacion) : null,
       cantidad: product.cantidad,
       estado: product.estado.nombre,
-      // Se incluye 'visible' para que el vendedor pueda verlo en su panel
       visible: product.visible,
       fechaAgregado: product.fechaAgregado,
-      imagenes: product.imagenes,
+      imagenes: product.imagenes.map(img => ({
+        id: img.id,
+        // Si tiene imagenData, crear URL absoluta para obtenerla desde BD
+        urlImagen: img.imagenData 
+          ? `${req.protocol}://${req.get('host')}/api/products/images/${product.id}/${img.id}`
+          : img.urlImagen,
+        tieneImagenData: !!img.imagenData
+      })),
+      // 👇 Nuevos campos
+      informacionTecnica: product.informacionTecnica,
+      estadoProducto: product.estadoProducto,
+      tiempoUso: product.tiempoUso,
       vendedor: product.vendedor
     }));
 
@@ -209,20 +258,22 @@ router.get('/my-products', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error listando mis productos:', error);
-    res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor'
+    });
   }
 });
 
-// ------------------------------------------
-// ℹ️ OBTENER PRODUCTO POR ID (Público)
-// GET /api/products/:id
-// ------------------------------------------
+// GET /api/products/:id - Obtener producto por ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     const product = await prisma.productos.findUnique({
-      where: { id: parseInt(id) },
+      where: { 
+        id: parseInt(id)
+      },
       include: {
         vendedor: {
           select: {
@@ -240,9 +291,6 @@ router.get('/:id', async (req, res) => {
       }
     });
 
-    // 1. Validación de seguridad:
-    //    Si el producto no existe O su estado NO es "Disponible" (ID 1),
-    //    se devuelve 404. Evita que se vean productos vendidos o eliminados.
     if (!product || product.estadoId !== 1) {
       return res.status(404).json({
         ok: false,
@@ -250,7 +298,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // 2. Formatear la respuesta (convirtiendo Decimales)
+    // ✅ SOLUCIÓN 4: Conversión segura para producto individual
     const formattedProduct = {
       id: product.id,
       nombre: product.nombre,
@@ -262,7 +310,18 @@ router.get('/:id', async (req, res) => {
       cantidad: product.cantidad,
       estado: product.estado.nombre,
       fechaAgregado: product.fechaAgregado,
-      imagenes: product.imagenes,
+      imagenes: product.imagenes.map(img => ({
+        id: img.id,
+        // Si tiene imagenData, crear URL absoluta para obtenerla desde BD
+        urlImagen: img.imagenData 
+          ? `${req.protocol}://${req.get('host')}/api/products/images/${product.id}/${img.id}`
+          : img.urlImagen,
+        tieneImagenData: !!img.imagenData
+      })),
+      // 👇 Nuevos campos
+      informacionTecnica: product.informacionTecnica,
+      estadoProducto: product.estadoProducto,
+      tiempoUso: product.tiempoUso,
       vendedor: {
         ...product.vendedor,
         reputacion: product.vendedor.reputacion ? Number(product.vendedor.reputacion) : 0
@@ -276,77 +335,95 @@ router.get('/:id', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error obteniendo producto:', error);
-    res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor'
+    });
   }
 });
 
-// ------------------------------------------
-// ➕ CREAR PRODUCTO (Protegido, con Auto-Promoción)
-// POST /api/products
-// ------------------------------------------
+// POST /api/products - Crear producto (CON AUTO-PROMOCIÓN A VENDEDOR)
 router.post('/', authenticateToken, [
-  // 1. Validaciones del body
   body('nombre').isLength({ min: 3 }).withMessage('Nombre debe tener al menos 3 caracteres'),
   body('descripcion').isLength({ min: 10 }).withMessage('Descripción debe tener al menos 10 caracteres'),
   body('precioActual').isFloat({ min: 0 }).withMessage('Precio debe ser un número positivo'),
   body('categoriaId').isInt({ min: 1 }).withMessage('Debe seleccionar una categoría válida')
 ], async (req, res) => {
   try {
-    // 2. Manejar errores de validación
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ ok: false, message: 'Datos de entrada inválidos', errors: errors.array() });
+      return res.status(400).json({
+        ok: false,
+        message: 'Datos de entrada inválidos',
+        errors: errors.array()
+      });
     }
 
-    const {
-      nombre,
-      descripcion,
-      precioAnterior,
+    const { 
+      nombre, 
+      descripcion, 
+      precioAnterior, 
       precioActual,
       categoriaId,
-      cantidad
+      cantidad,
+      imageUrl, // <-- Recibe imageUrl del body (compatibilidad)
+      imagenes, // <-- Recibe múltiples imágenes
+      informacionTecnica,
+      estadoProducto, // 'nuevo' o 'usado'
+      tiempoUso
     } = req.body;
 
-    // 3. Validar que la categoría enviada existe
+    // ✅ PASO 1: Verificar que la categoría existe
     const categoria = await prisma.categorias.findUnique({
       where: { id: parseInt(categoriaId) }
     });
+
     if (!categoria) {
-      return res.status(400).json({ ok: false, message: 'Categoría no encontrada' });
+      return res.status(400).json({
+        ok: false,
+        message: 'Categoría no encontrada'
+      });
     }
 
-    // 4. Obtener el usuario actual (del token) y su ROL
+    // ✅ PASO 2: Obtener usuario actual con su rol
     const usuario = await prisma.cuentas.findUnique({
       where: { id: req.user.userId },
       include: { rol: true }
     });
+
     if (!usuario) {
-      return res.status(404).json({ ok: false, message: 'Usuario no encontrado' });
+      return res.status(404).json({
+        ok: false,
+        message: 'Usuario no encontrado'
+      });
     }
 
-    // 5. ⭐️ LÓGICA DE AUTO-PROMOCIÓN ⭐️
-    //    Si el usuario es "CLIENTE", se le promueve a "VENDEDOR".
+    // ✅ PASO 3: Auto-promoción a VENDEDOR si es CLIENTE
     let roleChanged = false;
     if (usuario.rol.nombre.toUpperCase() === 'CLIENTE') {
-      // 5a. Buscar el ID del rol "Vendedor"
+      // Buscar el rol de VENDEDOR en la BD
       const rolVendedor = await prisma.roles.findFirst({
         where: { nombre: { equals: 'Vendedor', mode: 'insensitive' } }
       });
+
       if (!rolVendedor) {
-        return res.status(500).json({ ok: false, message: 'Error: Rol de vendedor no encontrado' });
+        return res.status(500).json({
+          ok: false,
+          message: 'Error: Rol de vendedor no encontrado en el sistema'
+        });
       }
 
-      // 5b. Actualizar el rol del usuario en la BD
+      // Actualizar rol del usuario a VENDEDOR
       await prisma.cuentas.update({
         where: { id: usuario.id },
         data: { rolId: rolVendedor.id }
       });
 
-      roleChanged = true; // Marcar que el rol cambió
+      roleChanged = true;
       console.log(`✅ Usuario ${usuario.usuario} promovido a VENDEDOR`);
     }
 
-    // 6. Crear el producto
+    // ✅ PASO 4: Crear el producto
     const newProduct = await prisma.productos.create({
       data: {
         nombre,
@@ -354,11 +431,15 @@ router.post('/', authenticateToken, [
         precioAnterior: precioAnterior ? parseFloat(precioAnterior) : null,
         precioActual: parseFloat(precioActual),
         categoriaId: parseInt(categoriaId),
-        vendedorId: req.user.userId, // Asignar al usuario del token
+        vendedorId: req.user.userId,
         cantidad: cantidad ? parseInt(cantidad) : 1,
-        estadoId: 1, // "Disponible" por defecto
+        estadoId: 1, // Estado "Disponible"
         visible: true, // Visible por defecto
-        calificacion: 0.0
+        calificacion: 0.0,
+        // 👇 Nuevos campos
+        informacionTecnica: informacionTecnica || null,
+        estadoProducto: estadoProducto || null, // 'nuevo' o 'usado'
+        tiempoUso: tiempoUso || null
       },
       include: {
         categoria: true,
@@ -373,16 +454,86 @@ router.post('/', authenticateToken, [
         },
         estado: true
       }
-    });
+    });    // 🖼️ PASO 5: Manejar múltiples imágenes
+    const imagenesLista = imagenes && Array.isArray(imagenes) ? imagenes : (imageUrl ? [imageUrl] : []);
+    
+    if (imagenesLista.length > 0) {
+      console.log(`📷 Procesando ${imagenesLista.length} imagen(es) para producto ${newProduct.id}`);
+      
+      for (let i = 0; i < imagenesLista.length; i++) {
+        const imagenItem = imagenesLista[i];
+        
+        try {
+          if (typeof imagenItem === 'string') {
+            if (imagenItem.startsWith('data:image')) {
+              // 📸 Procesar imagen base64
+              const base64Match = imagenItem.match(/^data:([^;]+);base64,(.+)$/);
+              if (base64Match) {
+                const mimeType = base64Match[1];
+                const base64Data = base64Match[2];
+                const imageBuffer = Buffer.from(base64Data, 'base64');
+                
+                // Validar tamaño de imagen (máx 10MB)
+                if (imageBuffer.length > 10 * 1024 * 1024) {
+                  console.warn(`⚠️ Imagen ${i+1} muy grande: ${imageBuffer.length} bytes`);
+                  continue;
+                }
+                
+                await prisma.imagenesProducto.create({
+                  data: {
+                    productoId: newProduct.id,
+                    imagenData: imageBuffer,
+                    mimeType: mimeType,
+                    urlImagen: null
+                  }
+                });
+                
+                console.log(`✅ Imagen ${i+1} guardada: ${mimeType}, ${imageBuffer.length} bytes`);
+              }
+            } else {
+              // 🔗 URL (compatibilidad hacia atrás)
+              await prisma.imagenesProducto.create({
+                data: {
+                  productoId: newProduct.id,
+                  urlImagen: imagenItem,
+                  imagenData: null,
+                  mimeType: null
+                }
+              });
+              console.log(`✅ Imagen ${i+1} URL guardada: ${imagenItem}`);
+            }
+          } else if (imagenItem && imagenItem.imageData) {
+            // 📦 Objeto con imageData y mimeType
+            const imageBuffer = Buffer.from(imagenItem.imageData, 'base64');
+            
+            if (imageBuffer.length > 10 * 1024 * 1024) {
+              console.warn(`⚠️ Imagen objeto ${i+1} muy grande: ${imageBuffer.length} bytes`);
+              continue;
+            }
+              await prisma.imagenesProducto.create({
+              data: {
+                productoId: newProduct.id,
+                imagenData: imageBuffer,
+                mimeType: imagenItem.mimeType || 'image/jpeg',
+                urlImagen: null
+              }
+            });
+            
+            console.log(`✅ Imagen objeto ${i+1} guardada: ${imagenItem.mimeType}, ${imageBuffer.length} bytes`);
+          }
+        } catch (imgError) {
+          console.error(`❌ Error procesando imagen ${i+1}:`, imgError);
+        }
+      }
+    }
 
-    // 7. Enviar respuesta 201 (Creado)
+    // ✅ PASO 5: Respuesta exitosa
     res.status(201).json({
       ok: true,
-      // Mensaje dinámico si el rol cambió
-      message: roleChanged
-        ? '🎉 ¡Producto creado! Ahora eres VENDEDOR'
+      message: roleChanged 
+        ? '🎉 ¡Producto creado! Ahora eres VENDEDOR' 
         : 'Producto creado exitosamente',
-      roleChanged, // Informa al frontend sobre el cambio
+      roleChanged,
       newRole: roleChanged ? 'VENDEDOR' : usuario.rol.nombre.toUpperCase(),
       product: {
         id: newProduct.id,
@@ -407,67 +558,69 @@ router.post('/', authenticateToken, [
   }
 });
 
-// ------------------------------------------
-// 🗂️ OBTENER CATEGORÍAS (Público)
-// GET /api/products/categories/list
-// ------------------------------------------
+// GET /api/products/categories - Obtener categorías
 router.get('/categories/list', async (req, res) => {
   try {
     const categories = await prisma.categorias.findMany({
-      orderBy: { nombre: 'asc' },
-      include: { subcategorias: true, categoriaPadre: true }
+      orderBy: {
+        nombre: 'asc'
+      },
+      include: {
+        subcategorias: true,
+        categoriaPadre: true
+      }
     });
 
-    // Formatear respuesta para que sea más limpia
     res.json({
       ok: true,
       categories: categories.map(cat => ({
         id: cat.id,
         nombre: cat.nombre,
         categoriaPadreId: cat.categoriaPadreId,
-        subcategorias: cat.subcategorias?.map(sub => ({ id: sub.id, nombre: sub.nombre })) || []
+        subcategorias: cat.subcategorias?.map(sub => ({
+          id: sub.id,
+          nombre: sub.nombre
+        })) || []
       }))
     });
 
   } catch (error) {
     console.error('❌ Error obteniendo categorías:', error);
-    res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor'
+    });
   }
 });
 
-// ------------------------------------------
-// 👁️ CAMBIAR VISIBILIDAD (Protegido)
-// PATCH /api/products/:id/visibility
-// ------------------------------------------
-// Usa PATCH porque es una actualización parcial (solo un campo).
+// Cambiar visibilidad del producto
 router.patch("/:id/visibility", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { visible } = req.body; // Espera { "visible": true } o { "visible": false }
+    const { visible } = req.body;
 
-    // 1. Validar la entrada
-    if (typeof visible !== "boolean") {
-      return res.status(400).json({ ok: false, message: "El valor de 'visible' debe ser booleano" });
-    }
-
-    // 2. Buscar el producto
     const producto = await prisma.productos.findUnique({
       where: { id: parseInt(id) },
     });
+
+    if (typeof visible !== "boolean") {
+      return res.status(400).json({ ok: false, message: "El valor de 'visible' debe ser booleano (true o false)" });
+    }
+
     if (!producto) {
       return res.status(404).json({ ok: false, message: "Producto no encontrado" });
     }
 
-    // 3. 🛡️ CONTROL DE PERMISOS
-    //    Solo el Vendedor dueño O un Admin pueden cambiar la visibilidad.
+    // Solo el vendedor o admin puede cambiar visibilidad
     if (producto.vendedorId !== req.user.userId && req.user.role !== "ADMIN") {
-      return res.status(403).json({ ok: false, message: "No tienes permiso para modificar este producto" });
+      return res
+        .status(403)
+        .json({ ok: false, message: "No tienes permiso para modificar este producto" });
     }
 
-    // 4. Actualizar el producto
     const actualizado = await prisma.productos.update({
       where: { id: parseInt(id) },
-      data: { visible }, // Actualiza solo el campo 'visible'
+      data: { visible },
     });
 
     res.json({ ok: true, message: "Visibilidad actualizada", producto: actualizado });
@@ -477,13 +630,8 @@ router.patch("/:id/visibility", authenticateToken, async (req, res) => {
   }
 });
 
-// ------------------------------------------
-// 🔄 ACTUALIZAR PRODUCTO (Protegido)
-// PUT /api/products/:id
-// ------------------------------------------
-// Usa PUT para una actualización completa (o casi completa) del recurso.
+// PUT /api/products/:id - Actualizar producto completo
 router.put('/:id', authenticateToken, [
-  // 1. Validaciones (opcionales, ya que es un PUT/actualización)
   body('nombre').optional().isLength({ min: 3 }).withMessage('Nombre debe tener al menos 3 caracteres'),
   body('descripcion').optional().isLength({ min: 10 }).withMessage('Descripción debe tener al menos 10 caracteres'),
   body('precioActual').optional().isFloat({ min: 0 }).withMessage('Precio debe ser un número positivo'),
@@ -491,40 +639,48 @@ router.put('/:id', authenticateToken, [
   body('cantidad').optional().isInt({ min: 0 }).withMessage('Cantidad debe ser un número entero positivo')
 ], async (req, res) => {
   try {
-    // 2. Manejar errores de validación
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ ok: false, message: 'Datos de entrada inválidos', errors: errors.array() });
+      return res.status(400).json({
+        ok: false,
+        message: 'Datos de entrada inválidos',
+        errors: errors.array()
+      });
     }
 
     const { id } = req.params;
-    const {
-      nombre,
-      descripcion,
-      precioAnterior,
+    const { 
+      nombre, 
+      descripcion, 
+      precioAnterior, 
       precioActual,
       categoriaId,
       cantidad,
       estadoId
     } = req.body;
 
-    // 3. Verificar que el producto existe
+    // ✅ PASO 1: Verificar que el producto existe
     const productoExistente = await prisma.productos.findUnique({
       where: { id: parseInt(id) },
       include: { vendedor: true }
     });
+
     if (!productoExistente) {
-      return res.status(404).json({ ok: false, message: 'Producto no encontrado' });
+      return res.status(404).json({
+        ok: false,
+        message: 'Producto no encontrado'
+      });
     }
 
-    // 4. 🛡️ CONTROL DE PERMISOS
-    //    Solo el Vendedor dueño O un Admin pueden modificarlo.
+    // ✅ PASO 2: Verificar permisos (solo el vendedor dueño o admin)
     if (productoExistente.vendedorId !== req.user.userId && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ ok: false, message: 'No tienes permiso para modificar este producto' });
+      return res.status(403).json({
+        ok: false,
+        message: 'No tienes permiso para modificar este producto'
+      });
     }
 
-    // 5. Construir objeto de actualización dinámico
-    //    (Solo actualiza los campos que vienen en el 'body')
+    // ✅ PASO 3: Preparar datos de actualización
     const updateData = {};
     if (nombre !== undefined) updateData.nombre = nombre;
     if (descripcion !== undefined) updateData.descripcion = descripcion;
@@ -541,17 +697,21 @@ router.put('/:id', authenticateToken, [
       });
     }
 
-    // 6. Validar que la nueva categoría (si se cambió) existe
+    // ✅ PASO 4: Si se cambió la categoría, verificar que existe
     if (categoriaId) {
       const categoria = await prisma.categorias.findUnique({
         where: { id: parseInt(categoriaId) }
       });
+
       if (!categoria) {
-        return res.status(400).json({ ok: false, message: 'Categoría no encontrada' });
+        return res.status(400).json({
+          ok: false,
+          message: 'Categoría no encontrada'
+        });
       }
     }
 
-    // 7. Actualizar el producto en la BD
+    // ✅ PASO 5: Actualizar producto
     const productoActualizado = await prisma.productos.update({
       where: { id: parseInt(id) },
       data: updateData,
@@ -570,7 +730,6 @@ router.put('/:id', authenticateToken, [
       }
     });
 
-    // 8. Enviar respuesta (con datos formateados y Decimales convertidos)
     res.json({
       ok: true,
       message: 'Producto actualizado exitosamente',
@@ -598,86 +757,78 @@ router.put('/:id', authenticateToken, [
   }
 });
 
-// ------------------------------------------
-// 🗑️ ELIMINAR PRODUCTO (Soft Delete)
-// DELETE /api/products/:id
-// ------------------------------------------
+// DELETE /api/products/:id - Eliminar producto (Hard Delete)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const productoId = parseInt(id); // ⬅️ FIX 1: Definir la variable 'productoId' aquí
 
-    // 1. Buscar el producto
+    // ✅ PASO 1: Verificar que el producto existe
     const producto = await prisma.productos.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: productoId }, // ⬅️ FIX 2: Usar 'productoId'
       include: { vendedor: true, estado: true }
     });
+
     if (!producto) {
-      return res.status(404).json({ ok: false, message: 'Producto no encontrado' });
-    }
-
-    // 2. 🛡️ CONTROL DE PERMISOS
-    //    Solo el Vendedor dueño O un Admin pueden eliminarlo.
-    if (producto.vendedorId !== req.user.userId && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ ok: false, message: 'No tienes permiso para eliminar este producto' });
-    }
-
-    // 3. 🛡️ LÓGICA DE NEGOCIO: Evitar eliminar si hay transacciones pendientes
-    const transaccionesPendientes = await prisma.transacciones.findFirst({
-      where: {
-        productoId: parseInt(id),
-        estadoId: { in: [1, 2] } // Asumiendo 1="Pendiente", 2="En proceso"
-      }
-    });
-    if (transaccionesPendientes) {
-      return res.status(400).json({
+      return res.status(404).json({
         ok: false,
-        message: 'No se puede eliminar: tiene transacciones pendientes'
+        message: 'Producto no encontrado'
       });
     }
 
-    // 4. Buscar el ID del estado "Eliminado"
-    const estadoEliminado = await prisma.estadosProducto.findFirst({
-      where: {
-        OR: [
-          { nombre: { equals: 'Eliminado', mode: 'insensitive' } },
-          { nombre: { equals: 'Inactivo', mode: 'insensitive' } }
-        ]
-      }
-    });
-    if (!estadoEliminado) {
-      return res.status(500).json({ ok: false, message: 'Error: Estado "Eliminado" no configurado' });
+    // ✅ PASO 2: Verificar permisos (solo el vendedor dueño o admin)
+    if (producto.vendedorId !== req.user.userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        ok: false,
+        message: 'No tienes permiso para eliminar este producto'
+      });
     }
 
-    // 5. ❗️ SOFT DELETE ❗️
-    //    No se borra el registro, solo se actualiza su estado y visibilidad.
-    const productoEliminado = await prisma.productos.update({
-      where: { id: parseInt(id) },
-      data: {
-        estadoId: estadoEliminado.id, // Cambia el estado
-        visible: false // Lo oculta de las búsquedas públicas
-      },
-      include: {
-        estado: true,
-        vendedor: {
-          select: { id: true, nombre: true, usuario: true }
-        }
+    // ✅ PASO 3: Verificar si tiene transacciones pendientes
+    const transaccionesPendientes = await prisma.transacciones.findFirst({
+      where: {
+        productoId: productoId, // ⬅️ FIX 3: Usar 'productoId'
+        estadoId: { in: [1, 2] } // Estados: Pendiente o En proceso
       }
     });
 
+    if (transaccionesPendientes) {
+      return res.status(400).json({
+        ok: false,
+        message: 'No se puede eliminar el producto porque tiene transacciones pendientes'
+      });
+    }
+
+    // ⬇️ PASO 4 (MODIFICADO): Borrado físico (Hard Delete)
+    // Esto elimina permanentemente la fila de la base de datos.
+    const productoEliminado = await prisma.productos.delete({
+      where: { id: productoId }, // ⬅️ FIX 4: Usar 'productoId'
+    });
+
+    // ⬇️ PASO 5 (MODIFICADO): Respuesta de éxito simple
     res.json({
       ok: true,
       message: 'Producto eliminado exitosamente',
       product: {
         id: productoEliminado.id,
-        nombre: productoEliminado.nombre,
-        estado: productoEliminado.estado.nombre,
-        // Informa quién realizó la acción
-        eliminadoPor: { id: req.user.userId, role: req.user.role }
+        nombre: productoEliminado.nombre
       }
     });
 
   } catch (error) {
     console.error('❌ Error eliminando producto:', error);
+
+    // ⚠️ IMPORTANTE: Manejo de error de borrado
+    // Si el producto está en favoritos, reportes, etc.,
+    // la base de datos lanzará un error de "foreign key".
+    if (error.code === 'P2003') {
+       return res.status(400).json({
+         ok: false,
+         message: 'No se puede eliminar el producto porque está referenciado en otra parte (ej: transacciones, favoritos, reportes).',
+         error: 'Foreign key constraint failed'
+       });
+    }
+
     res.status(500).json({
       ok: false,
       message: 'Error interno del servidor',

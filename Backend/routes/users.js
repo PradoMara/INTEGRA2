@@ -1,40 +1,32 @@
-// routes/users.js
+// users.js
 const express = require('express');
-const { prisma } = require('../config/database'); // Acceso a la BD
-const { authenticateToken } = require('../middleware/auth'); // Middleware para proteger rutas
-const AppError = require('../utils/AppError'); // Clase de error personalizada
+const { prisma } = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
+const AppError = require('../utils/AppError');
 
 const router = express.Router();
+const admin = require('firebase-admin');
 
-// ------------------------------------------
-// 👤 OBTENER PERFIL PROPIO
-// GET /api/users/profile
-// ------------------------------------------
-// Ruta protegida que devuelve el perfil del usuario actualmente autenticado (el dueño del token).
+// GET /api/users/profile - Obtener perfil del usuario actual
 router.get('/profile', authenticateToken, async (req, res, next) => {
   try {
-    // 1. Busca al usuario usando el 'userId' que se adjuntó al 'req' en el middleware 'authenticateToken'
     const user = await prisma.cuentas.findUnique({
       where: { id: req.user.userId },
       include: {
-        rol: true, // Incluye el nombre del rol (ej. "Cliente")
-        estado: true, // Incluye el estado (ej. "ACTIVO")
-        resumenUsuario: true // Incluye las estadísticas (ventas, compras, etc.)
+        rol: true,
+        estado: true,
+        resumenUsuario: true
       }
     });
 
-    // 2. Si por alguna razón el ID del token no existe en la BD, lanza un error
     if (!user) {
       throw new AppError(
         "Usuario no encontrado",
         "USER_NOT_FOUND",
-        404, // 404 Not Found
+        404,
         { field: "id" }
       );
-    }
-
-    // 3. Devuelve los datos del usuario en un formato limpio
-    res.json({
+    }    res.json({
       success: true,
       data: {
         id: user.id,
@@ -47,77 +39,64 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
         campus: user.campus,
         reputacion: user.reputacion,
         fechaRegistro: user.fechaRegistro,
+        fotoPerfilUrl: user.fotoPerfilUrl,
         resumen: user.resumenUsuario
       }
     });
   } catch (error) {
-    // 4. Si algo falla (incluido el AppError), lo pasa al errorHandler global
-    next(error);
+    next(error); // lo captura el errorHandler
   }
 });
 
-// ------------------------------------------
-// ✏️ ACTUALIZAR PERFIL PROPIO
-// PUT /api/users/profile
-// ------------------------------------------
-// Ruta protegida para que el usuario actualice sus propios datos editables.
+// PUT /api/users/profile - Actualizar perfil del usuario actual
 router.put('/profile', authenticateToken, async (req, res, next) => {
   try {
-    // 1. Obtiene los campos permitidos del body de la petición
-    const { apellido, usuario, campus, telefono, direccion } = req.body;
+    const { usuario, campus, telefono, direccion } = req.body;
 
-    // 2. Construye un objeto 'updateData' solo con los campos que el usuario SÍ envió.
-    //    Esto evita sobreescribir campos existentes con 'undefined'.
+    // Validar que al menos un campo sea enviado
     const updateData = {};
-    if (apellido !== undefined) updateData.apellido = apellido;
     if (usuario !== undefined) updateData.usuario = usuario;
     if (campus !== undefined) updateData.campus = campus;
-    if (telefono !== undefined) updateData.telefono = telefono; // (Nota: 'telefono' y 'direccion' no están en tu schema.prisma)
-    if (direccion !== undefined) updateData.direccion = direccion; // (Pero los dejamos por si se añaden)
+    if (telefono !== undefined) updateData.telefono = telefono;
+    if (direccion !== undefined) updateData.direccion = direccion;
 
-    // 3. Valida que al menos un campo haya sido enviado
     if (Object.keys(updateData).length === 0) {
       throw new AppError(
         'Se debe proporcionar al menos un campo para actualizar',
         'VALIDATION_ERROR',
-        400, // 400 Bad Request
-        { fields: ['apellido', 'usuario', 'campus', 'telefono', 'direccion'] }
+        400,
+        { fields: ['usuario', 'campus', 'telefono', 'direccion'] }
       );
     }
 
-    // 4. Lógica de UNICIDAD: Si el usuario está intentando cambiar su 'usuario'...
+    // Verificar que el nombre de usuario sea único si se está cambiando
     if (usuario) {
-      // 5. ...busca si OTRA persona ya tiene ese nombre de usuario.
       const existingUser = await prisma.cuentas.findFirst({
         where: {
-          usuario, // Busca el nombre de usuario
-          NOT: { id: req.user.userId } // Excluye al propio usuario de la búsqueda
+          usuario,
+          NOT: { id: req.user.userId }
         }
       });
 
-      // 6. Si se encuentra, lanza un error
       if (existingUser) {
         throw new AppError(
           'El nombre de usuario ya está en uso',
           'USERNAME_TAKEN',
-          400, // 400 Bad Request (o 409 Conflict)
+          400,
           { field: 'usuario', value: usuario }
         );
       }
     }
 
-    // 7. Si pasa todas las validaciones, actualiza al usuario en la BD
+    // Actualizar usuario
     const updatedUser = await prisma.cuentas.update({
-      where: { id: req.user.userId }, // Actualiza al usuario del token
-      data: updateData, // Usa el objeto dinámico con los campos a actualizar
+      where: { id: req.user.userId },
+      data: updateData,
       include: {
         rol: true,
         estado: true
       }
-    });
-
-    // 8. Devuelve el perfil actualizado
-    res.json({
+    });    res.json({
       ok: true,
       message: 'Perfil actualizado correctamente',
       user: {
@@ -130,33 +109,27 @@ router.put('/profile', authenticateToken, async (req, res, next) => {
         telefono: updatedUser.telefono,
         direccion: updatedUser.direccion,
         role: updatedUser.rol.nombre,
-        editableFields: ['apellido', 'usuario', 'campus', 'telefono', 'direccion']
+        editableFields: ['usuario', 'campus', 'telefono', 'direccion']
       }
     });
 
   } catch (error) {
-    next(error); // Pasa errores (de unicidad, validación, etc.) al errorHandler
+    next(error);
   }
 });
 
-// ------------------------------------------
-// 👥 LISTAR TODOS LOS USUARIOS (SOLO ADMIN)
-// GET /api/users
-// ------------------------------------------
+// GET /api/users - Listar usuarios (solo admin)
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
-    // 1. AUTORIZACIÓN: Verifica el rol (obtenido del token).
-    // Nota: Aquí se usa un 'if' en lugar del middleware 'requireAdmin' (ambos son válidos).
-    if (req.user.role.toLowerCase() !== 'administrador') {
+    if (req.user.role !== 'Administrador') {
       throw new AppError(
-        "Acceso denegado. Se requiere rol de Administrador.",
+        "Acceso denegado",
         "FORBIDDEN",
-        403, // 403 Forbidden
+        403,
         { requiredRole: "Administrador" }
       );
     }
 
-    // 2. Si es Admin, busca TODOS los usuarios en la BD
     const users = await prisma.cuentas.findMany({
       include: {
         rol: true,
@@ -164,11 +137,10 @@ router.get('/', authenticateToken, async (req, res, next) => {
         resumenUsuario: true
       },
       orderBy: {
-        fechaRegistro: 'desc' // Ordena por los más nuevos primero
+        fechaRegistro: 'desc'
       }
     });
 
-    // 3. Devuelve la lista de usuarios, mapeada a un formato limpio
     res.json({
       success: true,
       data: users.map(user => ({
@@ -191,19 +163,16 @@ router.get('/', authenticateToken, async (req, res, next) => {
   }
 });
 
-// ------------------------------------------
-// ⭐ CALIFICAR A UN VENDEDOR
-// POST /api/users/rate/:sellerId
-// ------------------------------------------
-// Ruta para que un comprador (autenticado) califique a un vendedor (sellerId)
+// POST /api/users/rate/:sellerId - Calificar a un vendedor
 router.post('/rate/:sellerId', authenticateToken, async (req, res, next) => {
   try {
-    const { sellerId } = req.params; // ID del Vendedor (el calificado)
-    const sellerIdInt = parseInt(sellerId);
+    // --- Definiciones ---
+    const { sellerId } = req.params;
     const { puntuacion, comentario } = req.body;
-    const buyerId = req.user.userId; // ID del Comprador (el calificador, del token)
+    const userId = req.user.userId;
+    const sellerIdInt = parseInt(sellerId);
 
-    // 1. Validaciones básicas de la entrada
+    // 1️⃣ Validaciones básicas
     if (!puntuacion || puntuacion < 1 || puntuacion > 5) {
       throw new AppError(
         'La puntuación debe estar entre 1 y 5',
@@ -213,37 +182,28 @@ router.post('/rate/:sellerId', authenticateToken, async (req, res, next) => {
       );
     }
 
-    // 1b. Obtener el nombre de usuario del comprador (para la notificación)
-    const buyer = await prisma.cuentas.findUnique({
-      where: { id: buyerId },
-      select: { usuario: true } // Solo necesitamos el nombre de usuario
-    });
-    const buyerName = buyer ? buyer.usuario : 'Un usuario';
-
-
-    // 2. LÓGICA DE NEGOCIO: Verificar que el comprador haya tenido una transacción con el vendedor
+    // 2️⃣ Verificar que haya al menos una transacción con este vendedor
     const transactionExists = await prisma.transacciones.findFirst({
       where: {
-        compradorId: buyerId,
+        compradorId: userId,
         vendedorId: sellerIdInt
       }
     });
 
-    // 3. Si no hay transacción, no puede calificar
     if (!transactionExists) {
       throw new AppError(
-        'No puedes calificar a este vendedor sin haber realizado una transacción previa',
+        'No puedes calificar a este vendedor sin haber realizado una transacción',
         'NO_TRANSACTION_ERROR',
         400
       );
     }
 
-    // 4. LÓGICA DE NEGOCIO: Verificar que no haya calificado ESTA MISMA transacción
+    // 3️⃣ Verificar que el usuario no haya calificado antes...
     const alreadyRated = await prisma.calificaciones.findFirst({
       where: {
-        calificadorId: buyerId,
+        calificadorId: userId,
         calificadoId: sellerIdInt,
-        transaccionId: transactionExists.id // Clave: se liga a la transacción
+        transaccionId: transactionExists.id
       }
     });
 
@@ -255,41 +215,66 @@ router.post('/rate/:sellerId', authenticateToken, async (req, res, next) => {
       );
     }
 
-    // 5. Crear la calificación en la tabla 'Calificaciones'
+    // 4️⃣ Crear la calificación
     const rating = await prisma.calificaciones.create({
       data: {
         transaccionId: transactionExists.id,
-        calificadorId: buyerId,
+        calificadorId: userId,
         calificadoId: sellerIdInt,
         puntuacion,
         comentario
       }
     });
 
-    // 6. Recalcular la reputación PROMEDIO del vendedor
+    // 5️⃣ Recalcular la reputación promedio del vendedor
     const promedio = await prisma.calificaciones.aggregate({
-      where: { calificadoId: sellerIdInt }, // Busca todas las calificaciones del vendedor
-      _avg: { puntuacion: true } // Calcula el promedio de la columna 'puntuacion'
+      where: { calificadoId: sellerIdInt },
+      _avg: { puntuacion: true }
     });
 
-    // 7. Actualizar el campo 'reputacion' en la tabla 'Cuentas' del vendedor
     await prisma.cuentas.update({
       where: { id: sellerIdInt },
       data: { reputacion: promedio._avg.puntuacion || 0 }
     });
 
-    // 8. ¡NUEVO! Crear una notificación para el VENDEDOR
-    const message = `${buyerName} te ha calificado con ${puntuacion} estrellas.`;
+    // ⭐️ INICIO: Enviar Notificación Push ⭐️
+    try {
+      // (Obtener el nombre del comprador para el mensaje)
+      const buyer = await prisma.cuentas.findUnique({
+        where: { id: userId },
+        select: { usuario: true }
+      });
+      const buyerName = buyer ? buyer.usuario : 'Un usuario';
 
-    await prisma.notificaciones.create({
-      data: {
-        usuarioId: sellerIdInt, // El ID del vendedor (quien recibe la notif)
-        tipo: 'valoracion',
-        mensaje: message
+      // 1. Busca el token FCM del vendedor 
+      const vendedor = await prisma.cuentas.findUnique({
+        where: { id: sellerIdInt },
+        select: { fcm_token: true }
+      });
+
+      // 2. Si el vendedor tiene un token, envía la notificación
+      if (vendedor && vendedor.fcm_token) {
+        const message = {
+          token: vendedor.fcm_token,
+          notification: {
+            title: '¡Nueva Valoración! ⭐',
+            body: `${buyerName} te ha calificado con ${puntuacion} estrellas.`
+          },
+          data: {
+            screen: 'ratings',
+            sellerId: sellerIdInt.toString()
+          }
+        };
+        console.log(`🔔 Enviando notificación a ${vendedor.fcm_token}`);
+        await admin.messaging().send(message);
       }
-    });
+    } catch (fcmError) {
+      console.error("❌ Error al enviar notificación FCM:", fcmError);
+      // No detenemos la respuesta principal si la notificación falla
+    }
+    // ⭐️ FIN: Enviar Notificación Push ⭐️
 
-    // 9. Enviar respuesta exitosa
+    // 6️⃣ Respuesta
     res.status(201).json({
       success: true,
       message: 'Calificación registrada correctamente',
@@ -304,67 +289,127 @@ router.post('/rate/:sellerId', authenticateToken, async (req, res, next) => {
   }
 });
 
-// ------------------------------------------
-// 🔔 OBTENER NOTIFICACIONES
-// GET /api/users/notifications
-// ------------------------------------------
-// Ruta protegida para que el usuario actual obtenga sus notificaciones
-router.get('/notifications', authenticateToken, async (req, res, next) => {
+
+// ==========================================
+// PUT /api/users/profile/fcm-token - Guardar Token FCM
+// ==========================================
+router.put('/profile/fcm-token', authenticateToken, async (req, res, next) => {
   try {
+    const { fcmToken } = req.body;
     const userId = req.user.userId;
 
-    const notifications = await prisma.notificaciones.findMany({
-      where: { usuarioId: userId },
-      orderBy: { fecha: 'desc' }, // Más nuevas primero
-      take: 20 // Limita a las últimas 20 notificaciones
+    if (!fcmToken || typeof fcmToken !== 'string') {
+      return res.status(400).json({
+        ok: false,
+        message: 'fcmToken es requerido y debe ser un string',
+      });
+    }
+
+    await prisma.cuentas.update({
+      where: { id: userId },
+      data: { fcm_token: fcmToken },
     });
 
     res.json({
-      success: true,
-      data: notifications
+      ok: true,
+      message: 'Token FCM guardado exitosamente',
     });
 
   } catch (error) {
-    next(error);
+    next(error); // Pasa el error al manejador de errores
   }
 });
 
-// ------------------------------------------
-// ✔️ MARCAR NOTIFICACIÓN COMO LEÍDA
-// PUT /api/users/notifications/:id/read
-// ------------------------------------------
-router.put('/notifications/:id/read', authenticateToken, async (req, res, next) => {
+// ✅ NUEVA RUTA: GET /api/users/:id - Obtener perfil PÚBLICO de un usuario por ID
+router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const notificationId = parseInt(id);
-    const userId = req.user.userId; // ID del usuario del token
+    const userId = parseInt(id);
 
-    // 1. Actualiza la notificación.
-    // Se usa 'updateMany' por seguridad: solo actualizará si AMBAS condiciones se cumplen.
-    const updateOperation = await prisma.notificaciones.updateMany({
-      where: {
-        id: notificationId, // 1. El ID de la notificación debe coincidir
-        usuarioId: userId,  // 2. La notificación debe pertenecer al usuario
-      },
-      data: {
-        leido: true,
-      },
+    if (isNaN(userId)) {
+      throw new AppError(
+        "ID de usuario inválido",
+        "INVALID_INPUT",
+        400,
+        { field: "id", value: id }
+      );
+    }    const user = await prisma.cuentas.findUnique({
+      where: { id: userId },
+      select: { // Selecciona solo los campos públicos que quieres mostrar
+        id: true,
+        nombre: true,
+        apellido: true,
+        usuario: true, // Puedes decidir si mostrar el nombre de usuario
+        campus: true,
+        reputacion: true,
+        fechaRegistro: true,
+        fotoPerfilUrl: true, // ✅ AGREGADO: Incluir foto de perfil
+        // NO incluyas correo o contraseña aquí por seguridad
+      }
     });
 
-    // 2. 'updateOperation.count' nos dice cuántos registros se actualizaron.
-    // Si es 0, significa que la notificación no se encontró o no le pertenecía al usuario.
-    if (updateOperation.count === 0) {
+    if (!user) {
       throw new AppError(
-        'Notificación no encontrada o no autorizada',
-        'NOT_FOUND',
+        "Usuario no encontrado",
+        "USER_NOT_FOUND",
         404,
+        { field: "id", value: userId }
       );
     }
 
-    // 3. Éxito
-    res.json({ success: true, message: 'Notificación marcada como leída' });
+    // ✅ NUEVO: Obtener estadísticas del vendedor
+    const [totalPublicaciones, publicacionesActivas, totalVentas] = await Promise.all([
+      // Total de productos publicados por este vendedor
+      prisma.productos.count({
+        where: { vendedorId: userId }
+      }),
+      
+      // Productos activos/disponibles
+      prisma.productos.count({
+        where: { 
+          vendedorId: userId,
+          estadoId: 1, // Estado "Disponible"
+          visible: true 
+        }
+      }),
+      
+      // Total de ventas completadas
+      prisma.transacciones.count({
+        where: { 
+          vendedorId: userId,
+          estado: 'Completada'
+        }
+      })
+    ]);    // Formatea la respuesta (opcional pero bueno)
+    res.json({
+      success: true,
+      data: {
+        id: user.id,
+        nombre: user.nombre, // ✅ AGREGADO: Nombre individual
+        apellido: user.apellido, // ✅ AGREGADO: Apellido individual  
+        nombreCompleto: `${user.nombre || ''} ${user.apellido || ''}`.trim(),
+        usuario: user.usuario,
+        campus: user.campus,
+        reputacion: user.reputacion ? Number(user.reputacion) : 0.0,
+        miembroDesde: user.fechaRegistro,
+        fotoPerfilUrl: user.fotoPerfilUrl, // ✅ Incluir foto de perfil
+        
+        // ✅ NUEVO: Estadísticas del vendedor
+        estadisticas: {
+          totalPublicaciones,
+          publicacionesActivas,
+          totalVentas,
+          ventasCompletadas: totalVentas // Alias para claridad
+        }
+      }
+    });
+
   } catch (error) {
-    next(error);
+    // Asegúrate de que los errores 404 lleguen a la app
+    if (error instanceof AppError && error.statusCode === 404) {
+      return res.status(404).json({ success: false, error: { code: error.code, message: error.message } });
+    }
+    next(error); // Otros errores van al errorHandler general
   }
 });
 

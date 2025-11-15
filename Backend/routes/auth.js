@@ -1,87 +1,77 @@
 // routes/auth.js
 const express = require('express');
-const bcrypt = require('bcryptjs'); // Para comparar contraseñas (login) y hashear (register)
-const jwt = require('jsonwebtoken'); // Para crear los tokens de sesión
-const { body, validationResult } = require('express-validator'); // Para validar la entrada (req.body)
-const { prisma } = require('../config/database'); // Acceso directo a la base de datos
-const { authenticateToken } = require('../middleware/auth'); // Importa el middleware de autenticación
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
+const { prisma } = require('../config/database');
+const { authenticateToken, requireAdmin, requireVendor } = require('../middleware/auth');
+const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
+const { generateTokenPair, verifyRefreshToken } = require('../utils/tokenUtils');
+const { secureLog } = require('../middleware/secureLogger');
 
 const router = express.Router();
 
-/**
- * Middleware local para manejar los errores de 'express-validator'.
- * Si hay errores de validación (ej. email inválido), detiene la
- * petición y envía una respuesta 400.
- */
+// Middleware de validacion de errores
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Si hay errores, responde con un 400
     return res.status(400).json({
       ok: false,
       message: 'Datos de entrada invalidos',
       errors: errors.array()
     });
   }
-  // Si no hay errores, continúa con el controlador de la ruta
   next();
 };
 
-// ------------------------------------------
-// 🔑 ENDPOINT: POST /api/auth/login
-// ------------------------------------------
-// Ruta pública para iniciar sesión
-router.post('/login', [
-  // Validaciones de entrada
-  body('email').isEmail().normalizeEmail().withMessage('Email debe ser valido'),
-  body('password').isLength({ min: 6 }).withMessage('Password debe tener al menos 6 caracteres'),
-  // Middleware que revisa las validaciones
-  handleValidationErrors
-], async (req, res) => {
+// ------------------- LOGIN -------------------
+router.post('/login', 
+  loginLimiter, // 🔒 Rate limiting para login
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Email debe ser valido'),
+    body('password').isLength({ min: 6 }).withMessage('Password debe tener al menos 6 caracteres'),
+    handleValidationErrors
+  ], 
+  async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Buscar al usuario en la BD que esté ACTIVO (estadoId: 1)
     const user = await prisma.cuentas.findFirst({
-      where: {
-        correo: email,
-        estadoId: 1 // ¡Importante! No permite login a usuarios baneados
-      },
-      include: { rol: true, estado: true } // Incluye el ROL para el token
+      where: { correo: email, estadoId: 1 },
+      include: { rol: true, estado: true }
     });
 
-    // 2. Si el usuario no existe (o está baneado), devuelve error 401
     if (!user) {
       return res.status(401).json({ ok: false, message: 'Credenciales invalidas' });
     }
 
-    // 3. Comparar la contraseña enviada con el hash guardado en la BD
     const passwordMatch = await bcrypt.compare(password, user.contrasena);
     if (!passwordMatch) {
       return res.status(401).json({ ok: false, message: 'Credenciales invalidas' });
-    }
+    }    // 🔒 Generar par de tokens (access + refresh)
+    const tokenPayload = { 
+      userId: user.id, 
+      email: user.correo, 
+      role: user.rol.nombre.toUpperCase() 
+    };
+    const { accessToken, refreshToken } = generateTokenPair(tokenPayload);
 
-    // 4. Si todo es correcto, crear el JSON Web Token (JWT)
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.correo,
-        role: user.rol.nombre.toUpperCase() // Guarda el ROL en el token (crucial para 'requireAdmin')
-      },
-      process.env.JWT_SECRET, // Firma el token con el secreto del .env
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } // Define la expiración
-    );
+    secureLog.info('Usuario logueado exitosamente', {
+      userId: user.id,
+      email: user.correo,
+      role: user.rol.nombre
+    });
 
-    // 5. Enviar respuesta exitosa con el token y los datos del usuario
     res.json({
       ok: true,
       message: 'Login exitoso',
-      token,
+      token: accessToken, // Mantener compatibilidad
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.correo,
         nombre: user.nombre,
-        apellido: user.apellido,
         role: user.rol.nombre.toUpperCase(),
         campus: user.campus,
         reputacion: user.reputacion
@@ -93,30 +83,36 @@ router.post('/login', [
   }
 });
 
-// ------------------------------------------
-// 📝 ENDPOINT: POST /api/auth/register
-// ------------------------------------------
-// Ruta pública para registrar un nuevo usuario
-router.post('/register', [
-  // Validaciones de entrada
-  body('email')
-    .isEmail().normalizeEmail().withMessage('Email debe ser valido')
-    .custom(async (email) => {
-      // ¡LÓGICA DE NEGOCIO CLAVE!
-      // Solo permite registros con correos de la universidad.
-      if (!email.endsWith('@uct.cl') && !email.endsWith('@alu.uct.cl')) {
-        throw new Error('Solo se permiten correos de @uct.cl o @alu.uct.cl');
-      }
-    }),
-  body('password').isLength({ min: 6 }).withMessage('Password debe tener al menos 6 caracteres'),
-  body('nombre').isLength({ min: 2 }).withMessage('Nombre debe tener al menos 2 caracteres'),
-  body('usuario').isLength({ min: 3 }).withMessage('Usuario debe tener al menos 3 caracteres'),
-  handleValidationErrors
-], async (req, res) => {
+// ------------------- REGISTER -------------------
+router.post('/register',
+  registerLimiter, // 🔒 Rate limiting para registro
+  [
+    body('email')
+      .isEmail().normalizeEmail().withMessage('Email debe ser valido')
+      .isLength({ max: 100 }).withMessage('Email muy largo')
+      .custom(async (email) => {
+        if (!email.endsWith('@uct.cl') && !email.endsWith('@alu.uct.cl')) {
+          throw new Error('Solo se permiten correos de @uct.cl o @alu.uct.cl');
+        }
+      }),
+    body('password')
+      .isLength({ min: 8, max: 128 }).withMessage('Password debe tener entre 8 y 128 caracteres')
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+      .withMessage('Password debe tener mayúscula, minúscula, número y símbolo especial'),
+    body('nombre')
+      .trim()
+      .isLength({ min: 2, max: 50 }).withMessage('Nombre debe tener entre 2 y 50 caracteres')
+      .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/).withMessage('Nombre solo debe contener letras'),
+    body('usuario')
+      .trim()
+      .isLength({ min: 3, max: 30 }).withMessage('Usuario debe tener entre 3 y 30 caracteres')
+      .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Usuario solo debe contener letras, números, _ y -'),
+    handleValidationErrors
+  ], 
+  async (req, res) => {
   try {
     const { email, password, nombre, usuario } = req.body;
 
-    // 1. Verificar si el email O el nombre de usuario ya existen
     const existingUser = await prisma.cuentas.findFirst({
       where: { OR: [{ correo: email }, { usuario: usuario }] }
     });
@@ -126,28 +122,22 @@ router.post('/register', [
       return res.status(409).json({ ok: false, message: `El ${campo} ya esta en uso` });
     }
 
-    // 2. Hashear la contraseña antes de guardarla
     const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS) || 12);
-
-    // ¡LÓGICA DE NEGOCIO! Asigna rol Vendedor (2) o Cliente (3) según el dominio.
     const rolId = email.endsWith('@uct.cl') ? 2 : 3;
 
-    // 3. Crear el nuevo usuario en la base de datos
     const newUser = await prisma.cuentas.create({
       data: {
         correo: email,
         contrasena: hashedPassword,
         nombre,
         usuario,
-        apellido: '',
-        rolId,         // Rol asignado (Vendedor o Cliente)
-        estadoId: 1,  // Se crea como ACTIVO
+        rolId,
+        estadoId: 1,
         campus: 'Campus Temuco'
       },
       include: { rol: true, estado: true }
     });
 
-    // 4. IMPORTANTE: Crea la entrada de 'ResumenUsuario' para las estadísticas
     await prisma.resumenUsuario.create({
       data: {
         usuarioId: newUser.id,
@@ -158,14 +148,12 @@ router.post('/register', [
       }
     });
 
-    // 5. Crear el JWT para que el usuario inicie sesión automáticamente
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.correo, role: newUser.rol.nombre.toUpperCase() },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
-    // 6. Enviar respuesta 201 (Creado)
     res.status(201).json({
       ok: true,
       message: 'Usuario registrado exitosamente',
@@ -175,7 +163,6 @@ router.post('/register', [
         correo: newUser.correo,
         usuario: newUser.usuario,
         nombre: newUser.nombre,
-        apellido: newUser.apellido,
         role: newUser.rol.nombre.toUpperCase(),
         campus: newUser.campus
       }
@@ -186,12 +173,8 @@ router.post('/register', [
   }
 });
 
-// ------------------------------------------
-// 🇬 ENDPOINT: POST /api/auth/google
-// ------------------------------------------
-// Ruta pública para manejar el inicio de sesión/registro con Google
+// ------------------- GOOGLE LOGIN -------------------
 router.post('/google', [
-  // Valida que los datos básicos de Google vengan en el body
   body('idToken').notEmpty().withMessage('ID Token es requerido'),
   body('email').isEmail().withMessage('Email debe ser valido'),
   body('name').notEmpty().withMessage('Nombre es requerido'),
@@ -200,32 +183,25 @@ router.post('/google', [
   try {
     const { email, name } = req.body;
 
-    // 1. ¡LÓGICA DE NEGOCIO! Se re-aplica la restricción de dominio UCT.
     if (!email.endsWith('@uct.cl') && !email.endsWith('@alu.uct.cl')) {
       return res.status(403).json({ ok: false, message: 'Solo se permiten correos de @uct.cl o @alu.uct.cl' });
     }
 
-    // 2. Lógica de "Find or Create" (Upsert)
     let user = await prisma.cuentas.findFirst({
-      where: { correo: email, estadoId: 1 }, // Busca si el usuario ya existe y está activo
+      where: { correo: email, estadoId: 1 },
       include: { rol: true, estado: true }
-    });
-
-    // 3. Si el usuario NO existe, se crea
-    if (!user) {
-      // NOTA: Todos los registros de Google se asignan como 'Cliente' (ID 3) por defecto.
+    }); if (!user) {
+      // Todos los usuarios de Google son "Cliente" por defecto (ID 3)
       const rolId = 3; // Cliente
-      // Genera un nombre de usuario único inicial
       const baseUsuario = name.toLowerCase().replace(/\s+/g, '_');
       const usuario = `${baseUsuario}_${Date.now()}`;
 
       user = await prisma.cuentas.create({
         data: {
           correo: email,
-          contrasena: '', // Se crea sin contraseña, la autenticación es por Google
+          contrasena: '',
           nombre: name,
           usuario,
-          apellido: '',
           rolId,
           estadoId: 1,
           campus: 'Campus Temuco'
@@ -233,7 +209,6 @@ router.post('/google', [
         include: { rol: true, estado: true }
       });
 
-      // 4. Crea el resumen de usuario (solo si es nuevo)
       await prisma.resumenUsuario.create({
         data: {
           usuarioId: user.id,
@@ -245,53 +220,44 @@ router.post('/google', [
       });
     }
 
-    // 5. Crear el JWT para la sesión
     const token = jwt.sign(
       { userId: user.id, email: user.correo, role: user.rol.nombre.toUpperCase() },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
-
-    // 6. Devolver el token y los datos del usuario
-    res.json({
+    ); res.json({
       ok: true,
       message: '¡Cuenta creada/actualizada en base de datos!',
       token,
       user: {
         id: user.id,
-        correo: user.correo,
-        nombre: user.nombre,
-        apellido: user.apellido || '',
-        usuario: user.usuario,
-        campus: user.campus || 'Campus Temuco',
+        correo: user.correo,        // 🔒 Solo lectura (viene de Google)
+        nombre: user.nombre,        // 🔒 Solo lectura (viene de Google)  // ✏️ Editable por el usuario
+        usuario: user.usuario,      // ✏️ Editable por el usuario
+        campus: user.campus || 'Campus Temuco',  // ✏️ Editable por el usuario
         role: user.rol.nombre.toUpperCase(),
-        // Informa al frontend qué campos puede editar el usuario
-        editableFields: ['apellido', 'usuario', 'campus']
+        // Campos editables disponibles para actualizar después:
+        editableFields: ['usuario', 'campus', 'telefono', 'direccion']
       }
     });
+    console.log(token)
   } catch (error) {
     console.error('Error en login Google:', error);
     res.status(500).json({ ok: false, message: 'Error interno del servidor' });
   }
 });
 
-// ------------------------------------------
-// 👤 ENDPOINT: GET /api/auth/me
-// ------------------------------------------
-// Ruta PROTEGIDA para obtener el perfil del usuario autenticado
+// ------------------- PERFIL DEL USUARIO -------------------
 router.get('/me', authenticateToken, async (req, res) => {
-  // 'authenticateToken' se ejecuta primero.
-  // Si el token es válido, 'req.user' (con el userId) está disponible.
   try {
-    // FEATURE: Permite al cliente pedir "includes" dinámicos
-    // Ejemplos:
+    const { include } = req.query;
+    // Ejemplos de uso:
+    // /me                          -> trae todo
     // /me?include=perfil           -> solo datos básicos
     // /me?include=notificaciones
     // /me?include=productos,seguidores
-    // /me                          -> trae todo
-    const { include } = req.query;
+    // /me?include=todo             -> todo explícitamente
 
-    // Define todas las relaciones que el frontend podría solicitar
+    // Todas las relaciones disponibles
     const relacionesDisponibles = {
       rol: true,
       estado: true,
@@ -310,7 +276,6 @@ router.get('/me', authenticateToken, async (req, res) => {
       foros: true,
       publicacionesForo: { include: { foro: true, comentarios: true } },
       comentariosPublicacion: { include: { publicacion: true } },
-      notificaciones: true,
       ubicaciones: true,
       resumenUsuario: true,
       siguiendo: { include: { usuarioSeguido: true } },
@@ -319,40 +284,37 @@ router.get('/me', authenticateToken, async (req, res) => {
 
     let includeOptions = {};
 
-    // Lógica para construir el 'include' de Prisma
     if (!include || include === "todo") {
-      // 1. Si no se pide nada o se pide "todo", incluir todo
+      // Si no se pide nada o se pide "todo", incluir todo
       includeOptions = relacionesDisponibles;
     } else if (include === "perfil") {
-      // 2. Si se pide "perfil", solo incluir lo básico (rol y estado)
+      // Solo perfil básico, sin relaciones pesadas
       includeOptions = {
         rol: true,
         estado: true,
       };
     } else {
-      // 3. Se pidió algo específico, ej: ?include=notificaciones,productos
+      // Se pidió algo específico, ejemplo: ?include=notificaciones,productos
       const partes = include.split(",");
       for (const key of partes) {
         if (relacionesDisponibles[key]) {
-          includeOptions[key] = relacionesDisponibles[key]; // Añade la relación pedida
+          includeOptions[key] = relacionesDisponibles[key];
         }
       }
-      // Siempre incluir lo básico (rol y estado)
+      // Siempre incluir lo básico
       includeOptions.rol = true;
       includeOptions.estado = true;
     }
 
-    // Buscar al usuario en la BD usando el ID del token
     const user = await prisma.cuentas.findUnique({
       where: { id: req.user.userId },
-      include: includeOptions // Pasa las opciones dinámicas a Prisma
+      include: includeOptions
     });
 
     if (!user) {
       return res.status(404).json({ ok: false, message: 'Usuario no encontrado' });
     }
 
-    // (Prisma es inteligente y excluye 'contrasena' por defecto si no se pide)
     res.json({
       ok: true,
       user
@@ -360,6 +322,66 @@ router.get('/me', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error en /me:', error);
     res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+  }
+});
+
+// ------------------- REFRESH TOKEN -------------------
+router.post('/refresh', [
+  body('refreshToken').notEmpty().withMessage('Refresh token requerido'),
+  handleValidationErrors
+], async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    // Verificar refresh token
+    const payload = verifyRefreshToken(refreshToken);
+    
+    // Verificar que el usuario aún existe y está activo
+    const user = await prisma.cuentas.findFirst({
+      where: { 
+        id: payload.userId, 
+        estadoId: 1 
+      },
+      include: { rol: true }
+    });
+    
+    if (!user) {
+      secureLog.warn('Intento de refresh con usuario inválido', { 
+        userId: payload.userId 
+      });
+      return res.status(401).json({ 
+        ok: false, 
+        message: 'Usuario no encontrado o inactivo' 
+      });
+    }
+    
+    // Generar nuevos tokens
+    const newTokenPayload = {
+      userId: user.id,
+      email: user.correo,
+      role: user.rol.nombre.toUpperCase()
+    };
+    const { accessToken, refreshToken: newRefreshToken } = generateTokenPair(newTokenPayload);
+    
+    secureLog.info('Tokens renovados exitosamente', {
+      userId: user.id,
+      email: user.correo
+    });
+    
+    res.json({
+      ok: true,
+      message: 'Tokens renovados exitosamente',
+      accessToken,
+      refreshToken: newRefreshToken,
+      token: accessToken // Mantener compatibilidad
+    });
+    
+  } catch (error) {
+    secureLog.error('Error en refresh token', error);
+    res.status(403).json({ 
+      ok: false, 
+      message: 'Refresh token inválido o expirado' 
+    });
   }
 });
 
