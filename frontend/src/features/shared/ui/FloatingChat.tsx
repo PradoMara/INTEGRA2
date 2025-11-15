@@ -1,5 +1,7 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { mockChats as rawMockChats } from "@/features/shared/Shared.Repositories/mockChats"; // Ajusta la ruta si es necesario
+import { useAuthStore } from "@/store/authStore";
 
 /* ===================== Tipos ===================== */
 type Estado = "enviando" | "enviado" | "recibido" | "leido";
@@ -34,6 +36,16 @@ export default function FloatingChat({
   height = 560,
   corner = "right",
 }: FloatingChatProps) {
+  const location = useLocation();
+  // obtiene usuario/rol desde el store (ajusta selector si tu store usa otro nombre)
+  const currentUser = useAuthStore((s: any) => s.user);
+
+  // No renderizar en rutas de admin ni si el usuario es ADMIN
+  const pathname = location?.pathname ?? "";
+  if (pathname.startsWith("/admin") || currentUser?.rol === "ADMIN") {
+    return null;
+  }
+
   // ui
   const [mode, setMode] = useState<Mode>("closed");
   const [chats, setChats] = useState<Chat[]>(mockChats);
