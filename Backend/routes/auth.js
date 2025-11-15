@@ -228,7 +228,7 @@ router.post('/google', [
           apellido: '',
           rolId,
           estadoId: 1,
-          campus: 'Campus Temuco'
+          campus: null // Campus vacío, debe configurarlo en onboarding
         },
         include: { rol: true, estado: true }
       });
@@ -263,7 +263,7 @@ router.post('/google', [
         nombre: user.nombre,
         apellido: user.apellido || '',
         usuario: user.usuario,
-        campus: user.campus || 'Campus Temuco',
+        campus: user.campus || null,
         role: user.rol.nombre.toUpperCase(),
         // Informa al frontend qué campos puede editar el usuario
         editableFields: ['apellido', 'usuario', 'campus']

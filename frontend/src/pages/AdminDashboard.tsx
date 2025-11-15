@@ -3,6 +3,8 @@ import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { AdminRepository } from '../repositories/AdminRepository';
 import type { BackendUser } from '../types/User';
+import Spinner from '@/components/ui/Spinner';
+import { TableSkeleton } from '@/components/ui/Skeleton';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuthStore((state: any) => ({
@@ -75,7 +77,9 @@ const AdminDashboard = () => {
         <h2>Gestión de Usuarios ({users.length} usuarios)</h2>
         
         {loading ? (
-          <p>Cargando usuarios...</p>
+          <div style={{ padding: '40px 0' }}>
+            <TableSkeleton rows={5} cols={7} />
+          </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

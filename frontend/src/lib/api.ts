@@ -1,3 +1,5 @@
+// frontend/src/lib/api.ts - CORREGIDO
+
 // Importamos el store para poder leer el token
 import { useAuthStore } from '../store/authStore';
 
@@ -10,7 +12,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
  */
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
   // MEJORA: Obtenemos el token MÁS ACTUALIZADO desde el store
-  // Usamos getState() porque esto no es un Hook, es una función normal.
   const token = useAuthStore.getState().token;
 
   const defaultHeaders: Record<string, string> = {
@@ -25,6 +26,8 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
   // Construimos la URL completa
   const url = `${API_BASE_URL}${endpoint}`;
+
+  console.log(`🚀 API Request: ${options.method || 'GET'} ${url}`, options.body ? JSON.parse(options.body as string) : null);
 
   const res = await fetch(url, {
     ...options,
@@ -44,15 +47,24 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
     // Lanzamos el error para que React Query o el 'catch' lo maneje
     const errorBody = await res.json().catch(() => ({}));
-    throw new Error(errorBody.message || 'Ocurrió un error en la solicitud');
+    throw new Error(errorBody.message || errorBody.error || `Error ${res.status}: ${res.statusText}`);
   }
 
-  // Si no hay contenido (ej. en un 204 No Content), devuelve un objeto vacío
-  if (res.status === 204) {
-    return {};
+  // CORRECCIÓN: Manejo de respuestas sin contenido
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    console.log(`✅ API Response: ${res.status} ${url} - No Content`);
+    return null; // O return { success: true } si prefieres
   }
 
-  return res.json();
+  // Intentar parsear JSON, pero manejar errores de parsing
+  try {
+    const data = await res.json();
+    console.log(`✅ API Response: ${res.status} ${url}`, data);
+    return data;
+  } catch (jsonError) {
+    console.log(`✅ API Response: ${res.status} ${url} - No JSON body`);
+    return null;
+  }
 }
 
 // Exportamos métodos específicos

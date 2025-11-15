@@ -8,22 +8,27 @@ import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '@/features/Log
 type Props = {
   onOAuth?: () => void | Promise<void>;
   onShowAdminLogin?: () => void;
+  error?: string | null;
 };
 
 const ALUMNO_DOMAIN = "alu.uct.cl";
 const PROFESOR_DOMAIN = "uct.cl";
 
-export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props) {
-  const btnRef = useRef<HTMLButtonElement | null>(null);
+export default function LoginInstitutional({ onOAuth, onShowAdminLogin, error: externalError }: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const w = window as any;
-    if (!w.google || !w.google.accounts || !w.google.accounts.id) return;
+    if (!w.google || !w.google.accounts || !w.google.accounts.id) {
+      setError('Google Identity Services no está disponible. Verifica el script en index.html.');
+      return;
+    }
 
     const client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!client_id) {
-      console.warn('[Login] Falta VITE_GOOGLE_CLIENT_ID en el .env — se usará el botón visual como fallback');
+      console.warn('[Login] Falta VITE_GOOGLE_CLIENT_ID en el .env');
+      setError('Falta configurar VITE_GOOGLE_CLIENT_ID en el entorno del frontend.');
       return;
     }
 
@@ -47,6 +52,10 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
 
     w.google.accounts.id.initialize({
       client_id,
+      // Fuerza el selector de cuenta y evita el auto sign-in
+      auto_select: false,
+      // Usa popup en lugar de redirect
+      ux_mode: 'popup',
       callback: (resp: any) => {
         const payload = decodeJwt(resp?.credential || '');
         const email: string = String(payload?.email || '');
@@ -60,14 +69,14 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
       },
     });
 
-    const container = document.createElement('div');
-    container.style.width = '100%';
-    container.style.display = 'flex';
-    container.style.justifyContent = 'center'; // Centrar el botón de Google
-    if (btnRef.current && btnRef.current.parentNode) {
-      btnRef.current.parentNode.replaceChild(container, btnRef.current);
-    }
-    w.google.accounts.id.renderButton(container, {
+    // Renderiza el botón REAL de Google dentro del contenedor
+    const target = containerRef.current;
+    if (!target) return;
+    target.style.width = '100%';
+    target.style.display = 'flex';
+    target.style.justifyContent = 'center';
+
+    w.google.accounts.id.renderButton(target, {
       theme: 'outline',
       size: 'large',
       width: 360,
@@ -75,6 +84,8 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
       logo_alignment: 'left',
       shape: 'pill',
     });
+    // Opcional: mostrar One Tap si el usuario ya inició antes, pero siempre permitirá elegir cuenta en el popup
+    try { w.google.accounts.id.prompt(); } catch {}
   }, [onOAuth]);
 
   return (
@@ -91,18 +102,9 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
           </div>
         </header>
 
-        {/* Contenedor centrado para el botón de Google */}
+        {/* Contenedor centrado para el botón de Google (renderizado por GIS) */}
         <div className={styles.googleBtnContainer}>
-          <button
-            ref={btnRef}
-            type="button"
-            className={styles.googleBtn}
-            onClick={() => { if (onOAuth) onOAuth(); }}
-            aria-label="Continuar con Google"
-          >
-            <GoogleIcon />
-            <span>Continuar con Google</span>
-          </button>
+          <div ref={containerRef} aria-label="Botón de Google" />
         </div>
 
         {/* BOTÓN DE ADMIN DISCRETO CENTRADO */}
@@ -117,22 +119,15 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
           </div>
         )}
 
-        {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
+  {(error || externalError) && (
+    <p className={styles.error} role="alert" aria-live="assertive">
+      {externalError || error}
+    </p>
+  )}
       </div>
 
       {/* Footer original sin cambios */}
       <LoginFooter />
     </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg className={styles.g} viewBox="0 0 533.5 544.3" aria-hidden>
-      <path fill="#EA4335" d="M533.5 278.4c0-18.6-1.6-37-5-54.8H272v103.8h147.2c-6.3 34.5-25 63.7-53.2 83.2l86 66.7c50.3-46.4 81.5-114.7 81.5-198.9z"/>
-      <path fill="#34A853" d="M272 544.3c72.9 0 134.3-24.1 179-65.4l-86-66.7c-23.8 16-54.2 25.4-93 25.4-71.4 0-132-48.1-153.8-112.6l-89.4 69.3C66.7 482.8 161.5 544.3 272 544.3z"/>
-      <path fill="#4A90E2" d="M118.2 324.9c-10.8-32.4-10.8-68.1 0-100.5l-89.4-69.3c-39.5 78.9-39.5 160.2 0 239.1l89.4-69.3z"/>
-      <path fill="#FBBC05" d="M272 106.2c39.6-.6 77.9 14.3 106.8 41l79.6-79.6C413.3 22.8 345.9-.2 272 0 161.5 0 66.7 61.5 28.8 180.8l89.4 69.3C140 186.6 200.6 106.2 272 106.2z"/>
-    </svg>
   );
 }

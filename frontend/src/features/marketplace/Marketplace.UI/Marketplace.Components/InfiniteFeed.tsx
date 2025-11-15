@@ -208,29 +208,36 @@ const InfiniteFeed: React.FC<InfiniteFeedProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {!isLoading && posts.length > 0 && (
         <motion.div 
-          className="mb-4 flex items-center justify-between"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className="mb-5 inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-md border border-gray-200"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span className="font-medium text-gray-900">{posts.length}</span>
-            <span>publicación{posts.length !== 1 ? 'es' : ''}</span>
-            {(searchTerm || selectedCategoryId) && (
-              <span className="flex items-center gap-2 ml-2">
-                {searchTerm && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200">
-                    🔍 "{searchTerm}"
-                  </span>
-                )}
-                {selectedCategoryId && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    📁 {categoryNames[selectedCategoryId]}
-                  </span>
-                )}
-              </span>
-            )}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+              <span className="text-white text-xs font-bold">{posts.length}</span>
+            </div>
+            <span className="text-sm font-medium text-gray-900">
+              {posts.length === 1 ? 'publicación' : 'publicaciones'}
+            </span>
           </div>
+          
+          {(searchTerm || selectedCategoryId) && (
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+              {searchTerm && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-blue-50 text-blue-700 border border-blue-200 font-medium">
+                  <span>🔍</span>
+                  <span className="max-w-[150px] truncate">"{searchTerm}"</span>
+                </span>
+              )}
+              {selectedCategoryId && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                  <span>📁</span>
+                  <span>{categoryNames[selectedCategoryId]}</span>
+                </span>
+              )}
+            </div>
+          )}
         </motion.div>
       )}
 

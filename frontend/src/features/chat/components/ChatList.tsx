@@ -1,4 +1,5 @@
 // ChatList.tsx
+import { motion } from 'framer-motion';
 import type { Chat } from "../types/chat";
 
 export function ChatList({
@@ -8,31 +9,35 @@ export function ChatList({
 }: { chats: Chat[]; onSelectChat: (id:number)=>void; chatActivo: number|null }) {
   if (!chats || chats.length === 0) {
     return (
-      // CAMBIO: Fondo amarillo
-      <aside className="h-full w-full min-w-0 flex flex-col bg-yellow-400">
-        {/* CAMBIO: Texto negro */}
-        <div className="flex flex-1 items-center justify-center text-black opacity-75">
-          No hay conversaciones
+      <aside className="h-full w-full min-w-0 flex flex-col bg-gradient-to-b from-slate-50 to-gray-100">
+        <div className="flex flex-1 items-center justify-center text-gray-500 text-sm">
+          <div className="text-center">
+            <svg className="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p className="font-medium">No hay conversaciones</p>
+          </div>
         </div>
       </aside>
     );
   }
   return (
-    // CAMBIO: Fondo amarillo (antes bg-transparent)
-    <aside className="h-full w-full min-w-0 flex flex-col bg-yellow-400">
+    <aside className="h-full w-full min-w-0 flex flex-col bg-gradient-to-b from-slate-50 to-gray-100">
       <ul className="min-h-0 overflow-y-auto overflow-x-hidden">
-        {chats.map((chat) => {
+        {chats.map((chat, index) => {
           const active = chatActivo === chat.id;
           return (
-            <li
+            <motion.li
               key={chat.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
               role="button"
               tabIndex={0}
               aria-selected={active}
-              // CAMBIO: Estilo activo es amarillo más oscuro. Borde amarillo más sutil.
-              className={`group cursor-pointer px-4 py-3 border-b border-yellow-500/30 transition-colors duration-150 ease-in-out transform-gpu
-                ${active ? "bg-yellow-500" : "bg-transparent hover:bg-yellow-500/50"}
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300`}
+              className={`group cursor-pointer px-4 py-3 border-b border-gray-200/50 transition-all duration-200 ease-in-out
+                ${active ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-orange-500" : "bg-transparent hover:bg-gray-50"}
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400`}
               onClick={() => onSelectChat(chat.id)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -42,24 +47,32 @@ export function ChatList({
               }}
             >
               <div className="flex items-center gap-3">
-                {/* CAMBIO: Avatar blanco (antes bg-gray-200) */}
-                <div className="h-10 w-10 rounded-full bg-white grid place-items-center text-gray-500 shrink-0
-                                transition-colors duration-150 ease-in-out group-hover:bg-yellow-100">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <div className={`h-11 w-11 rounded-full grid place-items-center shrink-0 transition-all duration-200
+                                ${active 
+                                  ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md" 
+                                  : "bg-gray-200 group-hover:bg-gradient-to-br group-hover:from-blue-400 group-hover:to-indigo-500"}`}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className={active ? "text-white" : "text-gray-600 group-hover:text-white"}>
                     <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5Z" fill="currentColor"/>
                     <path d="M4 20c0-3.31 3.58-6 8-6s8 2.69 8 6v1H4v-1Z" fill="currentColor"/>
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  {/* CAMBIO: Texto principal negro (antes text-slate-800) */}
-                  <p className={`font-semibold leading-5 truncate text-black`}>{chat.nombre}</p>
-                  {/* CAMBIO: Texto secundario gris oscuro (antes text-slate-500) */}
-                  <p className="text-xs text-gray-800 leading-5 truncate">
+                  <p className={`font-semibold leading-5 truncate transition-colors ${active ? "text-gray-900" : "text-gray-700 group-hover:text-gray-900"}`}>
+                    {chat.nombre}
+                  </p>
+                  <p className="text-xs text-gray-500 leading-5 truncate">
                     {chat.ultimoMensaje ?? ""}
                   </p>
                 </div>
+                {active && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-2 h-2 rounded-full bg-orange-500"
+                  />
+                )}
               </div>
-            </li>
+            </motion.li>
           )
         })}
       </ul>

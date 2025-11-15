@@ -1,14 +1,2 @@
-export interface Mensaje {
-  id: number | string; // puede ser tempId string hasta que se confirme
-  texto: string;
-  autor: "yo" | "otro";
-  estado?: "enviando" | "enviado" | "recibido" | "leido";
-  hora: string;
-}
-
-export interface Chat {
-  id: number;
-  nombre: string;
-  ultimoMensaje: string;
-  mensajes: Mensaje[]; 
-}
+// Re-exportar Message y Chat desde el archivo central de tipos
+export type { Message as Mensaje, Chat } from '../../../types/entities';

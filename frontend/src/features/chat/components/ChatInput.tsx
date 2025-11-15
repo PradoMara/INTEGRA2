@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>Promise<void> }) {
   const [texto, setTexto] = useState("");
@@ -120,69 +121,82 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
   };
 
   return (
-    <footer className="w-full border-t bg-white/60 px-4 py-3">
+    <footer className="w-full border-t border-gray-200 bg-white px-4 py-3 shadow-sm">
       <div className="max-w-full mx-auto flex flex-col gap-2" ref={wrapperRef}>
         <div className="flex items-center gap-2 relative">
-          <button
+          <motion.button
             type="button"
             onClick={() => setShowEmoji(v => !v)}
             aria-expanded={showEmoji}
             aria-label="Abrir panel de emojis"
-            className="p-2 rounded-full hover:bg-gray-100"
+            className="p-2.5 rounded-full hover:bg-gray-100 transition-colors text-xl"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
           >
             😊
-          </button>
+          </motion.button>
 
-          {showEmoji && (
-            <div
-              ref={emojiPanelRef}
-              className="absolute bottom-full left-0 mb-3 w-96 max-h-72 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-lg z-50"
-              role="dialog"
-              aria-label="Selector de emojis por categoría"
-            >
-              <div className="flex flex-col h-full">
-                {/* categorías */}
-                <div className="flex gap-1 px-3 py-2 border-b overflow-x-auto">
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setActiveCategory(cat)}
-                      className={`px-3 py-1 rounded text-sm whitespace-nowrap ${activeCategory === cat ? "bg-yellow-100 text-yellow-800 font-semibold" : "hover:bg-gray-100"}`}
-                      aria-pressed={activeCategory === cat}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+          <AnimatePresence>
+            {showEmoji && (
+              <motion.div
+                ref={emojiPanelRef}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full left-0 mb-3 w-96 max-h-72 overflow-hidden bg-white border border-gray-200 rounded-xl shadow-2xl z-50"
+                role="dialog"
+                aria-label="Selector de emojis por categoría"
+              >
+                <div className="flex flex-col h-full">
+                  {/* categorías */}
+                  <div className="flex gap-1 px-3 py-2 border-b overflow-x-auto bg-gradient-to-r from-blue-50 to-indigo-50">
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all ${
+                          activeCategory === cat 
+                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold shadow-md" 
+                            : "hover:bg-white/80"
+                        }`}
+                        aria-pressed={activeCategory === cat}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
 
-                {/* grid de emojis - emojis más grandes, centrados */}
-                <div className="p-3 overflow-auto">
-                  {/* usar inline-grid dentro de un contenedor flex para centrar todo el conjunto */}
-                  <div className="flex justify-center">
-                    <div className="inline-grid grid-cols-8 gap-2 justify-items-center">
-                      {(EMOJI_CATEGORIES[activeCategory] || []).map((e) => (
-                        <button
-                          key={e}
-                          type="button"
-                          onClick={() => { insertEmoji(e); }}
-                          className="w-12 h-12 flex items-center justify-center text-2xl rounded hover:bg-gray-100"
-                          aria-label={`Emoji ${e}`}
-                        >
-                          {e}
-                        </button>
-                      ))}
+                  {/* grid de emojis */}
+                  <div className="p-3 overflow-auto">
+                    <div className="flex justify-center">
+                      <div className="inline-grid grid-cols-8 gap-2 justify-items-center">
+                        {(EMOJI_CATEGORIES[activeCategory] || []).map((e) => (
+                          <motion.button
+                            key={e}
+                            type="button"
+                            onClick={() => { insertEmoji(e); }}
+                            className="w-12 h-12 flex items-center justify-center text-2xl rounded-lg hover:bg-blue-50 transition-colors"
+                            aria-label={`Emoji ${e}`}
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {e}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* pie con categoría activa */}
-                <div className="px-3 py-2 border-t text-sm text-gray-600">
-                  Categoría: <strong>{activeCategory}</strong>
+                  {/* pie con categoría activa */}
+                  <div className="px-3 py-2 border-t text-xs text-gray-600 bg-gray-50">
+                    Categoría: <strong className="text-orange-600">{activeCategory}</strong>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <textarea
             ref={textareaRef}
@@ -193,7 +207,7 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
             onCompositionEnd={handleCompositionEnd}
             placeholder="Escribe un mensaje..."
             rows={2}
-            className="flex-1 resize-none rounded-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+            className="flex-1 resize-none rounded-2xl px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             aria-label="Escribe un mensaje"
           />
           <input
@@ -203,31 +217,51 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
             onChange={handleFileChange}
             className="hidden"
           />
-          <button
+          <motion.button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200"
+            className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600"
             aria-label="Adjuntar archivo"
+            whileHover={{ scale: 1.1, rotate: 15 }}
+            whileTap={{ scale: 0.95 }}
           >
-            📎
-          </button>
-          <button
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+          </motion.button>
+          <motion.button
             type="button"
             onClick={() => submit()}
-            // Cambiado a fondo amarillo y texto negro para que la letra sea negra y mantenga contraste
-            className="px-4 py-2 rounded-md bg-yellow-400 text-black disabled:opacity-50"
+            className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
             disabled={!texto.trim() && !file}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Enviar
-          </button>
+          </motion.button>
         </div>
 
-        {preview && (
-          <div className="flex items-center gap-2">
-            <img src={preview} alt="preview" className="h-16 w-16 object-cover rounded" />
-            <button onClick={cancelFile} className="text-sm text-red-500">Cancelar</button>
-          </div>
-        )}
+        <AnimatePresence>
+          {preview && (
+            <motion.div 
+              className="flex items-center gap-3 p-2 bg-blue-50 rounded-lg border border-blue-200"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <img src={preview} alt="preview" className="h-16 w-16 object-cover rounded-lg shadow-sm" />
+              <span className="text-sm text-gray-700 flex-1">Imagen adjunta</span>
+              <motion.button 
+                onClick={cancelFile} 
+                className="text-sm text-red-500 hover:text-red-700 font-medium px-3 py-1 rounded-md hover:bg-red-50 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Cancelar
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </footer>
   );
