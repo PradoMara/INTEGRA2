@@ -1,40 +1,74 @@
-import React, { useState, useRef } from "react";
-import { useMemo } from "react";
-import { Sidebar } from "@/features/shared/ui/Sidebar";
-import MyPublicationsFeed from "./Perfil.Components/PublicationsFeed";
-import UserDefault from "@/assets/img/user_default.png";
-// CAMBIO: Añadido el import para el logo (ajusta la ruta si es necesario)
-import logo from "@/assets/img/logouct.png"; 
-import { useMe } from "@/features/users/hooks/useMe";
-import { Link } from 'react-router-dom'
-import { useUpdateUser } from "@/features/users/hooks/useUpdateUser";
+import React, { useState, useRef, useEffect } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useAuth } from "@/app/context/AuthContext" // Ajusta la ruta si es necesario
+import { Sidebar } from "@/features/shared/ui/Sidebar"
+import MyPublicationsFeed from "./Perfil.Components/PublicationsFeed"
+import UserDefault from "@/assets/img/user_default.png"
 
-const MyPublicationsFeedAny = MyPublicationsFeed as any;
+// Iconos para editar/guardar
+import { LuPencil, LuSave, LuX, LuLoader, LuMapPin, LuPhone, LuUser, LuMail } from "react-icons/lu"
 
-type Review = {
-  id: string;
-  author: string;
-  rating: number;
-};
+// Tipos
+interface UserProfile {
+  id: number
+  correo: string
+  usuario: string
+  nombre: string
+  apellido: string | null
+  role: string
+  campus: string | null
+  reputacion: string | number
+  telefono?: string
+  direccion?: string
+  resumen?: {
+    totalVentas: number
+    totalProductos: number
+  }
+}
 
-type Publication = {
-  id: string;
-  title: string;
-  price: number;
-  status: "Disponible" | "Agotado";
-  imageUrl?: string;
-};
+interface UpdateProfileData {
+  usuario: string
+  apellido: string
+  campus: string
+}
 
-// --- Componente StarRating (sin cambios) ---
+// --- Funciones de API ---
+const fetchProfile = async (token: string | null): Promise<UserProfile> => {
+  if (!token) throw new Error("No token")
+  const res = await fetch("/api/users/profile", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error("Error al cargar perfil")
+  const data = await res.json()
+  return data.data
+}
+
+const updateProfile = async (data: UpdateProfileData, token: string | null) => {
+  if (!token) throw new Error("No token")
+  const res = await fetch("/api/users/profile", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+  const result = await res.json()
+  if (!res.ok) throw new Error(result.message || "Error al actualizar")
+  return result.user
+}
+
+// --- Componente StarRating (Sin cambios) ---
 function StarRating({ value = 0, size = 18 }: { value?: number; size?: number }) {
-  const full = Math.floor(value);
-  const half = value - full >= 0.5;
-  const total = 5;
+  const rating = Number(value) || 0
+  const full = Math.floor(rating)
+  const half = rating - full >= 0.5
+  const total = 5
 
   return (
     <div className="inline-flex items-center gap-1" aria-hidden>
       {Array.from({ length: total }).map((_, i) => {
-        const fill = i < full ? "currentColor" : i === full && half ? "url(#half)" : "none";
+        const fill = i < full ? "currentColor" : i === full && half ? "url(#half)" : "none"
         return (
           <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="text-amber-500 flex-shrink-0">
             <defs>
@@ -45,25 +79,20 @@ function StarRating({ value = 0, size = 18 }: { value?: number; size?: number })
             </defs>
             <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill={fill} stroke="currentColor" strokeWidth="1" />
           </svg>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
-// --- Componente Principal PerfilPage ---
+// --- Componente Principal ---
 export default function PerfilPage() {
-  // Demo: datos mock desde MSW usando hooks de usuario
-  const { data: me, isLoading: loadingMe } = useMe()
-  const updateUser = useUpdateUser()
-
   const user = {
-    name: me?.nombre ?? "Nombre",
-    email: me?.email ?? "nombre@alu.uct.cl",
-    campus: me?.campus ?? "Campus San Juan Pablo II",
-    rating: me?.reputacion ?? 4.5,
-    id: me?.id ?? 'u-0',
-  }
+    name: "Nombre",
+    email: "nombre@alu.uct.cl",
+    campus: "Campus San Juan Pablo II",
+    rating: 4.5,
+  };
 
   const reviews: Review[] = [
     { id: "r1", author: "Usuario", rating: 4.5 },
@@ -83,7 +112,7 @@ export default function PerfilPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[200px_1fr]">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[240px_1fr]">
       <Sidebar />
 
       <div className="min-w-0 flex flex-col h-screen">
@@ -108,64 +137,44 @@ export default function PerfilPage() {
               </div>
               <p className="text-base text-gray-600 mt-2">{user.email}</p>
               <p className="text-base text-gray-600">{user.campus}</p>
-              {/* Botón de demo para actualizar mock (no red real) */}
-              <div className="mt-3">
-                <button
-                  className="px-3 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
-                  disabled={loadingMe || updateUser.isPending || !user.id}
-                  onClick={() => {
-                    if (!user.id) return
-                    updateUser.mutate({ id: user.id, data: { about: 'Actualizado desde demo ' + new Date().toLocaleTimeString() } })
-                  }}
-                >
-                  {updateUser.isPending ? 'Guardando…' : 'Actualizar perfil'}
-                </button>
-                <Link to="/perfil/editar" className="ml-3 inline-block">
-                  <button className="px-3 py-1.5 text-sm rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300">Editar perfil</button>
-                </Link>
-                {updateUser.isError && (
-                  <p className="mt-2 text-sm text-rose-600">Error al actualizar (mock).</p>
-                )}
-                {updateUser.isSuccess && (
-                  <p className="mt-2 text-sm text-emerald-700">Perfil actualizado (mock).</p>
-                )}
-              </div>
             </div>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Valoraciones</h2>
-            <div className="relative">
-              <div
-                ref={scrollContainerRef}
-                className="grid auto-cols-[calc(33.333%-0.67rem)] grid-flow-col gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {reviews.map((r, index) => (
+            {/* --- VALORACIONES (Mock) --- */}
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-4 px-1">Valoraciones Recientes</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {reviews.map((r) => (
                   <div
                     key={r.id}
-                    className="bg-amber-100 border border-amber-300 rounded-xl p-4 flex items-center gap-3 hover:shadow-lg hover:border-amber-400 hover:-translate-y-1 transition-all duration-300 ease-out"
-                    style={{
-                      animationDelay: `${index * 0.05}s`
-                    }}
+                    className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-all"
                   >
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0" />
+                    <div className="h-10 w-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg">
+                      {r.author.charAt(0)}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900 truncate">{r.author}</p>
-                      <StarRating value={r.rating} size={16} />
+                      <StarRating value={r.rating} size={14} />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tus Publicaciones</h2>
-            <MyPublicationsFeedAny publications={publications} />
-          </section>
+            {/* --- PUBLICACIONES (Componente Existente) --- */}
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-4 px-1">Tus Publicaciones</h2>
+              {/* Aquí pasas el componente que ya tienes. 
+                  Nota: Si quieres que este componente cargue datos reales, 
+                  asegúrate de que 'MyPublicationsFeed' use la API o pásale los datos aquí */}
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 min-h-[200px]">
+                 <MyPublicationsFeed />
+              </div>
+            </section>
+
+          </div>
         </main>
       </div>
     </div>
-  );
+  )
 }

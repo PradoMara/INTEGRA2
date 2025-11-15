@@ -20,9 +20,9 @@ export type {
   RegisterData,
   CreateProductData,
   UpdateProductData,
-} from '../entities';
+} from './entities';
 
-// Paginación / filtros
+// Tipos de UI y utilitarios
 export interface PageMeta {
   page: number;
   pageSize: number;
@@ -36,7 +36,7 @@ export interface Paginated<T> {
 
 // Respuestas de API
 export interface ApiError {
-  code: string;            // p.ej. 'VALIDATION_ERROR'
+  code: string;
   message: string;
   details?: unknown;
 }
@@ -45,3 +45,6 @@ export interface ApiResponse<T> {
   data: T;
   error?: ApiError;
 }
+
+// Nota: Las categorías ahora se obtienen dinámicamente desde la API
+// No usar constantes hardcodeadas
