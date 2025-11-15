@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/app/context/AuthContext'
+import { InlineSpinner } from '@/components/ui/Spinner'
 import styles from './Onboarding.module.css'
 
 interface OnboardingNameProps {
@@ -200,7 +201,10 @@ export default function OnboardingNamePage({ campusId, carreraId }: OnboardingNa
 							} : {}}
 							transition={{ duration: 2, repeat: Infinity }}
 						>
-							{loading ? 'Guardando...' : 'Continuar'}
+							<span className="flex items-center gap-2 justify-center">
+								{loading && <InlineSpinner size="sm" color="white" />}
+								{loading ? 'Guardando...' : 'Continuar'}
+							</span>
 						</motion.button>
 					</motion.div>
 

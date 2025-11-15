@@ -8,12 +8,13 @@ import { isAllowedEmailDomain, parseAllowedDomainsFromEnv } from '@/features/Log
 type Props = {
   onOAuth?: () => void | Promise<void>;
   onShowAdminLogin?: () => void;
+  error?: string | null;
 };
 
 const ALUMNO_DOMAIN = "alu.uct.cl";
 const PROFESOR_DOMAIN = "uct.cl";
 
-export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props) {
+export default function LoginInstitutional({ onOAuth, onShowAdminLogin, error: externalError }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string>('');
 
@@ -118,7 +119,11 @@ export default function LoginInstitutional({ onOAuth, onShowAdminLogin }: Props)
           </div>
         )}
 
-  {error && <p className={styles.error} role="alert" aria-live="assertive">{error}</p>}
+  {(error || externalError) && (
+    <p className={styles.error} role="alert" aria-live="assertive">
+      {externalError || error}
+    </p>
+  )}
       </div>
 
       {/* Footer original sin cambios */}

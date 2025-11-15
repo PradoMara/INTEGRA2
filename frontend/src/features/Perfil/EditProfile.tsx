@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import SelectCampus from '../onboarding/Onboarding.UI/SelectCampus'
 import SelectCarrera from '../onboarding/Onboarding.UI/SelectCarrera'
 import { campuses as mockCampuses, carreras as mockCarreras } from '../onboarding/Onboarding.Utils/mocks'
+import { InlineSpinner } from '@/components/ui/Spinner'
 
 export default function EditProfile() {
   // Datos de ejemplo (simularían venir del hook useMe())
@@ -84,7 +85,8 @@ export default function EditProfile() {
 
               <div className="flex items-center gap-3 justify-end mt-2">
                 <button type="button" onClick={() => { setName(existing.name); setEmail(existing.email); setCampusId(existing.campusId); setCarreraId(existing.carreraId); setSaved(false) }} className="px-4 py-2 border rounded text-sm">Cancelar</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded text-sm shadow">
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded text-sm shadow flex items-center gap-2 disabled:opacity-50">
+                  {saving && <InlineSpinner size="sm" color="white" />}
                   {saving ? 'Guardando…' : 'Guardar cambios'}
                 </button>
               </div>

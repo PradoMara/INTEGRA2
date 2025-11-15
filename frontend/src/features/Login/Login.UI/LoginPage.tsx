@@ -8,11 +8,13 @@ import LoginInstitutional from './Login.Components/LoginInstitutional';
 import styles from './Login.Components/Login.module.css'; // MISMO CSS
 import Logo from '@/assets/img/logouct.png';
 import useGoogleAuth from '@/features/Login/Login.Hooks/useGoogleAuth';
+import Spinner, { InlineSpinner } from '@/components/ui/Spinner';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const authLogin = useAuthStore((state) => state.login);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const { exchange } = useGoogleAuth();
@@ -54,6 +56,7 @@ export default function LoginPage() {
     // Intercambia el idToken (guardado por Google One Tap en localStorage)
     // por la sesión/JWT de la app antes de navegar.
     setError(null);
+    setOauthLoading(true);
     try {
       const response = await exchange();
       
@@ -69,6 +72,8 @@ export default function LoginPage() {
       const errorMsg = e?.message || 'No se pudo completar el inicio de sesión con Google';
       setError(errorMsg);
       console.error('Error en OAuth:', errorMsg);
+    } finally {
+      setOauthLoading(false);
     }
   }
 
@@ -121,9 +126,19 @@ export default function LoginPage() {
   }
 
   return (
-    <LoginInstitutional 
-      onOAuth={handleOAuth} 
-      onShowAdminLogin={() => setShowAdminLogin(true)}
-    />
+    <>
+      {oauthLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl p-8">
+            <Spinner size="xl" color="primary" label="Iniciando sesión con Google..." />
+          </div>
+        </div>
+      )}
+      <LoginInstitutional 
+        onOAuth={handleOAuth} 
+        onShowAdminLogin={() => setShowAdminLogin(true)}
+        error={error}
+      />
+    </>
   );
 }

@@ -10,6 +10,8 @@ import { MockChatWS } from '@/features/DM/DM.Hooks/MockChatWS'
 import { mockChats } from '@/features/DM/DM.Hooks/mockChats'
 import React from 'react'
 import ChatRules from './DM.Components/ChatRules' // aseguro import presente
+import Spinner from '@/components/ui/Spinner'
+import { ChatMessageSkeleton } from '@/components/ui/Skeleton'
 
 const useEnv = () => {
   const API = useMemo(() => import.meta.env.VITE_API_URL as string, [])
@@ -23,6 +25,7 @@ export default function ChatPage() {
   const location = useLocation()
   const [chats, setChats] = useState<Chat[]>([])
   const [chatActivo, setChatActivo] = useState<number | null>(null)
+  const [loadingChats, setLoadingChats] = useState(true)
   const userIdActual = useMemo(() => 'u1', [])
   const ws = useRef<WebSocket | MockChatWS | null>(null)
   const isMockWS = !WS_URL || WS_URL === "mock"
@@ -49,10 +52,12 @@ export default function ChatPage() {
     if (isMockWS) {
       setChats(mockChats)
       setChatActivo(mockChats[0]?.id ?? null)
+      setLoadingChats(false)
       return
     }
     (async () => {
       try {
+        setLoadingChats(true)
         const res = await fetch(`${API}/chats`, { credentials: 'include' })
         if (!res.ok) throw new Error(String(res.status))
         const data: Chat[] = await res.json()
@@ -61,6 +66,8 @@ export default function ChatPage() {
         if (!startTarget && data.length) setChatActivo((data[0] as any).id)
       } catch (e) {
         console.error('[ChatPage] Error cargando chats:', e)
+      } finally {
+        setLoadingChats(false)
       }
     })()
   }, [API, startTarget])
@@ -372,7 +379,18 @@ export default function ChatPage() {
 
         <div className="flex-1 min-h-0 max-h-screen overflow-y-auto overflow-x-hidden">
           {/* ChatList tiene su propio fondo amarillo, aquí el contenedor es redundante pero se mantiene el flujo */}
-          <ChatList chats={chats} onSelectChat={setChatActivo} chatActivo={chatActivo} />
+          {loadingChats ? (
+            <div className="flex items-center justify-center py-20">
+              <Spinner size="lg" color="primary" label="Cargando chats..." />
+            </div>
+          ) : chats.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-600">
+              <div className="text-6xl mb-4">💬</div>
+              <p className="text-center">No tienes conversaciones aún</p>
+            </div>
+          ) : (
+            <ChatList chats={chats} onSelectChat={setChatActivo} chatActivo={chatActivo} />
+          )}
         </div>
       </div>
 
