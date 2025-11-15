@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import SelectCampus from '../onboarding/SelectCampus'
-import SelectCarrera from '../onboarding/SelectCarrera'
-import { campuses as mockCampuses, carreras as mockCarreras } from '../onboarding/mocks'
+import SelectCampus from '../onboarding/Onboarding.UI/SelectCampus'
+import SelectCarrera from '../onboarding/Onboarding.UI/SelectCarrera'
+import { campuses as mockCampuses, carreras as mockCarreras } from '../onboarding/Onboarding.Utils/mocks'
 
 export default function EditProfile() {
   // Datos de ejemplo (simularían venir del hook useMe())
