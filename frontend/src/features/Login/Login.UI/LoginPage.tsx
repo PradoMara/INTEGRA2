@@ -42,7 +42,14 @@ export default function LoginPage() {
     // Intercambia el idToken (guardado por Google One Tap en localStorage)
     // por la sesión/JWT de la app antes de navegar.
     try {
-      await exchange();
+      const response = await exchange();
+      
+      // El backend devuelve: { ok: true, message: '...', token: 'jwt...', user: {...} }
+      if (response.token && response.user) {
+        // Guardar en authStore para mantener la sesión
+        authLogin(response.token, response.user as any);
+      }
+      
       navigate('/home', { replace: true });
     } catch (e: any) {
       // Mostrar feedback mínimo; no bloquea el botón
