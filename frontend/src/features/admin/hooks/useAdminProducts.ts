@@ -48,8 +48,9 @@ export function useAdminProducts(initialQuery: string = '') {
         const list: AdminProduct[] = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
         setProducts(list);
       } else {
-        // Fallback a MSW /api/posts y filtrado local
-        const res = await fetch(`/api/posts?limit=1000`);
+        // Fallback a MSW /api/posts con paginación correcta
+        const limit = 20; // Límite razonable por página
+        const res = await fetch(`/api/posts?limit=${limit}`);
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
         const posts: Post[] = Array.isArray(data?.posts) ? data.posts : [];
