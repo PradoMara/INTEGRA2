@@ -62,7 +62,11 @@ export class MockPostRepository implements PostRepository {
     // Generar un post específico basado en el ID
     const productIndex = (id - 1) % productData.length
     const product = productData[productIndex]
-    const category = categories.find(cat => cat.id === product.category)!
+    const category = categories.find(cat => cat.id === product.category)
+    
+    if (!category) {
+      throw new Error(`Category not found for product: ${product.category}`)
+    }
     
     return {
       id,
@@ -127,7 +131,12 @@ export class MockPostRepository implements PostRepository {
       const id = startId + i
       const productIndex = (id - 1) % productData.length
       const product = productData[productIndex]
-      const category = categories.find(cat => cat.id === product.category)!
+      const category = categories.find(cat => cat.id === product.category)
+      
+      // Skip si la categor\u00eda no existe para evitar crash
+      if (!category) {
+        continue;
+      }
       
       const post: Post = {
         id,

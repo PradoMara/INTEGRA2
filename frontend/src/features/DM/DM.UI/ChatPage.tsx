@@ -98,7 +98,9 @@ export default function ChatPage() {
       const chat = chats.find((c) => c.id === chatActivo);
       if (!chat) return;
 
-      const destinatarioId = (chat as any).partnerId || (chat as any).participantes?.find((p: any) => p.id !== userIdActual)?.id;
+      // Validación segura del destinatario
+      const chatAny = chat as any;
+      const destinatarioId = chatAny?.partnerId || chatAny?.participantes?.find((p: any) => p?.id !== userIdActual)?.id;
       if (!destinatarioId) {
         console.error('No se pudo encontrar el destinatario del chat');
         return;

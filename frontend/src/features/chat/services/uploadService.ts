@@ -23,10 +23,9 @@ export const uploadImageService = async (
   token: string
 ): Promise<UploadApiResponse> => {
 
-  // Asumimos que la API corre en el puerto 3001
-  // TODO: Mover esto a una variable de entorno de VITE (ej. import.meta.env.VITE_API_URL)
-  const API_BASE_URL = "http://localhost:3001";
-  const endpoint = `${API_BASE_URL}/api/upload-image`; //
+  // Usa la variable de entorno o fallback a localhost
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+  const endpoint = `${API_BASE_URL}/api/upload-image`;
 
   // 1. Crear el FormData para enviar la imagen
   const formData = new FormData();
