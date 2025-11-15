@@ -120,7 +120,7 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
   };
 
   return (
-    <footer className="w-full border-t bg-white/60 px-4 py-3">
+    <footer className="w-full border-t bg-white px-4 py-3">
       <div className="max-w-full mx-auto flex flex-col gap-2" ref={wrapperRef}>
         <div className="flex items-center gap-2 relative">
           <button
@@ -193,7 +193,7 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
             onCompositionEnd={handleCompositionEnd}
             placeholder="Escribe un mensaje..."
             rows={2}
-            className="flex-1 resize-none rounded-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+            className="flex-1 resize-none rounded-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0B3A66]"
             aria-label="Escribe un mensaje"
           />
           <input
@@ -215,9 +215,9 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
           <button
             type="button"
             onClick={() => submit()}
-            // Cambiado a fondo amarillo y texto negro para que la letra sea negra y mantenga contraste
-            className="px-4 py-2 rounded-md bg-yellow-400 text-black disabled:opacity-50"
+            className="px-4 py-2 rounded-md bg-[#FFC400] text-black disabled:opacity-50 shadow-md hover:brightness-95"
             disabled={!texto.trim() && !file}
+            aria-label="Enviar mensaje"
           >
             Enviar
           </button>

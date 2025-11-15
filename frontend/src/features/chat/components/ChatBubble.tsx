@@ -68,11 +68,15 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
     >
       <div>
         <motion.div
-          className={`max-w-lg px-4 py-3 rounded-2xl text-sm shadow-md
-            ${esPropio
-              ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm" 
-              : "bg-white text-gray-900 rounded-bl-sm border border-gray-200"
-            }`}
+          className={`px-4 py-3 rounded-xl text-sm shadow-md`}
+          style={{
+            maxWidth: '68%',
+            background: esPropio ? '#1F6FA3' : '#FFFFFF',
+            color: esPropio ? '#FFFFFF' : '#0B2D52',
+            border: esPropio ? 'none' : '1px solid rgba(11,45,82,0.06)',
+            borderBottomRightRadius: esPropio ? 6 : 18,
+            borderBottomLeftRadius: esPropio ? 18 : 6
+          }}
           whileHover={{ scale: 1.02, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
           transition={{ type: 'spring', stiffness: 300 }}
           style={{ whiteSpace: "pre-wrap" as const }}

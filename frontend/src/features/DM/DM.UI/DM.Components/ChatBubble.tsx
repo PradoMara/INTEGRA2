@@ -7,10 +7,8 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ mensaje }: ChatBubbleProps) {
   const esPropio = mensaje.autor === "yo";
-  // ... (estado e imagen sin cambios) ...
   const estado = (mensaje as any).estado as string | undefined;
   const imagen = (mensaje as any).imagenUrl ?? (mensaje as any).imgUrl ?? null;
-  // ... (wrapText sin cambios) ...
   const wrapText = (text: string, max = 30) => {
     if (!text) return "";
     return text
@@ -27,7 +25,6 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
   };
   const displayText = wrapText(String(mensaje.texto ?? ""), 30);
   const renderEstado = () => {
-    // ... (lógica de estado sin cambios, pero ajustando color para fondo oscuro) ...
     if (!estado) return null;
     let texto = "";
     let color = "";
@@ -63,32 +60,37 @@ export function ChatBubble({ mensaje }: ChatBubbleProps) {
     <div className={`flex mb-3 ${esPropio ? "justify-end" : "justify-start"}`}>
       <div>
         <div
-          // CAMBIO CLAVE: AMBAS burbujas son blancas con texto negro
-          className={`max-w-lg px-4 py-2 rounded-2xl text-sm transform transition-all duration-200 ease-out flex items-center
-            ${esPropio
-              ? "bg-white text-black rounded-br-none hover:shadow-lg hover:-translate-y-0.5" // CAMBIADO DE 'bg-blue-600'
-              : "bg-white text-black rounded-bl-none hover:shadow-lg hover:-translate-y-0.5" // CAMBIADO DE 'bg-[#F2A900]'
-            }`}
-          style={{ boxShadow: "0 6px 18px rgba(0,0,0,0.06)", whiteSpace: "pre-wrap" as const }}
+          className="px-4 py-3 rounded-xl text-sm shadow-md transform transition-all duration-150 ease-out flex items-start"
+          style={{
+            maxWidth: '68%',
+            background: esPropio ? '#1F6FA3' : '#FFFFFF',
+            color: esPropio ? '#FFFFFF' : '#0B2D52',
+            border: esPropio ? 'none' : '1px solid rgba(11,45,82,0.06)',
+            borderBottomRightRadius: esPropio ? 8 : 18,
+            borderBottomLeftRadius: esPropio ? 18 : 8,
+            boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
+            whiteSpace: 'pre-wrap'
+          }}
         >
           <div className="w-full flex items-center gap-3">
             {imagen ? (
               <img
                 src={imagen}
                 alt="miniatura"
-                className="h-12 w-12 object-cover rounded-md flex-shrink-0"
-                style={{ width: 48, height: 48 }}
+                className="object-cover rounded-md flex-shrink-0"
+                style={{ width: 64, height: 64 }}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
               />
             ) : null}
-            <div className={`flex-1 ${imagen ? "" : "text-center"}`} style={{ lineHeight: 1.25 }}>
+            <div className={`flex-1 ${imagen ? "" : "text-left"}`} style={{ lineHeight: 1.35 }}>
               {displayText}
             </div>
           </div>
         </div>
         {esPropio && (
-          // CAMBIO: Texto de estado visible en fondo oscuro
-          <div className="flex justify-end mt-1 text-gray-400">{renderEstado()}</div>
+          <div className="flex justify-end mt-1 text-xs" style={{ color: 'rgba(0,0,0,0.45)' }}>
+            {renderEstado()}
+          </div>
         )}
       </div>
     </div>

@@ -347,22 +347,18 @@ export default function ChatPage() {
   }, [])
 
   return (
-    // CAMBIO: Fondo principal con un patrón y un color base (simulando la imagen)
-    // Nota: El patrón de fondo visible en la imagen debe ser implementado con CSS externo.
-    // Usaremos un color de fondo base y una clase de placeholder 'bg-pattern-chat'
-    // También ajustamos la rejilla para que ocupe toda la pantalla visible
     <div className="grid h-screen overflow-hidden max-h-screen grid-cols-[64px_320px_1fr] bg-gray-100 bg-pattern-chat">
 
       {/* COLUMNA 1: MiniSidebar (Fondo Amarillo Fuerte) */}
-      <aside className="border-r border-yellow-600 bg-yellow-600 max-h-screen">
+      <aside className="border-r border-[#D49A00] bg-[#FFC400] max-h-screen">
         <MiniSidebar active="chats" />
       </aside>
 
       {/* COLUMNA 2: Lista de Chats (Fondo Amarillo) */}
-      <div className="border-r border-yellow-500 min-w-0 min-h-0 max-h-screen flex flex-col bg-yellow-400">
+      <div className="border-r border-[#D49A00] min-w-0 min-h-0 max-h-screen flex flex-col bg-[#FFC400]">
         {/* CABECERA "Mis Chats" - Azul Oscuro */}
-        <div className="shrink-0 px-4 py-3 border-b border-blue-900 bg-blue-900">
-          <h2 className="text-sm font-semibold text-white">Chats</h2> {/* Cambio de texto y color */}
+        <div className="shrink-0 px-4 py-3 border-b border-[#0B3A66] bg-[#0B3A66]">
+          <h2 className="text-sm font-semibold text-white">Chats</h2>
         </div>
 
         {/* Inserto ChatRules inline para que el botón sea visible en la columna de chats */}
@@ -388,7 +384,7 @@ export default function ChatPage() {
         </div>
         {/* ChatInput - Ya tiene el fondo claro/transparente */}
         <div className="shrink-0">
-          <ChatInput onSend={handleSend} /> {/* AQUÍ ESTÁ EL INPUT */}
+          <ChatInput onSend={handleSend} />
         </div>
       </div>
     </div>

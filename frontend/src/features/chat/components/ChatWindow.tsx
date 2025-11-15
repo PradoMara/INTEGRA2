@@ -11,8 +11,8 @@ export function ChatWindow({ mensajes }: { mensajes: Mensaje[] }) {
   }, [mensajes]);
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
-      <div className="px-8 py-6 space-y-3">
+    <div className="h-full min-h-0 overflow-y-auto" style={{ background: '#F5F6F8' }}>
+      <div className="px-6 py-5 space-y-3">
         {mensajes.map((m) => <ChatBubble key={m.id} mensaje={m} />)}
         <div ref={endRef} />
       </div>

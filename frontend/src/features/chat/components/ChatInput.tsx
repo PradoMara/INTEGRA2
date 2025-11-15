@@ -232,7 +232,8 @@ export function ChatInput({ onSend }: { onSend: (t: string, file?: File|null)=>P
           <motion.button
             type="button"
             onClick={() => submit()}
-            className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
+            className="px-5 py-3 rounded-xl text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
+            style={{ background: 'linear-gradient(90deg, #1F6FA3 0%, #0B3A66 100%)' }}
             disabled={!texto.trim() && !file}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
