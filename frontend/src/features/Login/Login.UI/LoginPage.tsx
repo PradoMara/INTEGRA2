@@ -34,8 +34,8 @@ export default function LoginPage() {
       // El API ya entrega el usuario en la forma que espera el cliente (con 'rol').
       authLogin(token, userFromApi as any);
       
-      // Verificar si necesita onboarding (usuario sin apellido/datos completos)
-      if (!userFromApi.apellido || userFromApi.apellido.trim() === '') {
+      // Verificar si necesita onboarding (usuario sin campus configurado)
+      if (!userFromApi.campus || userFromApi.campus.trim() === '') {
         navigate('/onboarding', { replace: true });
       } else {
         navigate('/home', { replace: true });
@@ -72,8 +72,8 @@ export default function LoginPage() {
         authLogin(response.token, response.user as any);
       }
       
-      // Verificar si necesita onboarding (usuario nuevo de Google sin apellido completo)
-      if (response.user && (!response.user.apellido || response.user.apellido.trim() === '')) {
+      // Verificar si necesita onboarding (usuario nuevo de Google sin campus configurado)
+      if (response.user && (!response.user.campus || response.user.campus.trim() === '')) {
         navigate('/onboarding', { replace: true });
       } else {
         navigate('/home', { replace: true });
