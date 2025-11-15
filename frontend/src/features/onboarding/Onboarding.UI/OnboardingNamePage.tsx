@@ -8,9 +8,10 @@ import styles from './Onboarding.module.css'
 interface OnboardingNameProps {
 	campusId?: string
 	carreraId?: string
+	onNext?: () => void
 }
 
-export default function OnboardingNamePage({ campusId, carreraId }: OnboardingNameProps) {
+export default function OnboardingNamePage({ campusId, carreraId, onNext }: OnboardingNameProps) {
 	const navigate = useNavigate()
 	const { user, login } = useAuth()
 	const [usuario, setUsuario] = useState(user?.usuario || '')
@@ -29,7 +30,11 @@ export default function OnboardingNamePage({ campusId, carreraId }: OnboardingNa
 		setError(null)
 
 		try {
-			const token = localStorage.getItem('token')
+			const token = localStorage.getItem('app_jwt_token') || localStorage.getItem('token')
+			
+			if (!token) {
+				throw new Error('No se encontró el token de sesión')
+			}
 			
 			// Construir el payload con los campos que el backend acepta
 			const payload: any = {}
@@ -39,7 +44,7 @@ export default function OnboardingNamePage({ campusId, carreraId }: OnboardingNa
 			
 			// Solo hacer la petición si hay cambios
 			if (Object.keys(payload).length > 0) {
-				const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+				const response = await fetch(`${import.meta.env.VITE_API_URL}/users/profile`, {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
@@ -69,8 +74,13 @@ export default function OnboardingNamePage({ campusId, carreraId }: OnboardingNa
 				}
 			}
 
-			// Redirigir al home
-			navigate('/home')
+			// Si hay callback onNext, ir a la siguiente página del onboarding
+			// Si no, redirigir al home
+			if (onNext) {
+				onNext()
+			} else {
+				navigate('/home')
+			}
 		} catch (err: any) {
 			console.error('Error:', err)
 			setError(err.message || 'Hubo un problema al guardar tu información')

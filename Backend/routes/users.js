@@ -64,7 +64,7 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
 router.put('/profile', authenticateToken, async (req, res, next) => {
   try {
     // 1. Obtiene los campos permitidos del body de la petición
-    const { apellido, usuario, campus, telefono, direccion } = req.body;
+    const { apellido, usuario, campus, telefono, direccion, fotoPerfil } = req.body;
 
     // 2. Construye un objeto 'updateData' solo con los campos que el usuario SÍ envió.
     //    Esto evita sobreescribir campos existentes con 'undefined'.
@@ -72,8 +72,9 @@ router.put('/profile', authenticateToken, async (req, res, next) => {
     if (apellido !== undefined) updateData.apellido = apellido;
     if (usuario !== undefined) updateData.usuario = usuario;
     if (campus !== undefined) updateData.campus = campus;
-    if (telefono !== undefined) updateData.telefono = telefono; // (Nota: 'telefono' y 'direccion' no están en tu schema.prisma)
-    if (direccion !== undefined) updateData.direccion = direccion; // (Pero los dejamos por si se añaden)
+    if (telefono !== undefined) updateData.telefono = telefono;
+    if (direccion !== undefined) updateData.direccion = direccion;
+    if (fotoPerfil !== undefined) updateData.fotoPerfil = fotoPerfil;
 
     // 3. Valida que al menos un campo haya sido enviado
     if (Object.keys(updateData).length === 0) {
@@ -81,7 +82,7 @@ router.put('/profile', authenticateToken, async (req, res, next) => {
         'Se debe proporcionar al menos un campo para actualizar',
         'VALIDATION_ERROR',
         400, // 400 Bad Request
-        { fields: ['apellido', 'usuario', 'campus', 'telefono', 'direccion'] }
+        { fields: ['apellido', 'usuario', 'campus', 'telefono', 'direccion', 'fotoPerfil'] }
       );
     }
 

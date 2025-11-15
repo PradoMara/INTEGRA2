@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import SelectCampus from './SelectCampus'
 import SelectCarrera from './SelectCarrera'
 import OnboardingNamePage from './OnboardingNamePage'
+import OnboardingContactPage from './OnboardingContactPage'
 import SuccessModal from './SuccessModal'
 import { campuses as mockCampuses, carreras as mockCarreras } from '../Onboarding.Utils/mocks'
 import styles from './Onboarding.module.css'
 
 export default function OnboardingPage() {
 	const navigate = useNavigate()
-	const [step, setStep] = useState<'campus-carrera' | 'nombre'>('campus-carrera')
+	const [step, setStep] = useState<'campus-carrera' | 'nombre' | 'contacto'>('campus-carrera')
 	const [campuses, setCampuses] = useState<Array<{ id: string; name: string }>>([])
 	const [carreras, setCarreras] = useState<Array<{ id: string; name: string; campusId: string }>>([])
 	const [campusId, setCampusId] = useState<string | null>(null)
@@ -60,9 +61,21 @@ export default function OnboardingPage() {
 	const selectedCampus = campuses.find(c => c.id === campusId)
 	const selectedCarrera = carreras.find(c => c.id === carreraId)
 
-	// Si ya pasó al step de nombre, mostrar ese componente
+	// Si está en el paso de nombre, mostrar ese componente
 	if (step === 'nombre') {
-		return <OnboardingNamePage campusId={campusId || undefined} carreraId={carreraId || undefined} />
+		return <OnboardingNamePage 
+			campusId={campusId || undefined} 
+			carreraId={carreraId || undefined}
+			onNext={() => setStep('contacto')}
+		/>
+	}
+
+	// Si está en el paso de contacto, mostrar ese componente
+	if (step === 'contacto') {
+		return <OnboardingContactPage 
+			campusId={campusId || undefined} 
+			carreraId={carreraId || undefined}
+		/>
 	}
 
 	return (

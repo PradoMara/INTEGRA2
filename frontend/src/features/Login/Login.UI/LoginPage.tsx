@@ -33,7 +33,13 @@ export default function LoginPage() {
       const { token, user: userFromApi } = await apiLogin({ email, password });
       // El API ya entrega el usuario en la forma que espera el cliente (con 'rol').
       authLogin(token, userFromApi as any);
-      navigate('/home', { replace: true });
+      
+      // Verificar si necesita onboarding (usuario sin apellido/datos completos)
+      if (!userFromApi.apellido || userFromApi.apellido.trim() === '') {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/home', { replace: true });
+      }
     } catch (err: any) {
       // Extraer mensaje de error específico
       let errorMessage = 'Error al iniciar sesión';
@@ -66,7 +72,12 @@ export default function LoginPage() {
         authLogin(response.token, response.user as any);
       }
       
-      navigate('/home', { replace: true });
+      // Verificar si necesita onboarding (usuario nuevo de Google sin apellido completo)
+      if (response.user && (!response.user.apellido || response.user.apellido.trim() === '')) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/home', { replace: true });
+      }
     } catch (e: any) {
       // Mostrar el error específico capturado
       const errorMsg = e?.message || 'No se pudo completar el inicio de sesión con Google';

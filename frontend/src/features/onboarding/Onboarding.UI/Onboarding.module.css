@@ -212,6 +212,95 @@
   font-weight: 500;
 }
 
+/* Photo upload styles */
+.photoUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.photoButton {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 3px dashed rgba(2, 6, 23, 0.2);
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #64748b;
+}
+
+.photoButton:hover:not(:disabled) {
+  border-color: #e97b1c;
+  background: #fff5ed;
+  color: #e97b1c;
+  transform: scale(1.05);
+}
+
+.photoButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.photoButton span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.photoPreview {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #e97b1c;
+  box-shadow: 0 4px 12px rgba(233, 123, 28, 0.25);
+}
+
+.photoPreviewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoRemove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.95);
+  border: 2px solid white;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.photoRemove:hover:not(:disabled) {
+  background: rgb(185, 28, 28);
+  transform: scale(1.1);
+}
+
+.photoRemove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.photoInput {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .card {
     padding: 32px 24px;
