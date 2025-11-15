@@ -140,6 +140,78 @@
   width: 24px;
 }
 
+/* Input styles */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0b3a6e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.required {
+  color: #e97b1c;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: #0f172a;
+  background: #fff;
+  border: 2px solid rgba(2, 6, 23, 0.12);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.input:hover {
+  border-color: rgba(11, 58, 110, 0.30);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.08);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #e97b1c;
+  box-shadow: 0 0 0 4px rgba(233, 123, 28, 0.12);
+  transform: translateY(-1px);
+}
+
+.input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: rgba(2, 6, 23, 0.06);
+}
+
+.input::placeholder {
+  color: #94a3b8;
+}
+
+.helper {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.error {
+  padding: 12px 16px;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 @media (max-width: 640px) {
   .card {
     padding: 32px 24px;

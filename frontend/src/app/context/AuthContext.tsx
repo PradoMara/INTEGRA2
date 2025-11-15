@@ -4,6 +4,10 @@ export type User = {
   id: number
   nombre: string
   correo: string
+  apellido?: string
+  campus?: string
+  usuario?: string
+  role?: string
 }
 
 type AuthContextType = {

@@ -19,7 +19,7 @@ import CrearPublicacionPage from '@/features/CrearPublicacion/CrearPublicacion.U
 import EditarPublicacionPage from '@/features/EditarPublicacion/EditarPublicacion.UI/EditarPublicacionPage';
 import MisPublicacionesPage from '@/features/MyPublications/MyPublications.UI/MisPublicacionesPage';
 import PerfilPage from '@/features/Perfil/Perfil.UI/PerfilPage';
-import OnboardingPage from '@/features/onboarding/Onboarding';
+import OnboardingPage from '@/features/onboarding/Onboarding.UI/OnboardingPage';
 import EditProfilePage from '@/features/Perfil/EditProfile';
 import ChatPage from '@/features/DM/DM.UI/ChatPage';
 
