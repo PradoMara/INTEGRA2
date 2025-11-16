@@ -276,62 +276,33 @@ io.on('connection', (socket) => {
 
       console.log('💾 Mensaje guardado en BD:', mensaje.id);
 
-      // Enviar mensaje al destinatario si está conectado
+      // BUG FIX: Incluir clientTempId en el mensaje para sincronización
+      const { clientTempId } = data;
+      const mensajeConTempId = {
+        ...mensaje,
+        clientTempId: clientTempId || null,
+        chatId: null // Se puede calcular o enviar desde el frontend si es necesario
+      };
+
+      // 2. Busca si el destinatario está conectado AHORA MISMO.
+      const destinatarioIdInt = parseInt(destinatarioId);
       const destinatarioSocketId = connectedUsers.get(destinatarioIdInt);
       let destinatarioConectado = false;
 
       if (destinatarioSocketId) {
-        // Verificar que el socket del destinatario aún esté conectado
-        const destinatarioSocket = io.sockets.sockets.get(destinatarioSocketId);
-        if (destinatarioSocket && destinatarioSocket.connected) {
-          // --- EL USUARIO ESTÁ CONECTADO ---
-          console.log(`✅ Enviando mensaje a destinatario conectado: ${destinatarioSocketId}`);
-          io.to(destinatarioSocketId).emit('new_message', mensaje);
-          destinatarioConectado = true;
-        } else {
-          // El socket está en el mapa pero no está conectado, limpiar
-          console.log(`⚠️ Socket ${destinatarioSocketId} está en el mapa pero no está conectado. Limpiando...`);
-          connectedUsers.delete(destinatarioIdInt);
-        }
+        console.log(`✅ Enviando mensaje a destinatario conectado: ${destinatarioSocketId}`);
+        // BUG FIX: Enviar mensaje SIN clientTempId al destinatario (no es su mensaje temporal)
+        io.to(destinatarioSocketId).emit('new_message', mensaje);
+        console.log(`📤 Evento new_message emitido al socket: ${destinatarioSocketId}`);
+      } else {
+        // 4. Si no está conectado, no se hace nada (el usuario recibirá el mensaje
+        //    cuando abra la app y pida su historial por la API REST).
+        console.log(`⚠️ Destinatario ${destinatarioId} no está conectado`);
       }
 
-      // Si el destinatario no está conectado, enviar notificación push
-      if (!destinatarioConectado) {
-        // --- EL USUARIO ESTÁ DESCONECTADO (ENVIAR PUSH) ---
-        console.log(`⚠️ Destinatario ${destinatarioIdInt} no está conectado. Enviando Push Notification.`);
-
-        // ⭐️ INICIO: Enviar Notificación Push de CHAT ⭐️
-        try {
-          // 1. Busca el token FCM del destinatario
-          const destinatario = await prisma.cuentas.findUnique({
-            where: { id: destinatarioIdInt },
-            select: { fcm_token: true }
-          });
-
-          // 2. Si tiene token, envía la notificación
-          if (destinatario && destinatario.fcm_token) {
-            console.log(`🔔 Enviando notificación de CHAT a ${destinatario.fcm_token}`);
-            await admin.messaging().send({
-              token: destinatario.fcm_token,
-              notification: {
-                title: `Nuevo mensaje de ${socket.userName} 💬`, // socket.userName viene del middleware
-                body: contenido
-              },
-              data: {
-                screen: 'chat', // Para abrir la pantalla de chat
-                senderId: socket.userId.toString() // socket.userId viene del middleware
-              }
-            });
-          }
-        } catch (fcmError) {
-          console.error("❌ Error al enviar notificación FCM de chat:", fcmError);
-        }
-        // ⭐️ FIN: Enviar Notificación Push de CHAT ⭐️
-      }
-
-      // Confirmar envío al remitente
-      socket.emit('message_sent', mensaje);
-      console.log(`✅ Confirmación enviada al remitente: ${socket.userId}`);
+      // 5. BUG FIX: Confirma al remitente con clientTempId para actualizar mensaje temporal
+      socket.emit('message_sent', mensajeConTempId);
+      console.log(`✅ Confirmación enviada al remitente: ${socket.userId} con clientTempId: ${clientTempId}`);
 
     } catch (error) {
       console.error('❌ Error enviando mensaje:', error);

@@ -1,202 +1,192 @@
 import { useState, ChangeEvent, FormEvent } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { useAuth } from '@/app/context/AuthContext'
-import { motion } from 'framer-motion'
+import { useAuth } from '@/app/context/AuthContext' // 1. Importa el hook de autenticación
 
-// UI Components (Shadcn)
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+// --- Tipos de TypeScript ---
+// (Estos deberían coincidir con tu AuthContext y la respuesta de la API)
 
-// Icons
-import { LuLoader, LuCircleAlert, LuLogIn } from "react-icons/lu"
-import logo from "@/assets/img/logoMUCT.png" // Asegúrate de tener el logo importado
-
-// --- TIPOS ---
+// Datos que espera la API /api/auth/login
 type FormData = {
   email: string
   password: string
 }
 
-type ApiSuccessResponse = {
-  ok: true
-  message: string
-  accessToken: string
-  refreshToken: string
-  user: {
-    id: number
-    email: string
-    nombre: string
-    role: string
-    campus: string | null
-    // ...otros campos
-  }
-}
-
+// Respuesta de la API en caso de error
 type ApiErrorResponse = {
   ok: false
   message: string
 }
 
-export default function LoginTest() {
-  const { login } = useAuth()
+// Respuesta de la API en caso de éxito
+type ApiSuccessResponse = {
+  ok: true
+  message: string
+  token: string
+  user: {
+    id: number
+    email: string
+    nombre: string
+    role: string
+    // ...otros campos
+  }
+}
+
+/**
+ * Componente de prueba para iniciar sesión con email y contraseña.
+ */
+function LoginTest() {
+  // --- Hooks ---
+  const { login } = useAuth() // 2. Obtiene la función 'login' del contexto
   const navigate = useNavigate()
   const location = useLocation()
 
+  // --- Estado Local ---
   const [formData, setFormData] = useState<FormData>({
     email: 'prueba.ts@alu.uct.cl',
-    password: 'Contraseña1?',
+    password: 'password123',
   })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Redirigir al usuario a donde quería ir, o al home por defecto
+  // 3. Determina a dónde redirigir al usuario después del login
+  // (Si intentó ir a /perfil, lo manda a /perfil. Si no, a /home)
   const from = location.state?.from?.pathname || '/home'
 
+  // --- Manejadores ---
+
+  /**
+   * Actualiza el estado del formulario cuando el usuario escribe.
+   */
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    if (error) setError(null) // Limpiar error al escribir
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
   }
 
+  /**
+   * Maneja el envío del formulario al backend.
+   */
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
+    setError(null) // Limpia errores previos
 
     try {
-      // Usamos la nueva ruta POST /api/auth/login
+      // 4. Llama al endpoint de la API
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(formData),
       })
 
       const data: ApiSuccessResponse | ApiErrorResponse = await res.json()
 
-      if (res.ok && data.ok) {
-        // Guardamos sesión usando el contexto (que maneja tokens)
-        // Nota: Asegúrate de que tu AuthContext acepte accessToken
-        login((data as ApiSuccessResponse).accessToken, (data as ApiSuccessResponse).user)
+      if (data.ok) {
+        // 5. ¡Éxito! Llama al contexto para guardar la sesión globalmente
+        login(data.token, data.user)
         
-        // Redirección suave
+        // 6. Redirige al usuario
         navigate(from, { replace: true })
       } else {
-        // Mostrar error del backend
+        // Error de credenciales
         setError(data.message || 'Credenciales inválidas')
       }
     } catch (err) {
+      // Error de red
       console.error(err)
-      setError('Error de conexión. Intenta nuevamente.')
+      setError('Error de red. No se pudo conectar al servidor.')
     } finally {
       setIsLoading(false)
     }
   }
 
+  // --- Renderizado ---
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50/50 p-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card className="shadow-xl border-slate-200">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <img src={logo} alt="Logo" className="h-12 w-auto" />
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+        <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">
+          🔑 Iniciar Sesión (Prueba)
+        </h2>
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Alerta de Error */}
+          {error && (
+            <div
+              className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-center text-sm font-medium text-red-700"
+              role="alert"
+            >
+              {error}
             </div>
-            <CardTitle className="text-2xl font-bold text-slate-900">Bienvenido de nuevo</CardTitle>
-            <CardDescription>
-              Ingresa tus credenciales institucionales para continuar
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Alerta de Error */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                >
-                  <Alert variant="destructive" className="bg-red-50 text-red-600 border-red-200">
-                    <LuCircleAlert className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                </motion.div>
-              )}
+          )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo Institucional</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="ejemplo@alu.uct.cl"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="bg-white"
-                  disabled={isLoading}
-                />
-              </div>
+          {/* Email */}
+          <div className="mb-4">
+            <label
+              htmlFor="email"
+              className="mb-1.5 block font-medium text-gray-700"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="email"
+              required
+            />
+          </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Link 
-                    to="/forgot-password" 
-                    className="text-xs text-blue-600 hover:underline font-medium"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="bg-white"
-                  disabled={isLoading}
-                />
-              </div>
+          {/* Contraseña */}
+          <div className="mb-6">
+            <label
+              htmlFor="password"
+              className="mb-1.5 block font-medium text-gray-700"
+            >
+              Contraseña
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 transition-all" 
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <LuLoader className="mr-2 h-4 w-4 animate-spin" />
-                    Iniciando sesión...
-                  </>
-                ) : (
-                  <>
-                    <LuLogIn className="mr-2 h-4 w-4" />
-                    Iniciar Sesión
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-          
-          <CardFooter className="flex justify-center border-t bg-slate-50/50 p-4">
-            <p className="text-sm text-slate-500">
+          {/* Botón de envío */}
+          <button
+            type="submit"
+            className="w-full rounded-md bg-blue-600 py-2.5 px-4 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
+          </button>
+
+          {/* Link a Registrar */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
               ¿No tienes una cuenta?{' '}
-              <Link to="/register" className="font-medium text-blue-600 hover:underline">
+              <Link
+                to="/register"
+                className="font-medium text-blue-600 hover:underline"
+              >
                 Regístrate aquí
               </Link>
             </p>
-          </CardFooter>
-        </Card>
-      </motion.div>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }
+
+export default LoginTest

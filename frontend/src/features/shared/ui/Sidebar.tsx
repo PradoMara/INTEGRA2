@@ -8,7 +8,7 @@ export function Sidebar({
   active = "marketplace",
   className = "",
 }: {
-  active?: "marketplace" | "chats" | "terminos" | "ayuda" | "crear";
+  active?: "marketplace" | "chats" | "terminos" | "ayuda" | "crear" | "foro";
   className?: string;
 }) {
   return (

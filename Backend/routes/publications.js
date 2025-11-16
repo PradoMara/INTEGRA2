@@ -9,9 +9,17 @@ const router = express.Router();
 // ---------------- GET /api/publications ----------------
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, search } = req.query;
+    // 1. AÑADIR 'userId' A LA DESESTRUCTURACIÓN
+    const { page = 1, limit = 10, search, userId } = req.query;
 
     const where = {};
+
+    // 2. LÓGICA NUEVA: Si llega userId, filtrar por ese campo
+    if (userId) {
+      where.usuarioId = parseInt(userId);
+    }
+
+    // (Lógica de búsqueda existente)
     if (search) {
       where.OR = [
         { titulo: { contains: search, mode: 'insensitive' } },
@@ -22,7 +30,7 @@ router.get('/', async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const publications = await prisma.publicaciones.findMany({
-      where,
+      where, // Ahora 'where' puede incluir el filtro de usuario
       include: {
         usuario: {
           select: { id: true, nombre: true, apellido: true, usuario: true }
@@ -106,7 +114,17 @@ router.post(
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    const publicacion = await prisma.publicaciones.findUnique({ where: { id } });
 
+    if (!publicacion) {
+      return res.status(404).json({ ok: false, message: 'Publicación no encontrada' });
+    }
+
+    if (publicacion.usuarioId !== req.user.userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ ok: false, message: 'No autorizado para eliminar esta publicación' });
+    }
+
+    // 2. Eliminar la publicación (Hard Delete)
     const deleted = await prisma.publicaciones.delete({
       where: { id }
     });
@@ -131,11 +149,26 @@ router.patch('/:id/visto', authenticateToken, async (req, res) => {
   }
 });
 
-// ---------------- PUT /api/publications/:id ----------------
+// ------------------------------------------
+// 🔄 ACTUALIZAR PUBLICACIÓN (Protegido)
+// PUT /api/publications/:id
+// ------------------------------------------
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
+    const id = parseInt(req.params.id);
     const { titulo, cuerpo, estado } = req.body;
 
+    const publicacion = await prisma.publicaciones.findUnique({ where: { id } });
+
+    if (!publicacion) {
+      return res.status(404).json({ ok: false, message: 'Publicación no encontrada' });
+    }
+
+    if (publicacion.usuarioId !== req.user.userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ ok: false, message: 'No autorizado para actualizar esta publicación' });
+    }
+
+    // 2. Actualizar la publicación
     const updated = await prisma.publicaciones.update({
       where: { id: parseInt(req.params.id) },
       data: { titulo, cuerpo, estado }

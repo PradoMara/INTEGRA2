@@ -1,6 +1,7 @@
 // src/components/SendMessageForm.tsx
 
 import React, { useState } from 'react';
+import { InlineSpinner } from '@/components/ui/Spinner';
 
 // NOTA: Debes crear un repositorio para mensajes (ej. MessageHttpRepository)
 // Por ahora, usaremos fetch directo para simular la llamada al nuevo endpoint.
@@ -84,9 +85,10 @@ const SendMessageForm: React.FC<Props> = ({ senderId, recipientId, onMessageSent
             )}
             <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
                 disabled={loading}
             >
+                {loading && <InlineSpinner size="sm" color="white" />}
                 {loading ? 'Enviando...' : 'Enviar Mensaje al Vendedor'}
             </button>
         </form>

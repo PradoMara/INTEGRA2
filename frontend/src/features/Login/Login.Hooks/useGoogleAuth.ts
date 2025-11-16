@@ -34,11 +34,6 @@ function decodeJwt(token: string): Record<string, any> {
   }
 }
 
-/**
- * Hook to exchange a Google ID Token (credential) for an app session/JWT
- * - Reads the One Tap credential from localStorage key "google_credential" if not provided
- * - Sends POST to your backend and returns the parsed response
- */
 export function useGoogleAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -79,18 +74,38 @@ export function useGoogleAuth() {
       })
 
       if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        const msg = text || `HTTP ${res.status}`
-        setError(msg)
-        throw new Error(msg)
+        let errorMessage = '';
+        
+        // Manejo específico de códigos de error
+        if (res.status === 403) {
+          errorMessage = 'Dominio no permitido. Solo se permiten correos @uct.cl o @alu.uct.cl';
+        } else if (res.status === 401) {
+          errorMessage = 'Token inválido o no autorizado. Por favor, intenta iniciar sesión nuevamente';
+        } else {
+          // Intentar obtener el mensaje del servidor
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorData.error || `Error HTTP ${res.status}`;
+          } catch {
+            errorMessage = `Error HTTP ${res.status}`;
+          }
+        }
+        
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
 
       const data = (await res.json()) as ExchangeResponse
 
-      // Optional: persist JWT returned by the API
+      // Guardar JWT del backend en localStorage con clave consistente
       if (data.token) {
-        try { localStorage.setItem('token', data.token) } catch {}
+        try { 
+          localStorage.setItem('app_jwt_token', data.token)
+          // También guardar en 'token' para compatibilidad con otros componentes
+          localStorage.setItem('token', data.token)
+        } catch {}
       }
+      
       lastToken.current = token
       return data
     } finally {

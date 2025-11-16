@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import SelectCampus from './SelectCampus'
-import SelectCarrera from './SelectCarrera'
-import SuccessModal from './SuccessModal'
-import { campuses as mockCampuses, carreras as mockCarreras } from './mocks'
-import styles from './Onboarding.module.css'
+import { useNavigate } from 'react-router-dom'
+import SelectCampus from './Onboarding.UI/SelectCampus'
+import SelectCarrera from './Onboarding.UI/SelectCarrera'
+import OnboardingNamePage from './Onboarding.UI/OnboardingNamePage'
+import SuccessModal from './Onboarding.UI/SuccessModal'
+import { campuses as mockCampuses, carreras as mockCarreras } from './Onboarding.Utils/mocks'
+import styles from './Onboarding.UI/Onboarding.module.css'
 
 export default function Onboarding() {
+	const navigate = useNavigate()
+	const [step, setStep] = useState<'campus-carrera' | 'nombre'>('campus-carrera')
 	const [campuses, setCampuses] = useState<Array<{ id: string; name: string }>>([])
 	const [carreras, setCarreras] = useState<Array<{ id: string; name: string; campusId: string }>>([])
 	const [campusId, setCampusId] = useState<string | null>(null)
@@ -32,16 +36,20 @@ export default function Onboarding() {
 		}
 		setLoadingCarreras(true)
 		setTimeout(() => {
-			setCarreras(mockCarreras.filter((c) => c.campusId === campusId))
+			setCarreras(mockCarreras.filter((c: any) => c.campusId === campusId))
 			setLoadingCarreras(false)
 		}, 200)
 	}, [campusId])
 
 	function handleSubmit(e?: React.FormEvent) {
 		e?.preventDefault()
-		// Aquí iría la llamada al backend para guardar la selección
-		console.log('Enviar onboarding', { campusId, carreraId })
-		setShowSuccessModal(true)
+		// Ir a la página de nombre
+		setStep('nombre')
+	}
+
+	function handleSkip() {
+		// Si omite, ir directo al home
+		navigate('/home')
 	}
 
 	function handleCloseModal() {
@@ -51,6 +59,11 @@ export default function Onboarding() {
 
 	const selectedCampus = campuses.find(c => c.id === campusId)
 	const selectedCarrera = carreras.find(c => c.id === carreraId)
+
+	// Si ya pasó al step de nombre, mostrar ese componente
+	if (step === 'nombre') {
+		return <OnboardingNamePage campusId={campusId || undefined} carreraId={carreraId || undefined} />
+	}
 
 	return (
 		<div className={styles.container}>
@@ -112,6 +125,7 @@ export default function Onboarding() {
 						<motion.button 
 							type="button" 
 							className={`${styles.button} ${styles.buttonSecondary}`}
+							onClick={handleSkip}
 							whileHover={{ scale: 1.02, y: -2 }}
 							whileTap={{ scale: 0.98 }}
 						>

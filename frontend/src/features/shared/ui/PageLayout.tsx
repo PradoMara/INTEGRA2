@@ -1,6 +1,7 @@
 // src/shared/ui/PageLayout.tsx
 import { Outlet, useLocation } from 'react-router-dom'
 import FloatingChat from './FloatingChat'
+import { ToastProvider } from './ToastProvider'
 
 export default function PageLayout() {
   const { pathname } = useLocation()
@@ -9,6 +10,7 @@ export default function PageLayout() {
 
   return (
     <div className="grid h-screen grid-rows-[auto,1fr] min-h-screen">
+      <ToastProvider />
       
 
       {/* En /chats: ocultamos scroll global para evitar doble scroll.

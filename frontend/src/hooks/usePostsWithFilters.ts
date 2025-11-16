@@ -71,7 +71,12 @@ const generatePosts = (page: number, limit: number = 9, filters: PostFilters): P
     // Usar modulo para reciclar datos pero con IDs únicos
     const productIndex = (id - 1) % productData.length
     const product = productData[productIndex]
-    const category = categories.find(cat => cat.id === product.category)!
+    const category = categories.find(cat => cat.id === product.category)
+    
+    // Skip si la categor\u00eda no existe para evitar crash
+    if (!category) {
+      continue;
+    }
     
     // Generar precio como número entero sin decimales
     const randomPrice = Math.floor(Math.random() * (product.priceRange[1] - product.priceRange[0]) + product.priceRange[0])

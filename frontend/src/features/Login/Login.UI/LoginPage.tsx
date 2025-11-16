@@ -3,18 +3,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { login as apiLogin } from '@/features/auth/api/authApi';
-import type { User as StoreUser } from '@/store/authStore';
 import LoginForm from '@/features/auth/ui/LoginForm';
 import LoginInstitutional from './Login.Components/LoginInstitutional';
 import styles from './Login.Components/Login.module.css'; // MISMO CSS
 import Logo from '@/assets/img/logouct.png';
+import useGoogleAuth from '@/features/Login/Login.Hooks/useGoogleAuth';
+import Spinner, { InlineSpinner } from '@/components/ui/Spinner';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const authLogin = useAuthStore((state) => state.login);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const { exchange } = useGoogleAuth();
 
   useEffect(() => {
     try {
@@ -28,20 +31,61 @@ export default function LoginPage() {
     setError(null);
     try {
       const { token, user: userFromApi } = await apiLogin({ email, password });
-      const userParaElStore: StoreUser = {
-        ...userFromApi,
-        rol: userFromApi.role === 'ADMINISTRADOR' ? 'ADMIN' : userFromApi.role === 'VENDEDOR' ? 'VENDEDOR' : 'USER',
-      };
-      authLogin(token, userParaElStore);
-      navigate('/home', { replace: true });
+      // El API ya entrega el usuario en la forma que espera el cliente (con 'rol').
+      authLogin(token, userFromApi as any);
+      
+      // Verificar si necesita onboarding (usuario sin campus configurado)
+      if (!userFromApi.campus || userFromApi.campus.trim() === '') {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/home', { replace: true });
+      }
     } catch (err: any) {
-      setError(err.message);
+      // Extraer mensaje de error específico
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.status === 401) {
+        errorMessage = 'Credenciales inválidas. Verifica tu email y contraseña';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Acceso denegado. No tienes permisos para acceder';
+      }
+      
+      setError(errorMessage);
+      console.error('Error en login:', errorMessage);
       setLoading(false);
     }
   }
 
   async function handleOAuth() {
-    navigate('/home', { replace: true });
+    // Intercambia el idToken (guardado por Google One Tap en localStorage)
+    // por la sesión/JWT de la app antes de navegar.
+    setError(null);
+    setOauthLoading(true);
+    try {
+      const response = await exchange();
+      
+      // El backend devuelve: { ok: true, message: '...', token: 'jwt...', user: {...} }
+      if (response.token && response.user) {
+        // Guardar en authStore para mantener la sesión
+        authLogin(response.token, response.user as any);
+      }
+      
+      // Verificar si necesita onboarding (usuario nuevo de Google sin campus configurado)
+      if (response.user && (!response.user.campus || response.user.campus.trim() === '')) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/home', { replace: true });
+      }
+    } catch (e: any) {
+      // Mostrar el error específico capturado
+      const errorMsg = e?.message || 'No se pudo completar el inicio de sesión con Google';
+      setError(errorMsg);
+      console.error('Error en OAuth:', errorMsg);
+    } finally {
+      setOauthLoading(false);
+    }
   }
 
   if (showAdminLogin) {
@@ -93,9 +137,19 @@ export default function LoginPage() {
   }
 
   return (
-    <LoginInstitutional 
-      onOAuth={handleOAuth} 
-      onShowAdminLogin={() => setShowAdminLogin(true)}
-    />
+    <>
+      {oauthLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl p-8">
+            <Spinner size="xl" color="primary" label="Iniciando sesión con Google..." />
+          </div>
+        </div>
+      )}
+      <LoginInstitutional 
+        onOAuth={handleOAuth} 
+        onShowAdminLogin={() => setShowAdminLogin(true)}
+        error={error}
+      />
+    </>
   );
 }

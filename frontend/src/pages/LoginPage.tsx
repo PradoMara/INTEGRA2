@@ -21,11 +21,13 @@ const LoginPage = () => {
       const isUCTEmail = email.endsWith('@alu.uct.cl') || email.endsWith('@uct.cl');
       
       const mockUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.floor(Math.random() * 10000),
         email: email,
         nombre: email.split('@')[0] || 'Usuario UCT',
-        rol: email.includes('admin') ? 'admin' : 'user',
-        campus: 'Campus Principal'
+        rol: email.includes('admin') ? 'Administrador' : 'Cliente',
+        campus: 'Campus Principal',
+        rol_id: email.includes('admin') ? 1 : 3,
+        estado_id: 1,
       };
 
       const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substr(2, 9);

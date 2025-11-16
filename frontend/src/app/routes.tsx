@@ -1,27 +1,32 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+// src/app/routes.tsx
+import { Routes, Route, Navigate } from 'react-router-dom'
 
-// --- COMPONENTES DE TAREA 1 ---
-import ProtectedRoute from '../components/auth/ProtectedRoute';
-import AdminRoute from '../components/auth/AdminRoute';
+// --- Layout y Autenticación ---
+import PageLayout from '@/features/shared/ui/PageLayout'
+import { ProtectedRoute } from '@/app/context/AuthContext'
+import AdminRoute from '@/components/auth/AdminRoute'
 
-// --- Páginas Públicas y de Layout ---
-import PageLayout from '@/features/shared/ui/PageLayout';
-import LoginPage from '@/features/Login/Login.UI/LoginPage';
-import HomePage from '@/features/marketplace/Marketplace.UI/HomePage';
-import AyudaPage from '@/features/About.Terms.Help/Help.UI/AyudaPage';
-import TermsPage from '@/features/About.Terms.Help/Terms.UI/TermsPage';
-import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage';
-import { PublicationDetailPage } from '@/features/marketplace/ui/PublicationDetailPage';
-import PostsSandboxPage from '@/features/posts/PostsSandboxPage';
+// --- Páginas Públicas ---
+import LoginPage from '@/features/Login/Login.UI/LoginPage'
+import HomePage from '@/features/marketplace/Marketplace.UI/HomePage'
+import AyudaPage from '@/features/About.Terms.Help/Help.UI/AyudaPage'
+import TermsPage from '@/features/About.Terms.Help/Terms.UI/TermsPage'
+import AboutPage from '@/features/About.Terms.Help/About.UI/AboutPage'
+import { PublicationDetailPage } from '@/features/marketplace/ui/PublicationDetailPage'
+import PostsSandboxPage from '@/features/posts/PostsSandboxPage'
+import RegisterTest from '@/features/Login/Login.UI/RegisterTest'
+import LoginTest from '@/features/Login/Login.UI/LoginTest'
 
 // --- Páginas Protegidas (Usuario) ---
-import CrearPublicacionPage from '@/features/CrearPublicacion/CrearPublicacion.UI/CrearPublicacionPage';
-import EditarPublicacionPage from '@/features/EditarPublicacion/EditarPublicacion.UI/EditarPublicacionPage';
-import MisPublicacionesPage from '@/features/MyPublications/MyPublications.UI/MisPublicacionesPage';
-import PerfilPage from '@/features/Perfil/Perfil.UI/PerfilPage';
-import OnboardingPage from '@/features/onboarding/Onboarding';
-import EditProfilePage from '@/features/Perfil/EditProfile';
-import ChatPage from '@/features/DM/DM.UI/ChatPage';
+import CrearPublicacionPage from '@/features/CrearPublicacion/CrearPublicacion.UI/CrearPublicacionPage'
+import EditarPublicacionPage from '@/features/EditarPublicacion/EditarPublicacion.UI/EditarPublicacionPage'
+import MisPublicacionesPage from '@/features/MyPublications/MyPublications.UI/MisPublicacionesPage'
+import PerfilPage from '@/features/Perfil/Perfil.UI/PerfilPage'
+import OnboardingPage from '@/features/onboarding/Onboarding.UI/OnboardingPage'
+import EditProfilePage from '@/features/Perfil/EditProfile'
+import ChatPage from '@/features/DM/DM.UI/ChatPage'
+import ForumPage from '@/features/Forum/ForumPage'
+import MyPublications from '@/features/Forum/MyPublications'
 
 // --- Páginas de Administrador ---
 import UsersPage from '../features/admin/pages/UsersPage';
@@ -34,12 +39,9 @@ import AdminMarketplacePage from '../features/admin/pages/MarketplacePage';
 export function AppRoutes() {
   return (
     <Routes>
-      {/* --- RUTAS PÚBLICAS (Sin Layout) --- */}
       {/* Redirige la raíz a /home */}
       <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="/login" element={<LoginPage />} />
 
-      {/* --- RUTAS CON LAYOUT (Públicas, Protegidas y Admin) --- */}
       <Route element={<PageLayout />}>
         
         {/* Rutas Públicas (Cualquiera puede verlas) */}
@@ -70,9 +72,7 @@ export function AppRoutes() {
           <Route path="/admin/marketplace" element={<AdminMarketplacePage />} />
         </Route>
       </Route>
-
-      {/* --- RUTA CATCH-ALL --- */}
-      {/* Si no coincide con nada, redirige a la raíz */}
+      <Route path="/login" element={<LoginPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

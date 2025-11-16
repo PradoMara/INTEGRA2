@@ -19,14 +19,21 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
       }
     });
 
+    // 2. BUG FIX: Validar que el usuario existe ANTES de intentar acceder a sus propiedades
+    // Si el ID del token no existe en la BD, devolver error 404
     if (!user) {
-      throw new AppError(
-        "Usuario no encontrado",
-        "USER_NOT_FOUND",
-        404,
-        { field: "id" }
-      );
-    }    res.json({
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "USER_NOT_FOUND",
+          message: "Usuario no encontrado",
+          details: { field: "id" }
+        }
+      });
+    }
+
+    // 3. Devuelve los datos del usuario en un formato limpio
+    res.json({
       success: true,
       data: {
         id: user.id,
@@ -44,14 +51,16 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error); // lo captura el errorHandler
+    // 4. Si algo falla, lo pasa al errorHandler global
+    next(error);
   }
 });
 
 // PUT /api/users/profile - Actualizar perfil del usuario actual
 router.put('/profile', authenticateToken, async (req, res, next) => {
   try {
-    const { usuario, campus, telefono, direccion } = req.body;
+    // 1. Obtiene los campos permitidos del body de la petición
+    const { apellido, usuario, campus, telefono, direccion, fotoPerfil } = req.body;
 
     // Validar que al menos un campo sea enviado
     const updateData = {};
@@ -59,13 +68,14 @@ router.put('/profile', authenticateToken, async (req, res, next) => {
     if (campus !== undefined) updateData.campus = campus;
     if (telefono !== undefined) updateData.telefono = telefono;
     if (direccion !== undefined) updateData.direccion = direccion;
+    if (fotoPerfil !== undefined) updateData.fotoPerfil = fotoPerfil;
 
     if (Object.keys(updateData).length === 0) {
       throw new AppError(
         'Se debe proporcionar al menos un campo para actualizar',
         'VALIDATION_ERROR',
-        400,
-        { fields: ['usuario', 'campus', 'telefono', 'direccion'] }
+        400, // 400 Bad Request
+        { fields: ['apellido', 'usuario', 'campus', 'telefono', 'direccion', 'fotoPerfil'] }
       );
     }
 

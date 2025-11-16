@@ -204,7 +204,7 @@ router.post('/google', [
           usuario,
           rolId,
           estadoId: 1,
-          campus: 'Campus Temuco'
+          campus: null // Campus vacío, debe configurarlo en onboarding
         },
         include: { rol: true, estado: true }
       });
@@ -230,10 +230,11 @@ router.post('/google', [
       token,
       user: {
         id: user.id,
-        correo: user.correo,        // 🔒 Solo lectura (viene de Google)
-        nombre: user.nombre,        // 🔒 Solo lectura (viene de Google)  // ✏️ Editable por el usuario
-        usuario: user.usuario,      // ✏️ Editable por el usuario
-        campus: user.campus || 'Campus Temuco',  // ✏️ Editable por el usuario
+        correo: user.correo,
+        nombre: user.nombre,
+        apellido: user.apellido || '',
+        usuario: user.usuario,
+        campus: user.campus || null,
         role: user.rol.nombre.toUpperCase(),
         // Campos editables disponibles para actualizar después:
         editableFields: ['usuario', 'campus', 'telefono', 'direccion']

@@ -25,8 +25,9 @@ model Cuentas {
   fechaRegistro DateTime @default(now()) @map("fecha_registro")
   campus        String?  @db.VarChar(100)
   reputacion    Decimal  @default(0.00) @db.Decimal(5, 2)
-  fcm_token    String? @db.Text
-  fotoPerfilUrl String? @db.VarChar(500) @map("foto_perfil_url")
+  telefono      String?  @db.VarChar(20)
+  direccion     String?  @db.VarChar(255)
+  fotoPerfil    String?  @map("foto_perfil") @db.VarChar(500)
 
   // Relaciones
   rol                     Roles                    @relation(fields: [rolId], references: [id])
