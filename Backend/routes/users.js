@@ -23,14 +23,17 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
       }
     });
 
-    // 2. Si por alguna razón el ID del token no existe en la BD, lanza un error
+    // 2. BUG FIX: Validar que el usuario existe ANTES de intentar acceder a sus propiedades
+    // Si el ID del token no existe en la BD, devolver error 404
     if (!user) {
-      throw new AppError(
-        "Usuario no encontrado",
-        "USER_NOT_FOUND",
-        404, // 404 Not Found
-        { field: "id" }
-      );
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "USER_NOT_FOUND",
+          message: "Usuario no encontrado",
+          details: { field: "id" }
+        }
+      });
     }
 
     // 3. Devuelve los datos del usuario en un formato limpio
@@ -51,7 +54,7 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
       }
     });
   } catch (error) {
-    // 4. Si algo falla (incluido el AppError), lo pasa al errorHandler global
+    // 4. Si algo falla, lo pasa al errorHandler global
     next(error);
   }
 });
