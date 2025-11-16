@@ -252,6 +252,14 @@ io.on('connection', (socket) => {
 
       console.log('💾 Mensaje guardado en BD:', mensaje.id);
 
+      // BUG FIX: Incluir clientTempId en el mensaje para sincronización
+      const { clientTempId } = data;
+      const mensajeConTempId = {
+        ...mensaje,
+        clientTempId: clientTempId || null,
+        chatId: null // Se puede calcular o enviar desde el frontend si es necesario
+      };
+
       // 2. Busca si el destinatario está conectado AHORA MISMO.
       const destinatarioIdInt = parseInt(destinatarioId);
       const destinatarioSocketId = connectedUsers.get(destinatarioIdInt);
@@ -263,7 +271,7 @@ io.on('connection', (socket) => {
       // 3. Si está conectado, le envía el mensaje en tiempo real.
       if (destinatarioSocketId) {
         console.log(`✅ Enviando mensaje a destinatario conectado: ${destinatarioSocketId}`);
-        // Envía el evento 'new_message' SOLO a ese socketId específico.
+        // BUG FIX: Enviar mensaje SIN clientTempId al destinatario (no es su mensaje temporal)
         io.to(destinatarioSocketId).emit('new_message', mensaje);
         console.log(`📤 Evento new_message emitido al socket: ${destinatarioSocketId}`);
       } else {
@@ -272,9 +280,9 @@ io.on('connection', (socket) => {
         console.log(`⚠️ Destinatario ${destinatarioId} no está conectado`);
       }
 
-      // 5. Confirma al remitente que el mensaje fue procesado (para UI).
-      socket.emit('message_sent', mensaje);
-      console.log(`✅ Confirmación enviada al remitente: ${socket.userId}`);
+      // 5. BUG FIX: Confirma al remitente con clientTempId para actualizar mensaje temporal
+      socket.emit('message_sent', mensajeConTempId);
+      console.log(`✅ Confirmación enviada al remitente: ${socket.userId} con clientTempId: ${clientTempId}`);
 
     } catch (error) {
       console.error('❌ Error enviando mensaje:', error);

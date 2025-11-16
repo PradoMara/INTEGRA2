@@ -59,9 +59,26 @@ export default function ChatPage() {
       setChats((prev) =>
         prev.map((c) => {
           if (c.id !== (incomingMessage as any).chatId) return c;
+          
+          // BUG FIX: Evitar duplicación de mensajes
+          // Verificar si el mensaje ya existe por ID o clientTempId
+          const mensajesExistentes = c.mensajes || [];
+          const mensajeYaExiste = mensajesExistentes.some((m: any) => {
+            // Comparar por ID de BD si existe
+            if (m.id === incomingMessage.id) return true;
+            // Comparar por clientTempId si el mensaje fue enviado por este cliente
+            if ((incomingMessage as any).clientTempId && m.clientTempId === (incomingMessage as any).clientTempId) return true;
+            return false;
+          });
+
+          if (mensajeYaExiste) {
+            console.log('[ChatPage] Mensaje duplicado ignorado:', incomingMessage.id);
+            return c;
+          }
+
           return {
             ...c,
-            mensajes: [...(c.mensajes || []), incomingMessage],
+            mensajes: [...mensajesExistentes, incomingMessage],
             ultimoMensaje: incomingMessage.texto,
           };
         })
@@ -70,6 +87,34 @@ export default function ChatPage() {
 
     socket.on('user_online', (u) => console.log('Usuario Conectado:', u.userName));
     socket.on('user_offline', (u) => console.log('Usuario Desconectado:', u.userName));
+
+    // BUG FIX: Escuchar confirmación de mensaje enviado para actualizar estado
+    socket.on('message_sent', (confirmedMessage: any) => {
+      console.log('[ChatPage] Confirmación de mensaje enviado:', confirmedMessage);
+      setChats((prev) =>
+        prev.map((c) => {
+          if (c.id !== confirmedMessage.chatId) return c;
+          
+          return {
+            ...c,
+            mensajes: (c.mensajes || []).map((m: any) => {
+              // Reemplazar el mensaje temporal con el mensaje confirmado de la BD
+              if (m.clientTempId === confirmedMessage.clientTempId) {
+                return {
+                  ...confirmedMessage,
+                  estado: 'enviado' as const,
+                };
+              }
+              return m;
+            }),
+          };
+        })
+      );
+    });
+
+    socket.on('message_error', (errorData: any) => {
+      console.error('[ChatPage] Error en mensaje:', errorData);
+    });
 
     return () => {
       socket.disconnect();
