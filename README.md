@@ -33,6 +33,6 @@ De esta manera el login puede seguir sin header (u otro layout) mientras el rest
 
 # INTEGRA2
 Repositorio del proyecto de Taller de integracion II, grupo 8 de la UCT
-https://testmarket-sigma.vercel.app
 ##
+MarketUCT: https://testmarket-sigma.vercel.app
 #
